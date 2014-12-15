@@ -1,0 +1,59 @@
+package nisargpatel.inertialnavigation;
+
+import android.content.Intent;
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class SetThresholds extends ActionBarActivity {
+
+    TextView textUpperThreshold;
+    TextView textLowerThreshold;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_set_thresholds);
+
+       textUpperThreshold = (TextView) findViewById(R.id.textUpper);
+       textLowerThreshold = (TextView) findViewById(R.id.textLower);
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_set_thresholds, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        //if (id == R.id.action_settings) {
+        //    return true;
+        //}
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void buttonSetThresholds(View view) {
+        double upper = Double.parseDouble(textUpperThreshold.getText().toString());
+        double lower = Double.parseDouble(textLowerThreshold.getText().toString());
+        MainActivity.setThresholds(upper, lower);
+
+        Toast.makeText(getApplicationContext(), "Thresholds Set!", Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+}

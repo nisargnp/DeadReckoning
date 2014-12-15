@@ -16,6 +16,32 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--
+        <activity
+            android:name=".Settings"
+            android:label="@string/title_activity_input_data"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nisargpatel.inertialnavigation.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nisargpatel.inertialnavigation.MainActivity" />
+        </activity>
+        -->
+        <activity
+            android:name=".SetThresholds"
+            android:label="@string/title_activity_set_thresholds"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nisargpatel.inertialnavigation.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
