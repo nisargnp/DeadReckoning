@@ -51,8 +51,10 @@
         android:id="@+id/textThreshold"
         android:textSize="30sp"
         android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/buttonStartCounter"
-        android:layout_toEndOf="@+id/buttonStartCounter" />
+        android:layout_alignRight="@+id/buttonStopCounter"
+        android:layout_alignEnd="@+id/buttonStopCounter"
+        android:layout_marginRight="23dp"
+        android:layout_marginEnd="23dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -74,24 +76,24 @@
         android:layout_alignLeft="@+id/textMovingAverage"
         android:layout_alignStart="@+id/textMovingAverage" />
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="75dp"
-        android:text="@string/start_step_counter"
+        android:text="@string/start"
         android:id="@+id/buttonStartCounter"
-        android:layout_above="@+id/buttonStopCounter"
-        android:layout_centerHorizontal="true"
         android:textSize="20sp"
-        android:layout_marginBottom = "10dp"/>
+        android:layout_alignTop="@+id/buttonStopCounter"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="75dp"
-        android:text="@string/stop_step_counter"
+        android:text="@string/stop"
         android:id="@+id/buttonStopCounter"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:textSize="20sp"
-        android:layout_marginBottom = "0dp"/>
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -111,8 +113,8 @@
         android:id="@+id/textInstantAcc"
         android:textSize="30sp"
         android:layout_alignTop="@+id/txtView4"
-        android:layout_alignRight="@+id/buttonStartCounter"
-        android:layout_alignEnd="@+id/buttonStartCounter" />
+        android:layout_alignRight="@+id/txtView2"
+        android:layout_alignEnd="@+id/txtView2" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -131,9 +133,11 @@
         android:text="@string/zero"
         android:id="@+id/textA2"
         android:textSize="30sp"
+        android:layout_marginRight="14dp"
+        android:layout_marginEnd="14dp"
         android:layout_alignTop="@+id/textA1"
-        android:layout_toRightOf="@+id/txtView4"
-        android:layout_toEndOf="@+id/txtView4" />
+        android:layout_alignRight="@+id/buttonStartCounter"
+        android:layout_alignEnd="@+id/buttonStartCounter" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -142,8 +146,8 @@
         android:id="@+id/textA3"
         android:textSize="30sp"
         android:layout_alignTop="@+id/textA2"
-        android:layout_alignRight="@+id/txtView3"
-        android:layout_alignEnd="@+id/txtView3" />
+        android:layout_toRightOf="@+id/txtView3"
+        android:layout_toEndOf="@+id/txtView3" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -154,5 +158,46 @@
         android:layout_alignTop="@+id/textA3"
         android:layout_alignLeft="@+id/textAndroid"
         android:layout_alignStart="@+id/textAndroid" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/zero"
+        android:id="@+id/textT1"
+        android:textSize="30sp"
+        android:layout_marginBottom="41dp"
+        android:layout_above="@+id/textA1"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/zero"
+        android:id="@+id/textT2"
+        android:textSize="30sp"
+        android:layout_alignTop="@+id/textT1"
+        android:layout_alignLeft="@+id/textA2"
+        android:layout_alignStart="@+id/textA2" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/zero"
+        android:id="@+id/textT3"
+        android:textSize="30sp"
+        android:layout_alignTop="@+id/textT2"
+        android:layout_alignLeft="@+id/textA3"
+        android:layout_alignStart="@+id/textA3" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/zero"
+        android:id="@+id/textT4"
+        android:textSize="30sp"
+        android:layout_alignTop="@+id/textT3"
+        android:layout_alignLeft="@+id/textA4"
+        android:layout_alignStart="@+id/textA4" />
 
 </RelativeLayout>

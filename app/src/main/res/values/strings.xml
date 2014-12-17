@@ -10,8 +10,8 @@
 
     <string name="instant_acc">dA/dT</string>
 
-    <string name="start_step_counter">Start Step Counter</string>
-    <string name="stop_step_counter">Stop Step Counter</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
 
     <string name="set_upper">Upper Threshold</string>
     <string name="set_lower">Lower Threshold</string>
