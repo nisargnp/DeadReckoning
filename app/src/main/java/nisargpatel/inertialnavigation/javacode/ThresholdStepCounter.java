@@ -9,11 +9,11 @@ public class ThresholdStepCounter {
 
 	private double upperThreshold;
 	private double lowerThreshold;
-	
+
 	//constructor sets the values for the upper and lower thresholds
 	public ThresholdStepCounter(double upper, double lower) {
-		upperThreshold = upper;
-		lowerThreshold = lower;
+        upperThreshold = upper;
+        lowerThreshold = lower;
 		peakFound = false;
 	}
 	

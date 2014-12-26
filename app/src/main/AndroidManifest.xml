@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="nisargpatel.inertialnavigation" >
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -35,8 +37,16 @@
         </activity>
         -->
         <activity
-            android:name=".SetThresholds"
+            android:name=".SetThresholdsActivity"
             android:label="@string/title_activity_set_thresholds"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="nisargpatel.inertialnavigation.MainActivity" />
+        </activity>
+        <activity
+            android:name=".CalibrationActivity"
+            android:label="@string/title_activity_calibration"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

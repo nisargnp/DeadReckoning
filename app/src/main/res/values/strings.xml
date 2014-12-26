@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Inertial Navigation</string>
-    <string name="title_activity_set_thresholds">SetThresholds</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
+    <string name="app_name">Inertial Navigation</string>
     <string name="threshold_steps">Threshold Steps:</string>
     <string name="moving_average_steps">Moving Avg. Steps:</string>
     <string name="android_steps">Android Steps:</string>
-
     <string name="instant_acc">dA/dT</string>
-
     <string name="start">Start</string>
     <string name="stop">Stop</string>
+    <string name="distance_traveled">Distance (ft.):</string>
 
+    <string name="title_activity_set_thresholds">Set Thresholds</string>
     <string name="set_upper">Upper Threshold</string>
     <string name="set_lower">Lower Threshold</string>
     <string name="set_thresholds">Set Thresholds</string>
+    <string name="threshold_set">Thresholds set.</string>
+
+    <string name="title_activity_calibration">Calibration Mode</string>
+    <string name="stride_length_set">Stride length set.</string>
+    <string name="set_stride_length">Set stride length</string>
+    <string name="enter_distance_traveled">Enter distance traveled (in ft.):</string>
 
     <string name="zero">0</string>
     <string name="blank"></string>
+    <string name="acc_file_name">accData</string>
+    <string name="text_extension">.txt</string>
+    <string name="text_file_title">time;zAcc;stepFound</string>
 
 </resources>

@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -12,15 +13,31 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import nisargpatel.inertialnavigation.javacode.MovingAverageStepCounter;
 import nisargpatel.inertialnavigation.javacode.ThresholdStepCounter;
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
+    private boolean firstCreate;
+
+    private File myFile;
+    private BufferedWriter writer;
+    private String fileName;
+
+    private static double strideLength;
+
     private Sensor accelerometer;
     private Sensor androidStepCounter;
     private SensorManager sensorManager;
+
+    private TextView textDistanceTraveled;
 
     private TextView textThresholdSteps1;
     private TextView textThresholdSteps2;
@@ -35,9 +52,10 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private TextView textMovingAverageSteps;
     private TextView textAndroidSteps;
     private TextView textInstantAcc;
+    private TextView textDistance;
 
-    //private static double upperThreshold;
-    //private static double lowerThreshold;
+    private static double upperThreshold = 11.5;
+    private static double lowerThreshold = 6.5;
 
     private Button buttonStartCounter;
     private Button buttonStopCounter;
@@ -54,6 +72,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private int thresholdStepCount = 0;
     private int movingAverageStepCount = 0;
     private int androidStepCount = 0;
+    private double distanceTraveled;
 
     ThresholdStepCounter thresholdCountSteps1 = new ThresholdStepCounter(10, 8);
     ThresholdStepCounter thresholdCountSteps2 = new ThresholdStepCounter(11, 7);
@@ -64,13 +83,16 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     MovingAverageStepCounter movingAverageCountSteps3 = new MovingAverageStepCounter(1.5);
     MovingAverageStepCounter movingAverageCountSteps4 = new MovingAverageStepCounter(2.0);
 
-    ThresholdStepCounter thresholdCountSteps = new ThresholdStepCounter(11.5, 6.5);
+    ThresholdStepCounter thresholdCountSteps = new ThresholdStepCounter(upperThreshold, lowerThreshold);
     MovingAverageStepCounter movingAverageCountSteps = new MovingAverageStepCounter(.75);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //declaring all the views
+        textDistanceTraveled = (TextView) findViewById(R.id.textDistance);
 
         textThresholdSteps1 = (TextView) findViewById(R.id.textT1);
         textThresholdSteps2 = (TextView) findViewById(R.id.textT2);
@@ -85,24 +107,48 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         textMovingAverageSteps = (TextView) findViewById(R.id.textMovingAverage);
         textAndroidSteps = (TextView) findViewById(R.id.textAndroid);
         textInstantAcc = (TextView) findViewById(R.id.textInstantAcc);
+        textDistance = (TextView) findViewById(R.id.textDistance);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         androidStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
-
-
         buttonStartCounter = (Button) findViewById(R.id.buttonStartCounter);
         buttonStopCounter = (Button) findViewById(R.id.buttonStopCounter);
 
+        //determines what the data file's name will be
+        fileName = getFileName(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS));
+
+        //lets the user know the name of the new file
+        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_LONG).show();
+
+        //if a file by the name already exists, it is opened, otherwise it is created
+        if (!firstCreate) {
+            try {
+                myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
+                if (!myFile.exists())
+                    myFile.createNewFile();
+
+                //writing the heading of the file
+                writer = new BufferedWriter(new FileWriter(myFile, true));
+                writer.write(R.string.text_file_title);
+                writer.close();
+            } catch (IOException e) {
+            }
+        }
+        firstCreate = false;
+
+        //launches when the start button is pressed, and activates the sensors
         buttonStartCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(MainActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(MainActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_UI);
+                sensorManager.registerListener(MainActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+                thresholdCountSteps.setThresholds(upperThreshold, lowerThreshold);
             }
         });
 
+        //launches when the stop button is pressed, and deactivates the sensors
         buttonStopCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,13 +179,20 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         //}
 
         if (id == R.id.set_thresholds) {
-            Intent intent = new Intent(this, SetThresholds.class);
+            Intent intent = new Intent(this, SetThresholdsActivity.class);
+            startActivity(intent);
+
+        }
+
+        if (id == R.id.calibration) {
+            Intent intent = new Intent(this, CalibrationActivity.class);
             startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    //this method is required to implement SensorEventListener, but is not used
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
@@ -150,9 +203,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        //if the data is of accelerometer type, then run it through the step counters
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             Double zAcc = (double) event.values[2];
 
+            //display the instantaneous acceleration to let the user know the step counter is working
             textInstantAcc.setText(String.valueOf(event.values[2]).substring(0, 5));
 
             if (thresholdCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
@@ -176,10 +231,38 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 textThresholdSteps4.setText(String.valueOf(thresholdStepCount4));
             }
 
+
+
             if (movingAverageCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
                 movingAverageStepCount++;
                 textMovingAverageSteps.setText(String.valueOf(movingAverageStepCount));
+
+                //writing the timestamps, acceleration data, and step locations to the data file
+                //if step is found, write a "1" in the last columhn
+                try {
+                    myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
+                    writer = new BufferedWriter(new FileWriter(myFile, true));
+
+                    writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 1);
+                    writer.write(System.getProperty("line.separator"));
+                    writer.close();
+                } catch (IOException e) {}
+
+                //if a step is not found, write a "0" in the last column
+            } else {
+
+                try {
+                    myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
+                    writer = new BufferedWriter(new FileWriter(myFile, true));
+
+                    writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 0);
+                    writer.write(System.getProperty("line.separator"));
+                    writer.close();
+                } catch (IOException e) {}
             }
+
+
+
             if (movingAverageCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
                 movingAverageStepCount1++;
                 textMovingAverageSteps1.setText(String.valueOf(movingAverageStepCount1));
@@ -196,22 +279,62 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 movingAverageStepCount4++;
                 textMovingAverageSteps4.setText(String.valueOf(movingAverageStepCount4));
             }
+
+            //if the data is not of accelerometer type (is step counter type) then increment the stepCount by 1
         } else {
             if (event.values[0] == 1.0) {
                 androidStepCount++;
                 textAndroidSteps.setText(String.valueOf(androidStepCount));
+                distanceTraveled = strideLength * androidStepCount;
+                textDistanceTraveled.setText(String.valueOf(distanceTraveled).substring(0,4));
             }
         }
-
     }
+
+    //setting thresholds for the ThresholdStepCounter (this method is called by SetThresholdsActivity)
     public static void setThresholds(double upper, double lower) {
-        //upperThreshold = upper;
-        //lowerThreshold = lower;
+        upperThreshold = upper;
+        lowerThreshold = lower;
     }
 
+    //provides the fileName for new data files depending on what already exists in the directory
+    //example: if accData2 already exists, then accData3 is created
+    public String getFileName(File folderPath) {
+
+        File folder = new File(folderPath.getPath());
+        File[] listOfFiles = folder.listFiles();
+
+        boolean fileFound;
+        int fileCount = 0;
+
+        //goes through every file in the directory to check its name
+        do {
+
+            fileCount++;
+
+            fileFound = false;
+
+            for (int i = 1; i <= listOfFiles.length; i++) {
+
+                //array starts at 0
+                if (listOfFiles[i - 1].getName().equals("accData" + fileCount + ".txt")) {
+                    fileFound = true;
+                }
+
+            }
+
+        } while (fileFound == true);
+
+        return "accData" + fileCount + ".txt";
+
+    }
+
+    public static void setStrideLength(double stride) {
+        strideLength = stride;
+    }
+
+    //I decided to implement the buttons in Java code instead of XML, so these methods will not be used
     /*
-    **decided to implement the buttons in Java code instead of XML
-    *
     public void buttonStartCounter (View view) {
         sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -224,4 +347,5 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sm.unregisterListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
     */
+
 }

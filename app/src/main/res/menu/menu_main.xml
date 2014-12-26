@@ -7,4 +7,8 @@
     -->
     <item android:id="@+id/set_thresholds" android:title="Set Thresholds"
         android:orderInCategory="1" app:showAsAction="never" />
+
+    <item android:id="@+id/calibration" android:title="Calibration Mode"
+        android:orderInCategory="2" app:showAsAction="never" />
+
 </menu>

@@ -9,7 +9,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class SetThresholds extends ActionBarActivity {
+public class SetThresholdsActivity extends ActionBarActivity {
 
     TextView textUpperThreshold;
     TextView textLowerThreshold;
@@ -46,14 +46,14 @@ public class SetThresholds extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    //set the thresholds whent he button the pressed
     public void buttonSetThresholds(View view) {
         double upper = Double.parseDouble(textUpperThreshold.getText().toString());
         double lower = Double.parseDouble(textLowerThreshold.getText().toString());
         MainActivity.setThresholds(upper, lower);
 
-        Toast.makeText(getApplicationContext(), "Thresholds Set!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), R.string.threshold_set, Toast.LENGTH_SHORT).show();
 
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+        finish();
     }
 }

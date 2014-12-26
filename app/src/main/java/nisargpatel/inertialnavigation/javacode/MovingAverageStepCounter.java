@@ -21,7 +21,7 @@ public class MovingAverageStepCounter {
 
 	private final int REQUIRED_HZ = 500;
 	private boolean hzCheck;
-	
+
 	//Set the default values for variables
 	public MovingAverageStepCounter(double margin) {
 		upperThreshold = 0;
@@ -97,9 +97,9 @@ public class MovingAverageStepCounter {
 			upperThreshold = (sumUpperAcc / numUpper) - margin;
 			lowerThreshold = (sumLowerAcc / numLower) - margin;
 
-            System.out.println("_avg_ = " + avgAcc);
-			System.out.println("upper = " + upperThreshold);
-			System.out.println("lower = " + lowerThreshold);
+            //System.out.println("_avg_ = " + avgAcc);
+			//System.out.println("upper = " + upperThreshold);
+			//System.out.println("lower = " + lowerThreshold);
 
             sumAcc = 0;
 
