@@ -11,4 +11,10 @@
     <item android:id="@+id/calibration" android:title="Calibration Mode"
         android:orderInCategory="2" app:showAsAction="never" />
 
+    <item android:id="@+id/graph" android:title="Graph"
+        android:orderInCategory="3" app:showAsAction="never" />
+
+    <item android:id="@+id/QRScan" android:title="QR Code Scanner"
+        android:orderInCategory="4" app:showAsAction="never" />
+
 </menu>

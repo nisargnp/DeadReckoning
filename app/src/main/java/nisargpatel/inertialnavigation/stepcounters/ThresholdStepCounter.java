@@ -1,4 +1,4 @@
-package nisargpatel.inertialnavigation.javacode;
+package nisargpatel.inertialnavigation.stepcounters;
 
 import java.util.ArrayList;
 
