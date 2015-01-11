@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Inertial_Navigation.iml" filepath="$PROJECT_DIR$/Inertial_Navigation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/InertialNavigation.iml" filepath="$PROJECT_DIR$/InertialNavigation.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/zBarScannerLibrary/zBarScannerLibrary.iml" filepath="$PROJECT_DIR$/zBarScannerLibrary/zBarScannerLibrary.iml" />
     </modules>

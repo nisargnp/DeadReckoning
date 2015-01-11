@@ -211,87 +211,118 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        final SensorEvent threadEvent = event;
 
-        //if the data is of accelerometer type, then run it through the step counters
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            Double zAcc = (double) event.values[2];
+        //all of the calculations happen in a separate thread, so that the UI thread is not bogged down
+        new Thread (new Runnable() {
+            @Override
+            public void run() {
 
-            //display the instantaneous acceleration to let the user know the step counter is working
-            textInstantAcc.setText(String.valueOf(event.values[2]).substring(0, 5));
+                //if the data is of accelerometer type, then run it through the step counters
+                if (threadEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    Double zAcc = (double) threadEvent.values[2];
 
-            if (thresholdCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
-                thresholdStepCount++;
-                textThresholdSteps.setText(String.valueOf(thresholdStepCount));
+                    //display the instantaneous acceleration to let the user know the step counter is working
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textInstantAcc.setText(String.valueOf(threadEvent.values[2]).substring(0, 5));
+                        }
+                    });
+
+                    if (thresholdCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
+                        thresholdStepCount++;
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                textThresholdSteps.setText(String.valueOf(thresholdStepCount));
+                            }
+                        });
+
+                    }
+
+                    if (thresholdCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
+                        thresholdStepCount1++;
+                    }
+                    if (thresholdCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
+                        thresholdStepCount2++;
+                    }
+                    if (thresholdCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
+                        thresholdStepCount3++;
+                    }
+                    if (thresholdCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
+                        thresholdStepCount4++;
+                    }
+
+                    if (movingAverageCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
+                        movingAverageStepCount++;
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                textMovingAverageSteps.setText(String.valueOf(movingAverageStepCount));
+                            }
+                        });
+
+
+                        //writing the timestamps, acceleration data, and step locations to the data file
+                        //if step is found, write a "1" in the last columhn
+                        try {
+                            myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
+                            writer = new BufferedWriter(new FileWriter(myFile, true));
+
+                            writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 1);
+                            writer.write(System.getProperty("line.separator"));
+                            writer.close();
+                        } catch (IOException ignored) {}
+
+                        //if a step is not found, write a "0" in the last column
+                    } else {
+
+                        try {
+                            myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
+                            writer = new BufferedWriter(new FileWriter(myFile, true));
+
+                            writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 0);
+                            writer.write(System.getProperty("line.separator"));
+                            writer.close();
+                        } catch (IOException ignored) {}
+                    }
+
+                    if (movingAverageCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
+                        movingAverageStepCount1++;
+                    }
+                    if (movingAverageCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
+                        movingAverageStepCount2++;
+                    }
+                    if (movingAverageCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
+                        movingAverageStepCount3++;
+                    }
+                    if (movingAverageCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
+                        movingAverageStepCount4++;
+                    }
+
+                    //if the data is not of accelerometer type (is step counter type) then increment the stepCount by 1
+                } else {
+                    if (threadEvent.values[0] == 1.0) {
+                        androidStepCount++;
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                textAndroidSteps.setText(String.valueOf(androidStepCount));
+                                textDistance.setText(String.valueOf(strideLength * androidStepCount).substring(0,3));
+                            }
+                        });
+
+                    }
+                }
+
+
             }
+        }).start(); //starts the thread
 
-
-
-            if (thresholdCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
-                thresholdStepCount1++;
-            }
-            if (thresholdCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
-                thresholdStepCount2++;
-            }
-            if (thresholdCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
-                thresholdStepCount3++;
-            }
-            if (thresholdCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
-                thresholdStepCount4++;
-            }
-
-
-
-            if (movingAverageCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
-                movingAverageStepCount++;
-                textMovingAverageSteps.setText(String.valueOf(movingAverageStepCount));
-
-                //writing the timestamps, acceleration data, and step locations to the data file
-                //if step is found, write a "1" in the last columhn
-                try {
-                    myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
-                    writer = new BufferedWriter(new FileWriter(myFile, true));
-
-                    writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 1);
-                    writer.write(System.getProperty("line.separator"));
-                    writer.close();
-                } catch (IOException ignored) {}
-
-                //if a step is not found, write a "0" in the last column
-            } else {
-
-                try {
-                    myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
-                    writer = new BufferedWriter(new FileWriter(myFile, true));
-
-                    writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 0);
-                    writer.write(System.getProperty("line.separator"));
-                    writer.close();
-                } catch (IOException ignored) {}
-            }
-
-
-
-            if (movingAverageCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
-                movingAverageStepCount1++;
-            }
-            if (movingAverageCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
-                movingAverageStepCount2++;
-            }
-            if (movingAverageCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
-                movingAverageStepCount3++;
-            }
-            if (movingAverageCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
-                movingAverageStepCount4++;
-            }
-
-            //if the data is not of accelerometer type (is step counter type) then increment the stepCount by 1
-        } else {
-            if (event.values[0] == 1.0) {
-                androidStepCount++;
-                textAndroidSteps.setText(String.valueOf(androidStepCount));
-                textDistance.setText(String.valueOf(strideLength * androidStepCount).substring(0,4));
-            }
-        }
     }
 
     //setting thresholds for the ThresholdStepCounter (this method is called by SetThresholdsActivity)
@@ -319,14 +350,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             writer = new BufferedWriter(new FileWriter(myFile, true));
             writer.write(R.string.text_file_title);
             writer.close();
-        } catch (IOException ignored) {
-        }
+        } catch (IOException ignored) {}
     }
 
     //provides the fileName for new data files depending on what already exists in the directory
     //example: if accData2 already exists, then accData3 is created
     private String getFileName(File folderPath) {
-
         File folder = new File(folderPath.getPath());
         File[] listOfFiles = folder.listFiles();
 
@@ -335,24 +364,17 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         //goes through every file in the directory to check its name
         do {
-
             fileCount++;
-
             fileFound = false;
-
             for (int i = 1; i <= listOfFiles.length; i++) {
-
                 //array starts at 0
                 if (listOfFiles[i - 1].getName().equals("accData" + fileCount + ".txt")) {
                     fileFound = true;
                 }
-
             }
-
         } while (fileFound);
 
         return "accData" + fileCount + ".txt";
-
     }
 
     public static void setStrideLength(double stride) {
