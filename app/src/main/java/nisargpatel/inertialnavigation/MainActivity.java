@@ -71,8 +71,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private StepInfoFragment myDialog;
 
     //declaring sensors
-    private Sensor accelerometer;
-    private Sensor androidStepCounter;
+    private Sensor sensorAccelerometer;
+    private Sensor sensorStepDetector;
     private SensorManager sensorManager;
 
     //instantiating step counters
@@ -109,8 +109,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         //defining sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        androidStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //open/create new file to hold sensor data
         openFile();
@@ -119,8 +119,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         buttonStartCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(MainActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(MainActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(MainActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(MainActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 thresholdCountSteps.setThresholds(upperThreshold, lowerThreshold);
             }
         });
@@ -129,8 +129,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         buttonStopCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(MainActivity.this, accelerometer);
-                sensorManager.unregisterListener(MainActivity.this, androidStepCounter);
+                sensorManager.unregisterListener(MainActivity.this, sensorAccelerometer);
+                sensorManager.unregisterListener(MainActivity.this, sensorStepDetector);
             }
         });
 
@@ -174,13 +174,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             startActivity(myIntent);
         }
 
+        if (id == R.id.QRScan) {
+            QRCodeScanner();
+        }
+
         if (id == R.id.graph) {
             Intent myIntent = new Intent(this, GraphActivity.class);
             startActivity(myIntent);
-        }
-
-        if (id == R.id.QRScan) {
-            QRCodeScanner();
         }
 
         return super.onOptionsItemSelected(item);
@@ -381,6 +381,10 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         strideLength = stride;
     }
 
+    public static double getStrideLength() {
+        return strideLength;
+    }
+
     private String getMessage() {
 
         String message;
@@ -403,7 +407,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     }
 
     private void QRCodeScanner() {
-        if (isCameraAvalible()) {
+        if (isCameraAvailable()) {
             Intent myIntent = new Intent(getApplicationContext(), ZBarScannerActivity.class);
             myIntent.putExtra(ZBarConstants.SCAN_MODES, new int[]{Symbol.QRCODE});
             startActivityForResult(myIntent, ZBAR_QR_SCANNER_REQUEST);
@@ -412,7 +416,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
     }
 
-    public boolean isCameraAvalible() {
+    public boolean isCameraAvailable() {
         return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 

@@ -7,24 +7,24 @@
     tools:context="nisargpatel.inertialnavigation.GraphActivity">
 
     <Button
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/start"
         android:id="@+id/buttonGraphStart"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textSize="25sp" />
+        android:textSize="20sp" />
 
     <Button
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/stop"
         android:id="@+id/buttonGraphStop"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:textSize="25sp" />
+        android:textSize="20sp" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -34,5 +34,14 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/linearLayoutGraph"></LinearLayout>
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="75dp"
+        android:text="@string/set_stride_length"
+        android:id="@+id/buttonGraphSetStrideLength"
+        android:textSize="15sp"
+        android:layout_alignBottom="@+id/buttonGraphStop"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

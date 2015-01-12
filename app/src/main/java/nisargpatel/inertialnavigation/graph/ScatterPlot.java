@@ -64,9 +64,9 @@ public class ScatterPlot {
         //myMultiRenderer.setChartTitleTextSize(0);
 
         //setting chart min/max
-        myMultiRenderer.setXAxisMin(0);
+        myMultiRenderer.setXAxisMin(-100);
         myMultiRenderer.setXAxisMax(100);
-        myMultiRenderer.setYAxisMin(0);
+        myMultiRenderer.setYAxisMin(-100);
         myMultiRenderer.setYAxisMax(100);
 
         return ChartFactory.getScatterChartView(context, myMultiSeries, myMultiRenderer);

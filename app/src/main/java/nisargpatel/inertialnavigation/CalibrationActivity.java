@@ -114,7 +114,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / (stepCount + 1);
         MainActivity.setStrideLength(strideLength);
 
-        Toast.makeText(getApplicationContext(), "Stride length set.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength, Toast.LENGTH_SHORT).show();
 
         finish();
     }
