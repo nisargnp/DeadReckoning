@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
 import nisargpatel.inertialnavigation.heading.HeadingInference;
@@ -19,9 +20,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private HeadingInference headingInference;
 
-    private double orientation;
-    private int stepCount;
-
     private Sensor sensorStepDetector;
     //private Sensor sensorAccelerometer;
     private Sensor sensorGyroscope;
@@ -29,7 +27,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private Button buttonStart;
     private Button buttonStop;
-    private Button buttonSetStrideLength;
 
     private LinearLayout linearLayout;
 
@@ -44,17 +41,17 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
-        double gyroInput[] = {-1450, 0, 1450};
-        double radianInput[] = {0, 90, 180};
-        headingInference = new HeadingInference(gyroInput, radianInput);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
-        stepCount = 0;
+        double gyroInput[] = {-2900, -1450, 0, 1450, 2900};
+        double radianInput[] = {-90, 0, 90, 180, 270};
+
+        headingInference = new HeadingInference(gyroInput, radianInput);
 
         sPlot = new ScatterPlot("Position");
 
         buttonStart = (Button) findViewById(R.id.buttonGraphStart);
         buttonStop = (Button) findViewById(R.id.buttonGraphStop);
-        buttonSetStrideLength = (Button) findViewById(R.id.buttonGraphSetStrideLength);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -62,12 +59,18 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
+        //setting up graph with origin
+        sPlot.addPoint(0, 0);
+        linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
+
+        //buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                 recordedTime = System.currentTimeMillis();
+                Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -76,13 +79,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             public void onClick(View v) {
                 sensorManager.unregisterListener(GraphActivity.this, sensorStepDetector);
                 sensorManager.unregisterListener(GraphActivity.this, sensorGyroscope);
-            }
-        });
-
-        buttonSetStrideLength.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
+                Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -137,25 +134,30 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             if (stepFound) {
 
-                System.out.println("Another one bites the dust!");
+//                stepCount++;
+//                double currentDistance = stepCount * STRIDE_LENGTH;
+//                headingInference.calcDegrees(totalGyroValue);
+//                double pointX = headingInference.getXPoint(currentDistance);
+//                double pointY = headingInference.getYPoint(currentDistance);
+//                sPlot.addPoint(pointX, pointY );
 
-                stepCount++;
-
-                double currentDistance = stepCount * STRIDE_LENGTH;
                 headingInference.calcDegrees(totalGyroValue);
-                System.out.println("Degree: " + headingInference.getDegree());
+                double pointX = headingInference.getXPoint(STRIDE_LENGTH);
+                double pointY = headingInference.getYPoint(STRIDE_LENGTH);
 
-                double pointX = headingInference.getXPoint(currentDistance);
-                double pointY = headingInference.getYPoint(currentDistance);
+                sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
 
-                //graphing rotated points
-                //sPlot.addPoint(-1 * pointY , pointX);
-                sPlot.addPoint(pointX, pointY);
-
+//                linearLayout.invalidate();
                 linearLayout.removeAllViews();
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
-            }
 
+                //debug information
+//                System.out.println("----------------------------");
+//                System.out.println("gyroInput: " + totalGyroValue);
+//                System.out.println("degree: " + headingInference.getDegree());
+//                System.out.println("normal (x,y): " + "(" + pointX + "," + pointY + ")");
+
+            }
         }
     }
 

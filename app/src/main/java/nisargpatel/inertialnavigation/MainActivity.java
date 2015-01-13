@@ -122,6 +122,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 sensorManager.registerListener(MainActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(MainActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 thresholdCountSteps.setThresholds(upperThreshold, lowerThreshold);
+                Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -131,6 +132,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             public void onClick(View v) {
                 sensorManager.unregisterListener(MainActivity.this, sensorAccelerometer);
                 sensorManager.unregisterListener(MainActivity.this, sensorStepDetector);
+                Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -139,6 +141,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             public void onClick(View v) {
                 myDialog.setDialogMessage(getMessage());
                 myDialog.show(getSupportFragmentManager(), "Step Info");
+            }
+        });
+
+        ((TextView) findViewById(R.id.txtViewThresholds)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent myIntent = new Intent(getApplicationContext(), SetThresholdsActivity.class);
+                startActivity(myIntent);
             }
         });
 
@@ -163,11 +173,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         //    return true;
         //}
 
-        if (id == R.id.set_thresholds) {
-            Intent myIntent = new Intent(this, SetThresholdsActivity.class);
-            startActivity(myIntent);
-
-        }
+//        if (id == R.id.set_thresholds) {
+//            Intent myIntent = new Intent(this, SetThresholdsActivity.class);
+//            startActivity(myIntent);
+//
+//        }
 
         if (id == R.id.calibration) {
             Intent myIntent = new Intent(this, CalibrationActivity.class);
@@ -193,8 +203,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         if (resultCode == RESULT_OK) {
             Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
         } else if (resultCode == RESULT_CANCELED) {
-            String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
-            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+            //zBarScanner recommends the following for when the scanner is cancled, however, for some reason, it causes the app to crash
+            //String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
+            //Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+
+            Toast.makeText(getApplicationContext(), "QR scanner canceled.", Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -338,7 +351,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         fileName = getFileName(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS));
 
         //lets the user know the name of the new file
-        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
 
         //if a file by the name already exists, it is opened, otherwise it is created
         try {
@@ -412,7 +425,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             myIntent.putExtra(ZBarConstants.SCAN_MODES, new int[]{Symbol.QRCODE});
             startActivityForResult(myIntent, ZBAR_QR_SCANNER_REQUEST);
         } else {
-            Toast.makeText(getApplicationContext(), "Camera not avalible.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Camera not available.", Toast.LENGTH_SHORT).show();
         }
     }
 

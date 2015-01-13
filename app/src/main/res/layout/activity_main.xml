@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/threshold_steps"
-        android:id="@+id/txtView"
+        android:id="@+id/txtViewThresholds"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -25,9 +25,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/moving_average_steps"
-        android:id="@+id/txtView2"
+        android:id="@+id/txtViewMovingAverage"
         android:textSize="30sp"
-        android:layout_below="@+id/txtView"
+        android:layout_below="@+id/txtViewThresholds"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp" />
@@ -37,9 +37,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/android_steps"
-        android:id="@+id/txtView3"
+        android:id="@+id/txtViewAndroidSteps"
         android:textSize="30sp"
-        android:layout_below="@id/txtView2"
+        android:layout_below="@id/txtViewMovingAverage"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp" />
@@ -62,7 +62,7 @@
         android:text="@string/zero"
         android:id="@+id/textMovingAverage"
         android:textSize="30sp"
-        android:layout_above="@+id/txtView3"
+        android:layout_above="@+id/txtViewAndroidSteps"
         android:layout_alignLeft="@+id/textThreshold"
         android:layout_alignStart="@+id/textThreshold" />
 
@@ -72,7 +72,7 @@
         android:text="@string/zero"
         android:id="@+id/textAndroid"
         android:textSize="30sp"
-        android:layout_alignTop="@+id/txtView3"
+        android:layout_alignTop="@+id/txtViewAndroidSteps"
         android:layout_alignLeft="@+id/textMovingAverage"
         android:layout_alignStart="@+id/textMovingAverage" />
     <Button
@@ -99,9 +99,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/instant_acc"
-        android:id="@+id/txtView4"
+        android:id="@+id/txtViewDyDt"
         android:textSize="30sp"
-        android:layout_below="@+id/textView"
+        android:layout_below="@+id/textViewDistance"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp" />
@@ -112,18 +112,18 @@
         android:text="@string/zero"
         android:id="@+id/textInstantAcc"
         android:textSize="30sp"
-        android:layout_alignTop="@+id/txtView4"
-        android:layout_alignRight="@+id/txtView2"
-        android:layout_alignEnd="@+id/txtView2" />
+        android:layout_alignTop="@+id/txtViewDyDt"
+        android:layout_alignRight="@+id/txtViewMovingAverage"
+        android:layout_alignEnd="@+id/txtViewMovingAverage" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/distance_traveled"
-        android:id="@+id/textView"
+        android:id="@+id/textViewDistance"
         android:textSize="30sp"
-        android:layout_below="@+id/txtView3"
+        android:layout_below="@+id/txtViewAndroidSteps"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp"/>
@@ -134,7 +134,7 @@
         android:text="@string/zero"
         android:id="@+id/textDistance"
         android:textSize="30sp"
-        android:layout_alignTop="@+id/textView"
+        android:layout_alignTop="@+id/textViewDistance"
         android:layout_toLeftOf="@+id/textAndroid"
         android:layout_toStartOf="@+id/textAndroid" />
 

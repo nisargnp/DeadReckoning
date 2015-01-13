@@ -34,14 +34,17 @@ public class HeadingInference {
 
     public void calcDegrees(double gyroInput) {
         degree = (slope * gyroInput) + intercept;
+
+        //mod degree by 360 to make sure its between 0 and 360
+        degree = degree % 360;
     }
 
     public double getXPoint(double distance) {
-        return distance * Math.sin(Math.toRadians(degree));
+        return distance * Math.cos(Math.toRadians(degree));
     }
 
     public double getYPoint(double distance) {
-        return distance * Math.cos(Math.toRadians(degree));
+        return distance * Math.sin(Math.toRadians(degree));
     }
 
     public double getDegree() {return degree;}

@@ -19,6 +19,8 @@ public class SetThresholdsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_thresholds);
 
+       getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
        textUpperThreshold = (TextView) findViewById(R.id.textUpper);
        textLowerThreshold = (TextView) findViewById(R.id.textLower);
 
@@ -46,7 +48,7 @@ public class SetThresholdsActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    //set the thresholds whent he button the pressed
+    //set the thresholds when the button the pressed
     public void buttonSetThresholds(View view) {
         double upper = Double.parseDouble(textUpperThreshold.getText().toString());
         double lower = Double.parseDouble(textLowerThreshold.getText().toString());

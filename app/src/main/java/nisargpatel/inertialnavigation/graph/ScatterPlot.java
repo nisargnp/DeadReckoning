@@ -57,11 +57,19 @@ public class ScatterPlot {
         myMultiRenderer.addSeriesRenderer(myRenderer);
 
         //setting text graph element sizes
-        myMultiRenderer.setPointSize(10);
+        myMultiRenderer.setPointSize(10); //size of scatter plot points
+        myMultiRenderer.setShowLegend(false); //hide legend
+
+        //set chart and label sizes
+        myMultiRenderer.setChartTitle("Position");
+        myMultiRenderer.setChartTitleTextSize(75);
         myMultiRenderer.setLabelsTextSize(40);
-        myMultiRenderer.setLegendTextSize(40);
-        //myMultiRenderer.setAxisTitleTextSize(0);
-        //myMultiRenderer.setChartTitleTextSize(0);
+
+        //setting X labels and Y labels position
+        int[] chartMargins = {100, 100, 25, 100}; //top, left, bottom, right
+        myMultiRenderer.setMargins(chartMargins);
+        myMultiRenderer.setYLabelsPadding(50);
+        myMultiRenderer.setXLabelsPadding(10);
 
         //setting chart min/max
         myMultiRenderer.setXAxisMin(-100);
@@ -76,4 +84,13 @@ public class ScatterPlot {
         xList.add(x);
         yList.add(y);
     }
+
+    public double getLastXPoint() {
+        return xList.get(xList.size() - 1);
+    }
+
+    public double getLastYPoint() {
+        return yList.get(yList.size() - 1);
+    }
+
 }

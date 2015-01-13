@@ -34,6 +34,8 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
         stepCount = 0;
 
         buttonStartCalibration = (Button) findViewById(R.id.buttonStartCalibration);
@@ -53,6 +55,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
             public void onClick(View v) {
                 sensorManager.registerListener(CalibrationActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(CalibrationActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+                Toast.makeText(getApplicationContext(), "Calibration mode started.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -62,6 +65,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
             public void onClick(View v) {
                 sensorManager.unregisterListener(CalibrationActivity.this, accelerometer);
                 sensorManager.unregisterListener(CalibrationActivity.this, androidStepCounter);
+                Toast.makeText(getApplicationContext(), "Calibration mode stopped.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -114,7 +118,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / (stepCount + 1);
         MainActivity.setStrideLength(strideLength);
 
-        Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + ".", Toast.LENGTH_SHORT).show();
 
         finish();
     }
