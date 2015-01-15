@@ -1,6 +1,5 @@
 package nisargpatel.inertialnavigation;
 
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -112,11 +111,11 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    //when the button is pressed, determine the strideLength by dividing stepsTaken by distanceTraveled, and stored stride length in MainActivity
+    //when the button is pressed, determine the strideLength by dividing stepsTaken by distanceTraveled, and stored stride length in StepCounterActivity
     public void buttonSetStrideLength(View view) {
         double strideLength;
         strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / (stepCount + 1);
-        MainActivity.setStrideLength(strideLength);
+        StepCounterActivity.setStrideLength(strideLength);
 
         Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + ".", Toast.LENGTH_SHORT).show();
 

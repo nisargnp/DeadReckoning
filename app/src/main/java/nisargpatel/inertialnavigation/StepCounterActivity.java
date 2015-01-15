@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,12 +32,13 @@ import java.io.IOException;
 import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
 import nisargpatel.inertialnavigation.stepcounters.ThresholdStepCounter;
 
-public class MainActivity extends ActionBarActivity implements SensorEventListener{
+public class StepCounterActivity extends ActionBarActivity implements SensorEventListener{
 
     private static final int ZBAR_QR_SCANNER_REQUEST = 1;
 
     private File myFile;
     private BufferedWriter writer;
+    private String folderPath;
     private String fileName;
 
     private static double strideLength;
@@ -92,7 +94,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_step_counter);
 
         //declaring all the views
         textThresholdSteps = (TextView) findViewById(R.id.textThreshold);
@@ -113,14 +115,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //open/create new file to hold sensor data
-        openFile();
+        createFile();
 
         //launches when the start button is pressed, and activates the sensors
         buttonStartCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(MainActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(MainActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StepCounterActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StepCounterActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 thresholdCountSteps.setThresholds(upperThreshold, lowerThreshold);
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
             }
@@ -130,8 +132,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         buttonStopCounter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(MainActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(MainActivity.this, sensorStepDetector);
+                sensorManager.unregisterListener(StepCounterActivity.this, sensorAccelerometer);
+                sensorManager.unregisterListener(StepCounterActivity.this, sensorStepDetector);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -157,7 +159,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_step_counter, menu);
         return true;
     }
 
@@ -278,7 +280,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                             }
                         });
 
-
                         //writing the timestamps, acceleration data, and step locations to the data file
                         //if step is found, write a "1" in the last columhn
                         try {
@@ -331,8 +332,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
                     }
                 }
-
-
             }
         }).start(); //starts the thread
 
@@ -346,18 +345,26 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     //open/create new file to hold sensor data
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    private void openFile() {
+    private void createFile() {
+
+        String folderName = "Inertial Navigation Data";
+
+        File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
+        if (!myFolder.exists())
+            myFolder.mkdir();
+
+        folderPath = myFolder.getPath();
+
         //determines what the data file's name will be
-        fileName = getFileName(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS));
+        fileName = getFileName();
 
         //lets the user know the name of the new file
         Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
 
         //if a file by the name already exists, it is opened, otherwise it is created
         try {
-            myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
-            if (!myFile.exists())
-                myFile.createNewFile();
+            myFile = new File(myFolder.getPath(), fileName);
+            myFile.createNewFile();
 
             //writing the heading of the file
             writer = new BufferedWriter(new FileWriter(myFile, true));
@@ -366,28 +373,39 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         } catch (IOException ignored) {}
     }
 
-    //provides the fileName for new data files depending on what already exists in the directory
-    //example: if accData2 already exists, then accData3 is created
-    private String getFileName(File folderPath) {
-        File folder = new File(folderPath.getPath());
-        File[] listOfFiles = folder.listFiles();
+    private String getFileName() {
 
-        boolean fileFound;
-        int fileCount = 0;
+        Time today = new Time(Time.getCurrentTimezone());
+        today.setToNow();
 
-        //goes through every file in the directory to check its name
-        do {
-            fileCount++;
-            fileFound = false;
-            for (int i = 1; i <= listOfFiles.length; i++) {
-                //array starts at 0
-                if (listOfFiles[i - 1].getName().equals("accData" + fileCount + ".txt")) {
-                    fileFound = true;
-                }
-            }
-        } while (fileFound);
+        //long moreTime = System.currentTimeMillis();
 
-        return "accData" + fileCount + ".txt";
+        String date = "(" + today.year + "-" + today.month + "-" + today.monthDay + ")";
+        String currentTime = "(" + today.format("%H.%M.%S") + ")";
+
+        return date + " " + currentTime;
+
+        //provides the fileName for new data files depending on what already exists in the directory
+        //example: if accData2 already exists, then accData3 is created
+//        File folder = new File(folderPath.getPath());
+//        File[] listOfFiles = folder.listFiles();
+//
+//        boolean fileFound;
+//        int fileCount = 0;
+//
+//        //goes through every file in the directory to check its name
+//        do {
+//            fileCount++;
+//            fileFound = false;
+//            for (int i = 1; i <= listOfFiles.length; i++) {
+//                //array starts at 0
+//                if (listOfFiles[i - 1].getName().equals("accData" + fileCount + ".txt")) {
+//                    fileFound = true;
+//                }
+//            }
+//        } while (fileFound);
+//
+//        return "accData" + fileCount + ".txt";
     }
 
     public static void setStrideLength(double stride) {

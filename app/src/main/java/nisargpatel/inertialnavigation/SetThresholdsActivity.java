@@ -1,6 +1,5 @@
 package nisargpatel.inertialnavigation;
 
-import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -52,7 +51,7 @@ public class SetThresholdsActivity extends ActionBarActivity {
     public void buttonSetThresholds(View view) {
         double upper = Double.parseDouble(textUpperThreshold.getText().toString());
         double lower = Double.parseDouble(textLowerThreshold.getText().toString());
-        MainActivity.setThresholds(upper, lower);
+        StepCounterActivity.setThresholds(upper, lower);
 
         Toast.makeText(getApplicationContext(), R.string.threshold_set, Toast.LENGTH_SHORT).show();
 
