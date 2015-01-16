@@ -1,4 +1,4 @@
-package nisargpatel.inertialnavigation;
+package nisargpatel.inertialnavigation.dialog;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+
+import nisargpatel.inertialnavigation.R;
 
 public class StepInfoFragment extends DialogFragment{
 

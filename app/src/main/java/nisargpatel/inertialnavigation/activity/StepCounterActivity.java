@@ -1,17 +1,14 @@
-package nisargpatel.inertialnavigation;
+package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
-import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.text.format.Time;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,26 +17,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dm.zbar.android.scanner.ZBarConstants;
-import com.dm.zbar.android.scanner.ZBarScannerActivity;
 
-import net.sourceforge.zbar.Symbol;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
+import nisargpatel.inertialnavigation.R;
+import nisargpatel.inertialnavigation.dialog.StepInfoFragment;
 import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
 import nisargpatel.inertialnavigation.stepcounters.ThresholdStepCounter;
 
 public class StepCounterActivity extends ActionBarActivity implements SensorEventListener{
-
-    private static final int ZBAR_QR_SCANNER_REQUEST = 1;
-
-    private File myFile;
-    private BufferedWriter writer;
-    private String folderPath;
-    private String fileName;
 
     private static double strideLength;
     private static double upperThreshold = 11.5;
@@ -65,10 +50,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
     private TextView textAndroidSteps;
     private TextView textInstantAcc;
     private TextView textDistance;
-
-    private Button buttonStartCounter;
-    private Button buttonStopCounter;
-    private Button buttonStepInfo;
 
     private StepInfoFragment myDialog;
 
@@ -103,10 +84,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         textInstantAcc = (TextView) findViewById(R.id.textInstantAcc);
         textDistance = (TextView) findViewById(R.id.textDistance);
 
-        buttonStartCounter = (Button) findViewById(R.id.buttonStartCounter);
-        buttonStopCounter = (Button) findViewById(R.id.buttonStopCounter);
-        buttonStepInfo = (Button) findViewById(R.id.buttonStepInfo);
-
         myDialog = new StepInfoFragment();
 
         //defining sensors
@@ -114,11 +91,8 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
-        //open/create new file to hold sensor data
-        createFile();
-
         //launches when the start button is pressed, and activates the sensors
-        buttonStartCounter.setOnClickListener(new View.OnClickListener() {
+        ((Button) findViewById(R.id.buttonStartCounter)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(StepCounterActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -129,7 +103,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         });
 
         //launches when the stop button is pressed, and deactivates the sensors
-        buttonStopCounter.setOnClickListener(new View.OnClickListener() {
+        ((Button) findViewById(R.id.buttonStopCounter)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.unregisterListener(StepCounterActivity.this, sensorAccelerometer);
@@ -138,7 +112,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
             }
         });
 
-        buttonStepInfo.setOnClickListener(new View.OnClickListener() {
+        ((Button) findViewById(R.id.buttonStepInfo)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myDialog.setDialogMessage(getMessage());
@@ -168,32 +142,12 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        //if (id == R.id.action_settings) {
-        //    return true;
-        //}
-
-//        if (id == R.id.set_thresholds) {
-//            Intent myIntent = new Intent(this, SetThresholdsActivity.class);
-//            startActivity(myIntent);
+//        int id = item.getItemId();
 //
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
 //        }
-
-        if (id == R.id.calibration) {
-            Intent myIntent = new Intent(this, CalibrationActivity.class);
-            startActivity(myIntent);
-        }
-
-        if (id == R.id.QRScan) {
-            QRCodeScanner();
-        }
-
-        if (id == R.id.graph) {
-            Intent myIntent = new Intent(this, GraphActivity.class);
-            startActivity(myIntent);
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -279,29 +233,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                                 textMovingAverageSteps.setText(String.valueOf(movingAverageStepCount));
                             }
                         });
-
-                        //writing the timestamps, acceleration data, and step locations to the data file
-                        //if step is found, write a "1" in the last columhn
-                        try {
-                            myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
-                            writer = new BufferedWriter(new FileWriter(myFile, true));
-
-                            writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 1);
-                            writer.write(System.getProperty("line.separator"));
-                            writer.close();
-                        } catch (IOException ignored) {}
-
-                        //if a step is not found, write a "0" in the last column
-                    } else {
-
-                        try {
-                            myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), fileName);
-                            writer = new BufferedWriter(new FileWriter(myFile, true));
-
-                            writer.write(System.currentTimeMillis() + ";" +  zAcc + ";" + 0);
-                            writer.write(System.getProperty("line.separator"));
-                            writer.close();
-                        } catch (IOException ignored) {}
                     }
 
                     if (movingAverageCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
@@ -343,77 +274,8 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         lowerThreshold = lower;
     }
 
-    //open/create new file to hold sensor data
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private void createFile() {
-
-        String folderName = "Inertial Navigation Data";
-
-        File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
-        if (!myFolder.exists())
-            myFolder.mkdir();
-
-        folderPath = myFolder.getPath();
-
-        //determines what the data file's name will be
-        fileName = getFileName();
-
-        //lets the user know the name of the new file
-        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
-
-        //if a file by the name already exists, it is opened, otherwise it is created
-        try {
-            myFile = new File(myFolder.getPath(), fileName);
-            myFile.createNewFile();
-
-            //writing the heading of the file
-            writer = new BufferedWriter(new FileWriter(myFile, true));
-            writer.write(R.string.text_file_title);
-            writer.close();
-        } catch (IOException ignored) {}
-    }
-
-    private String getFileName() {
-
-        Time today = new Time(Time.getCurrentTimezone());
-        today.setToNow();
-
-        //long moreTime = System.currentTimeMillis();
-
-        String date = "(" + today.year + "-" + today.month + "-" + today.monthDay + ")";
-        String currentTime = "(" + today.format("%H.%M.%S") + ")";
-
-        return date + " " + currentTime;
-
-        //provides the fileName for new data files depending on what already exists in the directory
-        //example: if accData2 already exists, then accData3 is created
-//        File folder = new File(folderPath.getPath());
-//        File[] listOfFiles = folder.listFiles();
-//
-//        boolean fileFound;
-//        int fileCount = 0;
-//
-//        //goes through every file in the directory to check its name
-//        do {
-//            fileCount++;
-//            fileFound = false;
-//            for (int i = 1; i <= listOfFiles.length; i++) {
-//                //array starts at 0
-//                if (listOfFiles[i - 1].getName().equals("accData" + fileCount + ".txt")) {
-//                    fileFound = true;
-//                }
-//            }
-//        } while (fileFound);
-//
-//        return "accData" + fileCount + ".txt";
-    }
-
     public static void setStrideLength(double stride) {
         strideLength = stride;
-    }
-
-    public static double getStrideLength() {
-        return strideLength;
     }
 
     private String getMessage() {
@@ -435,20 +297,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         message = t1 + newLine + t2 + newLine + t3 + newLine + t4 + newLine + newLine + a1 + newLine + a2 + newLine + a3 + newLine + a4;
 
         return message;
-    }
-
-    private void QRCodeScanner() {
-        if (isCameraAvailable()) {
-            Intent myIntent = new Intent(getApplicationContext(), ZBarScannerActivity.class);
-            myIntent.putExtra(ZBarConstants.SCAN_MODES, new int[]{Symbol.QRCODE});
-            startActivityForResult(myIntent, ZBAR_QR_SCANNER_REQUEST);
-        } else {
-            Toast.makeText(getApplicationContext(), "Camera not available.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public boolean isCameraAvailable() {
-        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 
 }

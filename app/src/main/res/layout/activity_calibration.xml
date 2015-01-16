@@ -4,7 +4,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="nisargpatel.inertialnavigation.CalibrationActivity"
+    tools:context="nisargpatel.inertialnavigation.activity.CalibrationActivity"
     android:id="@+id/calibration_layout_relative">
 
     <TextView

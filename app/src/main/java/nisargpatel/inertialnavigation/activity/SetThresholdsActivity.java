@@ -1,4 +1,4 @@
-package nisargpatel.inertialnavigation;
+package nisargpatel.inertialnavigation.activity;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import nisargpatel.inertialnavigation.R;
 
 public class SetThresholdsActivity extends ActionBarActivity {
 
@@ -17,8 +19,6 @@ public class SetThresholdsActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_thresholds);
-
-       getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
        textUpperThreshold = (TextView) findViewById(R.id.textUpper);
        textLowerThreshold = (TextView) findViewById(R.id.textLower);

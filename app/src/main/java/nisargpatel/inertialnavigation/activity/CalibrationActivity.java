@@ -1,4 +1,4 @@
-package nisargpatel.inertialnavigation;
+package nisargpatel.inertialnavigation.activity;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import nisargpatel.inertialnavigation.R;
 
 public class CalibrationActivity extends ActionBarActivity implements SensorEventListener {
 
@@ -32,8 +34,6 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
         stepCount = 0;
 
