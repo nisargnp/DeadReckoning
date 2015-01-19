@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -92,7 +91,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //launches when the start button is pressed, and activates the sensors
-        ((Button) findViewById(R.id.buttonStartCounter)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStartCounter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(StepCounterActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -103,7 +102,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         });
 
         //launches when the stop button is pressed, and deactivates the sensors
-        ((Button) findViewById(R.id.buttonStopCounter)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStopCounter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.unregisterListener(StepCounterActivity.this, sensorAccelerometer);
@@ -112,7 +111,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
             }
         });
 
-        ((Button) findViewById(R.id.buttonStepInfo)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStepInfo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myDialog.setDialogMessage(getMessage());
@@ -120,7 +119,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
             }
         });
 
-        ((TextView) findViewById(R.id.txtViewThresholds)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.txtViewThresholds).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent myIntent = new Intent(getApplicationContext(), SetThresholdsActivity.class);
@@ -159,7 +158,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         if (resultCode == RESULT_OK) {
             Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
         } else if (resultCode == RESULT_CANCELED) {
-            //zBarScanner recommends the following for when the scanner is cancled, however, for some reason, it causes the app to crash
+            //zBarScanner recommends the following for when the scanner is canceled, however, for some reason, it causes the app to crash
             //String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
             //Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
 
@@ -199,7 +198,7 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                         }
                     });
 
-                    if (thresholdCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (thresholdCountSteps.stepFound(zAcc)) {
                         thresholdStepCount++;
 
                         runOnUiThread(new Runnable() {
@@ -211,20 +210,20 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
 
                     }
 
-                    if (thresholdCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (thresholdCountSteps1.stepFound(zAcc)) {
                         thresholdStepCount1++;
                     }
-                    if (thresholdCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (thresholdCountSteps2.stepFound(zAcc)) {
                         thresholdStepCount2++;
                     }
-                    if (thresholdCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (thresholdCountSteps3.stepFound(zAcc)) {
                         thresholdStepCount3++;
                     }
-                    if (thresholdCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (thresholdCountSteps4.stepFound(zAcc)) {
                         thresholdStepCount4++;
                     }
 
-                    if (movingAverageCountSteps.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (movingAverageCountSteps.stepFound(zAcc)) {
                         movingAverageStepCount++;
 
                         runOnUiThread(new Runnable() {
@@ -235,16 +234,16 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                         });
                     }
 
-                    if (movingAverageCountSteps1.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (movingAverageCountSteps1.stepFound(zAcc)) {
                         movingAverageStepCount1++;
                     }
-                    if (movingAverageCountSteps2.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (movingAverageCountSteps2.stepFound(zAcc)) {
                         movingAverageStepCount2++;
                     }
-                    if (movingAverageCountSteps3.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (movingAverageCountSteps3.stepFound(zAcc)) {
                         movingAverageStepCount3++;
                     }
-                    if (movingAverageCountSteps4.stepFound(System.currentTimeMillis(), zAcc)) {
+                    if (movingAverageCountSteps4.stepFound(zAcc)) {
                         movingAverageStepCount4++;
                     }
 

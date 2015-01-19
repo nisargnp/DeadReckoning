@@ -16,17 +16,14 @@ public class HeadingInference {
         //finding the line of best fit between gyroInput and
         //using method from http://cnfolio.com/public/M591_regression_notes.pdf
 
-        for (int i = 0; i < gyroInput.length; i++)
-            sumGyroInput += gyroInput[i];
+        for (double aGyroInput : gyroInput) sumGyroInput += aGyroInput;
 
-        for (int i = 0; i < gyroInput.length; i++)
-            sumRadianInput += radianInput[i];
+        for (double aRadianInput : radianInput) sumRadianInput += aRadianInput;
 
         for (int i = 0; i < gyroInput.length; i++)
             sumGyroInputTimesRadianInput += gyroInput[i] * radianInput[i];
 
-        for (int i = 0; i < gyroInput.length; i++)
-            sumGyroInputSquared += Math.pow(gyroInput[i], 2);
+        for (double aGyroInput : gyroInput) sumGyroInputSquared += Math.pow(aGyroInput, 2);
 
         slope = ((gyroInput.length * sumGyroInputTimesRadianInput) - (sumGyroInput * sumRadianInput)) / (gyroInput.length * sumGyroInputSquared - Math.pow(sumGyroInput, 2));
         intercept = (sumRadianInput - slope * sumGyroInput) / gyroInput.length;
@@ -47,7 +44,7 @@ public class HeadingInference {
         return distance * Math.sin(Math.toRadians(degree));
     }
 
-    public double getDegree() {return degree;}
+//    public double getDegree() {return degree;}
 
 }
 

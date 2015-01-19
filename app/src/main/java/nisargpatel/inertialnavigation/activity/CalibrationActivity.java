@@ -1,24 +1,24 @@
 package nisargpatel.inertialnavigation.activity;
 
+import android.annotation.TargetApi;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Arrays;
 
 import nisargpatel.inertialnavigation.R;
 
 public class CalibrationActivity extends ActionBarActivity implements SensorEventListener {
-
-    private Button buttonStartCalibration;
-    private Button buttonStopCalibration;
 
     private TextView textAndroid2;
     private TextView textCalibrationDistance;
@@ -30,15 +30,13 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
 
     private static int stepCount;
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
 
         stepCount = 0;
-
-        buttonStartCalibration = (Button) findViewById(R.id.buttonStartCalibration);
-        buttonStopCalibration = (Button) findViewById(R.id.buttonStopCalibration);
 
         textAndroid2 = (TextView) findViewById(R.id.textAndroid2);
         textCalibrationDistance = (TextView) findViewById(R.id.textCalibrationDistance);
@@ -49,7 +47,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         androidStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //activate sensors when start button is pressed
-        buttonStartCalibration.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStartCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(CalibrationActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -59,7 +57,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         });
 
         //deactivate sensors when stop button is pressed
-        buttonStopCalibration.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonStopCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.unregisterListener(CalibrationActivity.this, accelerometer);
@@ -82,7 +80,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+//        int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
 //        if (id == R.id.action_settings) {
@@ -98,7 +96,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         //if the sensor data is of step counter type, increment stepCount
         if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
             if (event.values[0] == 1.0) {
-                textInstantAcc2.setText(String.valueOf(event.values));
+                textInstantAcc2.setText(Arrays.toString(event.values));
                 stepCount++;
                 textAndroid2.setText(String.valueOf(stepCount));
             }

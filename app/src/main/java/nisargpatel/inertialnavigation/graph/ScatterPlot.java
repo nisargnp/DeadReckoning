@@ -19,19 +19,19 @@ public class ScatterPlot {
     private ArrayList<Double> xList;
     private ArrayList<Double> yList;
 
-    private XYSeries mySeries;
-    private XYSeriesRenderer myRenderer;
-
-    private XYMultipleSeriesDataset myMultiSeries;
-    private XYMultipleSeriesRenderer myMultiRenderer;
-
     public ScatterPlot (String seriesName) {
         this.seriesName = seriesName;
-        xList = new ArrayList<Double>();
-        yList = new ArrayList<Double>();
+        xList = new ArrayList<>();
+        yList = new ArrayList<>();
     }
 
     public GraphicalView getGraphView(Context context) {
+
+        XYSeries mySeries;
+        XYSeriesRenderer myRenderer;
+
+        XYMultipleSeriesDataset myMultiSeries;
+        XYMultipleSeriesRenderer myMultiRenderer;
 
         double[] xSet = new double[xList.size()];
         for (int i = 0; i < xList.size(); i++)

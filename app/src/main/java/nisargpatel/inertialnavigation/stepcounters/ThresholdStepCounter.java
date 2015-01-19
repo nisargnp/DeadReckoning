@@ -1,11 +1,8 @@
 package nisargpatel.inertialnavigation.stepcounters;
 
-import java.util.ArrayList;
-
 public class ThresholdStepCounter {
 
 	private boolean peakFound;
-	private ArrayList<Double> peakLocation = new ArrayList<Double>();
 
 	private double upperThreshold;
 	private double lowerThreshold;
@@ -24,19 +21,18 @@ public class ThresholdStepCounter {
 	}
 	
 	//determines if graph peaks (step found), and if so returns true
-	public boolean stepFound(double time, double acc) {
+	public boolean stepFound( double acc) {
 		
 		//if no new peak is found, then the program will look for a peak which is above the upperThreshold
-		if (peakFound == false) {
+		if (!peakFound) {
 			if (acc > upperThreshold) {
 				peakFound = true;
-				peakLocation.add(time);
 				return true;
 			}
 		}
 
 		//after a new peak is found, program will find no more peaks until graph passes under lowerThreshold
-		if (peakFound == true) {
+		if (peakFound) {
 			if (acc < lowerThreshold) {
 				peakFound = false;
 			}

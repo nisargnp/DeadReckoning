@@ -12,7 +12,6 @@ import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.format.Time;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,7 +41,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private HeadingInference headingInference;
     private MovingAverageStepCounter movingStepCounter;
 
-    private Sensor sensorStepDetector;
+    //private Sensor sensorStepDetector;
     private Sensor sensorAccelerometer;
     private Sensor sensorGyroscope;
     private Sensor sensorMagnetometer;
@@ -75,7 +74,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         //declaring sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        //sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorMagnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
@@ -94,7 +93,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
+                //sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorMagnetometer, SensorManager.SENSOR_DELAY_FASTEST);
@@ -106,7 +105,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(GraphActivity.this, sensorStepDetector);
+                //sensorManager.unregisterListener(GraphActivity.this, sensorStepDetector);
                 sensorManager.unregisterListener(GraphActivity.this, sensorAccelerometer);
                 sensorManager.unregisterListener(GraphActivity.this, sensorGyroscope);
                 sensorManager.unregisterListener(GraphActivity.this, sensorMagnetometer);
@@ -182,30 +181,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
 
         }
-        else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
-            Log.d("stepDetected", "Another one bites the dust!");
-//            boolean stepFound = false;
-//            if (event.values[0] == 1.0)
-//                stepFound = true;
-//
-//            if (stepFound) {
-//                headingInference.calcDegrees(totalGyroValue);
-//                double pointX = headingInference.getXPoint(STRIDE_LENGTH);
-//                double pointY = headingInference.getYPoint(STRIDE_LENGTH);
-//
-//                sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
-//
-////                linearLayout.invalidate();
-//                linearLayout.removeAllViews();
-//                linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
-//
-//                //debug information
-////                System.out.println("----------------------------");
-////                System.out.println("gyroInput: " + totalGyroValue);
-////                System.out.println("degree: " + headingInference.getDegree());
-////                System.out.println("normal (x,y): " + "(" + pointX + "," + pointY + ")");
-//            }
-        }
+        //else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {}
         else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             Double xAcc = (double) event.values[0];
             Double yAcc = (double) event.values[1];
@@ -213,7 +189,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             boolean stepFound = false;
 
-            if (movingStepCounter.stepFound(System.currentTimeMillis(), zAcc))
+            if (movingStepCounter.stepFound(zAcc))
                 stepFound = true;
 
             if (stepFound) {
@@ -262,25 +238,25 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
         if (!myFolder.exists())
-            myFolder.mkdir();
+            if (myFolder.mkdir())
+                Toast.makeText(getApplicationContext(), "Folder created.", Toast.LENGTH_SHORT).show();
 
         String folderPath = myFolder.getPath();
 
         //determines what the data file's name will be
         String fileName = getFileName(type);
 
-        //lets the user know the name of the new file
-        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
-
         switch (type) {
             case "accelerometer":
                 try {
                     //creating file
                     fileAccelerometer = new File(folderPath, fileName);
-                    fileAccelerometer.createNewFile();
+                    if (fileAccelerometer.createNewFile())
+                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
                     //writing the heading of the file
                     writer = new BufferedWriter(new FileWriter(fileAccelerometer, true));
                     writer.write("time;xAcc;yAcc;zAcc;stepFound");
+                    writer.write(System.getProperty("line.separator"));
                     writer.close();
                 } catch (IOException ignored) {
                 }
@@ -289,10 +265,12 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 try {
                     //creating file
                     fileGyroscope = new File(folderPath, fileName);
-                    fileGyroscope.createNewFile();
+                    if(fileGyroscope.createNewFile())
+                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
                     //writing the heading of the file
                     writer = new BufferedWriter(new FileWriter(fileGyroscope, true));
                     writer.write("time;xVelocity;yVelocity;zVelocity;orientation");
+                    writer.write(System.getProperty("line.separator"));
                     writer.close();
                 } catch (IOException ignored) {
                 }
@@ -301,10 +279,12 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 try {
                     //creating file
                     fileMagnetometer = new File(folderPath, fileName);
-                    fileMagnetometer.createNewFile();
+                    if(fileMagnetometer.createNewFile())
+                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
                     //writing the heading of the file
                     writer = new BufferedWriter(new FileWriter(fileMagnetometer, true));
                     writer.write("time;xField;yField;zField;orientation");
+                    writer.write(System.getProperty("line.separator"));
                     writer.close();
                 } catch (IOException ignored) {
                 }

@@ -28,6 +28,7 @@
     <string name="title_activity_graph">Graph Activity</string>
     <string name="okay">Okay</string>
     <string name="step_info">Step Info</string>
+    <string name="title_step_counter">Step Counter</string>
 
 
 </resources>

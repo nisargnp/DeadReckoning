@@ -1,7 +1,5 @@
 package nisargpatel.inertialnavigation.stepcounters;
 
-import java.util.ArrayList;
-
 public class MovingAverageStepCounter {
 	private double upperThreshold, lowerThreshold;
 
@@ -17,10 +15,7 @@ public class MovingAverageStepCounter {
 
     private double margin;
 
-	private ArrayList<Double> peakLocation = new ArrayList<Double>();
-
-	private final int REQUIRED_HZ = 500;
-	private boolean hzCheck;
+    private boolean hzCheck;
 
 	//Set the default values for variables
 	public MovingAverageStepCounter(double margin) {
@@ -34,25 +29,24 @@ public class MovingAverageStepCounter {
 	}
 	
 	//determines if graph peaks (step found), and if so returns true
-	public boolean stepFound(double time, double acc) {
+	public boolean stepFound(double acc) {
 		
 		//run setThresholds() to determine what the peak detection thresholds will be
 		setThresholds(acc);
 
 		//no peaks are found during the first 500 points while the thresholds are set
-		if (hzCheck != false) {
+		if (hzCheck) {
 			
 			//if no new peak is found, then the program will look for a peak which is above the upperThreshold
-			if (peakFound == false) {
+			if (!peakFound) {
 				if (acc > upperThreshold) {
 					peakFound = true;
-					peakLocation.add(time);
 					return true;
 				}
 			}
 			
 			//after a new peak is found, program will find no more peaks until graph passes under lowerThreshold
-			if (peakFound == true) {
+			if (peakFound) {
 				if (acc < lowerThreshold) {
 					peakFound = false;
 				}
@@ -69,11 +63,12 @@ public class MovingAverageStepCounter {
 		runCount++;
 		
 		//the first time that runCount reaches half of the REQUIRED_HZ, hzCheck becomes true
-		if (runCount >= REQUIRED_HZ / 2)
+        int REQUIRED_HZ = 500;
+        if (runCount >= REQUIRED_HZ / 2)
 			hzCheck = true;
 		
 		//ONLY until runCount reaches half of REQUIRED_HZ for the FIRST TIME, only the avgAcc is desired
-		if (hzCheck == false) {
+		if (!hzCheck) {
 			sumAcc += acc;
 		}
 		//after the first time runCount reaches half of REQUIRED_HZ, the program starts the process calculating thresholds
@@ -96,10 +91,6 @@ public class MovingAverageStepCounter {
 
 			upperThreshold = (sumUpperAcc / numUpper) - margin;
 			lowerThreshold = (sumLowerAcc / numLower) - margin;
-
-            //System.out.println("_avg_ = " + avgAcc);
-			//System.out.println("upper = " + upperThreshold);
-			//System.out.println("lower = " + lowerThreshold);
 
             sumAcc = 0;
 
