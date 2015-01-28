@@ -55,6 +55,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private static final int STRIDE_LENGTH = 2;
 
+    private boolean sessionFilesCreated;
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +86,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         sPlot.addPoint(0, 0);
         linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
 
-        //creating data files
-        createFile("accelerometer");
-        createFile("gyroscope");
-        createFile("magnetometer");
+        //
+//        if (!sessionFilesCreated) {
+//            //creating data files
+//            createFile("accelerometer");
+//            createFile("gyroscope");
+//            createFile("magnetometer");
+//            sessionFilesCreated = true;
+//        }
 
         //buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
@@ -148,7 +154,31 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             startActivity(myIntent);
         }
 
+        if (id == R.id.orientationTest) {
+            Intent myIntent = new Intent(this, OrientationTestActivity.class);
+            startActivity(myIntent);
+        }
+
+        if (id == R.id.dataCollect) {
+            Intent myIntent = new Intent(this, DataCollectActivity.class);
+            startActivity(myIntent);
+        }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
+        } else if (resultCode == RESULT_CANCELED) {
+            //zBarScanner recommends the following for when the scanner is canceled, however, for some reason, it causes the app to crash
+            String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
+            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+            //Toast.makeText(getApplicationContext(), "QR scanner canceled.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -178,7 +208,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             recordedTime = System.currentTimeMillis();
 
-            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
+//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
 
         }
         //else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {}
@@ -194,7 +224,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             if (stepFound) {
 
-                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 1);
+//                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 1);
 
                 headingInference.calcDegrees(totalGyroValue);
                 double pointX = headingInference.getXPoint(STRIDE_LENGTH);
@@ -205,14 +235,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 linearLayout.removeAllViews();
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
             } else {
-                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 0);
+//                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 0);
             }
         } else if (event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
             Double xField = (double) event.values[0];
             Double yField = (double) event.values[1];
             Double zField = (double) event.values[2];
 
-            writeToFile(fileMagnetometer, xField, yField, zField, 0);
+//            writeToFile(fileMagnetometer, xField, yField, zField, 0);
         }
     }
 
@@ -223,7 +253,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private File fileMagnetometer;
 
     private void writeToFile(File myFile, double d1, double d2, double d3, double extra) {
-
         try {
             writer = new BufferedWriter(new FileWriter(myFile, true));
             writer.write(System.currentTimeMillis() + ";" +  d1 + ";" + d2 + ";" + d3 + ";" + extra);
@@ -301,10 +330,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         String date = "(" + today.year + "-" + today.month + "-" + today.monthDay + ")";
         String currentTime = "(" + today.format("%H.%M.%S") + ")";
 
-        return type + " " + date + " " + currentTime;
+        return type + " " + date + " " + currentTime + ".txt";
 
     }
-
 
     private void QRCodeScanner() {
         if (isCameraAvailable()) {
@@ -316,7 +344,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         }
     }
 
-    public boolean isCameraAvailable() {
+    private boolean isCameraAvailable() {
         return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 }

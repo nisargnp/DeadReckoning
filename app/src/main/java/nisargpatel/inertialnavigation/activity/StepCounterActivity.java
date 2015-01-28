@@ -15,9 +15,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.dm.zbar.android.scanner.ZBarConstants;
-
-
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.dialog.StepInfoFragment;
 import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
@@ -149,22 +146,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
 //        }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
-        } else if (resultCode == RESULT_CANCELED) {
-            //zBarScanner recommends the following for when the scanner is canceled, however, for some reason, it causes the app to crash
-            //String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
-            //Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
-
-            Toast.makeText(getApplicationContext(), "QR scanner canceled.", Toast.LENGTH_SHORT).show();
-        }
-
     }
 
     //this method is required to implement SensorEventListener, but is not used
