@@ -210,6 +210,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
 //            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
 
+//            headingInference.calcDegrees(totalGyroValue);
+//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, headingInference.getDegree());
+
         }
         //else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {}
         else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {

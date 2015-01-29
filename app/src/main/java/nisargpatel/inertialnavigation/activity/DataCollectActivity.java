@@ -33,9 +33,15 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     private Sensor sensorGyroUncalibrated;
     private Sensor sensorRotationVector;
     private Sensor sensorGeomagneticRotationVector;
+    private Sensor sensorMagneticField;
     private SensorManager sensorManager;
 
+    private float[] rotationMatrixFromVector;
     private float[] rotationMatrix;
+    private float[] orientationValues;
+
+    private boolean gotAccData, gotMagData;
+    private float[] accData, magData;
 
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -44,7 +50,13 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collect);
 
+        gotAccData = gotMagData = false;
+//        accData = new float[3];
+//        magData = new float[3];
+
+        rotationMatrixFromVector = new float[9];
         rotationMatrix = new float[9];
+        orientationValues = new float[3];
 
         info = (TextView) findViewById(R.id.textDataCollect);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -54,6 +66,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         sensorGyroUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
         sensorRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         sensorGeomagneticRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         final Button buttonStart = (Button) findViewById(R.id.buttonDataStart);
         final Button buttonPause = (Button) findViewById(R.id.buttonDataPause);
@@ -65,7 +78,6 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 info.setText("");
 
                 sensorManager.registerListener(DataCollectActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -73,13 +85,17 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.registerListener(DataCollectActivity.this, sensorGyroUncalibrated, SensorManager.SENSOR_DELAY_NORMAL);
                 sensorManager.registerListener(DataCollectActivity.this, sensorRotationVector, SensorManager.SENSOR_DELAY_NORMAL);
                 sensorManager.registerListener(DataCollectActivity.this, sensorGeomagneticRotationVector, SensorManager.SENSOR_DELAY_NORMAL);
+                sensorManager.registerListener(DataCollectActivity.this, sensorMagneticField, SensorManager.SENSOR_DELAY_FASTEST);
 
-                createFiles();
+                try {
+                    createFiles();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 buttonStart.setEnabled(false);
                 buttonPause.setEnabled(true);
                 buttonStop.setEnabled(true);
-
             }
         });
 
@@ -91,6 +107,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGyroUncalibrated);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGeomagneticRotationVector);
+                sensorManager.unregisterListener(DataCollectActivity.this, sensorMagneticField);
             }
         });
 
@@ -102,11 +119,11 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGyroUncalibrated);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGeomagneticRotationVector);
+                sensorManager.unregisterListener(DataCollectActivity.this, sensorMagneticField);
 
                 buttonStart.setEnabled(true);
                 buttonPause.setEnabled(false);
                 buttonStop.setEnabled(false);
-
             }
         });
 
@@ -118,9 +135,11 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     File fileGyroscopeUncalibrated;
     File fileRotationVector;
     File fileGeomagneticRotationVector;
+    File fileRotationMatrixFromVector;
     File fileRotationMatrix;
+    File fileOrientationValues;
 
-    private void createFiles() {
+    private void createFiles() throws IOException{
 
         //creating the folder
         String folderName = "Inertial Navigation Data";
@@ -132,7 +151,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
         String folderPath = myFolder.getPath();
 
-        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated", "RotationVector", "GeomagneticRotationVector", "RotationMatrix"};
+        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated", "RotationVector", "GeomagneticRotationVector", "RotationMatrixFromVector", "RotationMatrix", "OrientationValues"};
 
         fileAccelerometer = new File(folderPath, getFileName(fileType[0]));
         fileGyroscopeCalibrated = new File(folderPath, getFileName(fileType[1]));
@@ -140,22 +159,19 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         fileRotationVector = new File(folderPath, getFileName(fileType[3]));
         fileGeomagneticRotationVector = new File(folderPath, getFileName(fileType[4]));
 
+        fileRotationMatrixFromVector = new File(folderPath, getFileName(fileType[5]));
+        fileRotationMatrix = new File(folderPath, getFileName(fileType[6]));
+        fileOrientationValues = new File(folderPath, getFileName(fileType[7]));
+
         createSingleFile(fileAccelerometer, fileType[0]);
         createSingleFile(fileGyroscopeCalibrated, fileType[1]);
         createSingleFile(fileGyroscopeUncalibrated, fileType[2]);
         createSingleFile(fileRotationVector, fileType[3]);
         createSingleFile(fileGeomagneticRotationVector, fileType[4]);
 
-        //creating rotation matrix file separately, since it's a little bit different
-        fileRotationMatrix = new File(folderPath, getFileName(fileType[5]));
-        try {
-            if (fileRotationMatrix.createNewFile())
-                info.setText(info.getText() + "\n\n" + getFileName(fileType[5]));
-            writer = new BufferedWriter(new FileWriter(fileRotationMatrix, true));
-            writer.write("time;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3)");
-            writer.write(System.getProperty("line.separator"));
-            writer.close();
-        } catch (IOException ignored) {}
+        createSingleFile(fileRotationMatrixFromVector, fileType[5]);
+        createSingleFile(fileRotationMatrix, fileType[6]);
+        createSingleFile(fileOrientationValues, fileType[7]);
 
     }
 
@@ -171,21 +187,29 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
     }
 
-    private void createSingleFile(File file, String fileName) {
-        try {
-            if (file.createNewFile())
-                info.setText(info.getText() + "\n\n" + getFileName(fileName));
-            writer = new BufferedWriter(new FileWriter(file, true));
+    private void createSingleFile(File file, String fileName) throws IOException {
+
+        if (file.createNewFile())
+            info.setText(info.getText() + "\n\n" + getFileName(fileName));
+
+        writer = new BufferedWriter(new FileWriter(file, true));
+
+        if (fileName.contains("Matrix"))
+            writer.write("time;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3)");
+        else
             writer.write("time;x;y;z");
-            writer.write(System.getProperty("line.separator"));
-            writer.close();
-        } catch (IOException ignored) {}
+
+        writer.write(System.getProperty("line.separator"));
+        writer.close();
+
     }
 
-    private void writeToFile(File file, long time, double x, double y, double z) {
+    private void writeToFile(File file, long time, float[] sensorValues) {
         try {
             writer = new BufferedWriter(new FileWriter(file, true));
-            writer.write(time + ";" +  x + ";" + y + ";" + z);
+            writer.write(String.valueOf(time));
+            for (double sensorValue : sensorValues)
+                writer.write(";" + sensorValue);
             writer.write(System.getProperty("line.separator"));
             writer.close();
         } catch (IOException ignored) {}
@@ -214,41 +238,65 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        double x = event.values[0];
-        double y = event.values[1];
-        double z = event.values[2];
-        long time = System.currentTimeMillis();
-
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-            writeToFile(fileAccelerometer, time, x, y, z);
-        else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE)
-            writeToFile(fileGyroscopeCalibrated, time, x, y, z);
-        else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-            writeToFile(fileGyroscopeUncalibrated, time, x, y, z);
-        else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            writeToFile(fileRotationVector, time, x, y, z);
-
-            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-            try {
-                writer = new BufferedWriter(new FileWriter(fileRotationMatrix, true));
-                writer.write(String.valueOf(System.currentTimeMillis()));
-
-                for (float aRotationMatrix : rotationMatrix)
-                    writer.write(";" + String.valueOf(aRotationMatrix));
-
-                writer.write(System.getProperty("line.separator"));
-                writer.close();
-            } catch (IOException ignored) {}
-
-        } else if (event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
-            writeToFile(fileGeomagneticRotationVector, time, x, y, z);
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    public void onSensorChanged(SensorEvent event) {
+
+        long time = System.currentTimeMillis();
+        float[] sensorValues = event.values.clone();
+
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                writeToFile(fileAccelerometer, time, sensorValues);
+                accData = sensorValues.clone();
+                gotAccData = true;
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                writeToFile(fileGyroscopeCalibrated, time, sensorValues);
+                break;
+            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                writeToFile(fileGyroscopeUncalibrated, time, sensorValues);
+                break;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                writeToFile(fileRotationVector, time, sensorValues);
+                SensorManager.getRotationMatrixFromVector(rotationMatrixFromVector, event.values);
+                writeToFile(fileRotationMatrixFromVector, time, sensorValues);
+                break;
+            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
+                writeToFile(fileGeomagneticRotationVector, time, sensorValues);
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                magData = sensorValues.clone();
+                gotMagData = true;
+                break;
+
+        }
+
+//        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+//
+//        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+//
+//        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
+//
+//        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+//
+//        } else if (event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
+//
+//        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+//
+//        }
+
+        if (gotAccData && gotMagData) {
+            SensorManager.getRotationMatrix(rotationMatrix, null, accData, magData);
+            writeToFile(fileRotationMatrix, time, rotationMatrix);
+
+            SensorManager.getOrientation(rotationMatrix, orientationValues);
+            writeToFile(fileOrientationValues, time, orientationValues);
+        }
 
     }
+
 }

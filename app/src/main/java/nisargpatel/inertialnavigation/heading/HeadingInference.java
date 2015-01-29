@@ -44,7 +44,7 @@ public class HeadingInference {
         return distance * Math.sin(Math.toRadians(degree));
     }
 
-//    public double getDegree() {return degree;}
+    public double getDegree() {return degree;}
 
 }
 
