@@ -79,7 +79,6 @@
         android:layout_height="75dp"
         android:text="@string/set_stride_length"
         android:id="@+id/buttonSetStrideLength"
-        android:onClick="buttonSetStrideLength"
         android:textSize="20sp"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />

@@ -2,6 +2,7 @@ package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -36,12 +37,12 @@ import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
 
 public class GraphActivity extends ActionBarActivity implements SensorEventListener{
 
-    private static final int ZBAR_QR_SCANNER_REQUEST = 1;
+    private final String PREFS_NAME = "Inertial Navigation Preferences";
+    private final int ZBAR_QR_SCANNER_REQUEST = 1;
 
     private HeadingInference headingInference;
     private MovingAverageStepCounter movingStepCounter;
 
-    //private Sensor sensorStepDetector;
     private Sensor sensorAccelerometer;
     private Sensor sensorGyroscope;
     private Sensor sensorMagnetometer;
@@ -53,15 +54,24 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private long recordedTime;
 
-    private static final int STRIDE_LENGTH = 2;
-
-    private boolean sessionFilesCreated;
+    private float strideLength;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
+
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
+
+        if (sharedPreferences.getBoolean("first_run", true)) {
+            Intent myIntent = new Intent(GraphActivity.this, CalibrationActivity.class);
+            startActivity(myIntent);
+        }
+
+        sharedPreferencesEditor.putBoolean("first_run", false).apply();
+        strideLength = sharedPreferences.getFloat("stride_length", 2.5f);
 
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(1.0);
@@ -175,9 +185,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
         } else if (resultCode == RESULT_CANCELED) {
             //zBarScanner recommends the following for when the scanner is canceled, however, for some reason, it causes the app to crash
-            String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
-            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
-            //Toast.makeText(getApplicationContext(), "QR scanner canceled.", Toast.LENGTH_SHORT).show();
+//            String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
+//            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "QR Code Scanner Canceled.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -230,8 +240,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 //                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 1);
 
                 headingInference.calcDegrees(totalGyroValue);
-                double pointX = headingInference.getXPoint(STRIDE_LENGTH);
-                double pointY = headingInference.getYPoint(STRIDE_LENGTH);
+                double pointX = headingInference.getXPoint(strideLength);
+                double pointY = headingInference.getYPoint(strideLength);
 
                 sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
 

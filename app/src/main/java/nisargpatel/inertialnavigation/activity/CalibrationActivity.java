@@ -1,6 +1,7 @@
 package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,6 +21,9 @@ import nisargpatel.inertialnavigation.R;
 
 public class CalibrationActivity extends ActionBarActivity implements SensorEventListener {
 
+    private final String PREFS_NAME = "Inertial Navigation Preferences";
+    private SharedPreferences.Editor sharedPreferencesEditor;
+
     private TextView textAndroid2;
     private TextView textCalibrationDistance;
     private TextView textInstantAcc2;
@@ -35,6 +39,8 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
+
+        sharedPreferencesEditor = getSharedPreferences(PREFS_NAME, 0).edit();
 
         stepCount = 0;
 
@@ -63,6 +69,26 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(CalibrationActivity.this, accelerometer);
                 sensorManager.unregisterListener(CalibrationActivity.this, androidStepCounter);
                 Toast.makeText(getApplicationContext(), "Calibration mode stopped.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //when the button is pressed, determine the strideLength by dividing stepsTaken
+        //by distanceTraveled, and stored stride length in StepCounterActivity
+        findViewById(R.id.buttonSetStrideLength).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double strideLength;
+                if (stepCount != 0) {
+                    strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / stepCount;
+                } else {
+                    Toast.makeText(getApplication(), "You have to take a few steps first!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                sharedPreferencesEditor.putFloat("stride_length", (float) strideLength);
+                String trimmedStrideLength = String.valueOf(strideLength).substring(0,1);
+                Toast.makeText(getApplicationContext(), "Stride length set: " + trimmedStrideLength + ".", Toast.LENGTH_SHORT).show();
+
+                finish();
             }
         });
 
@@ -108,15 +134,4 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    //when the button is pressed, determine the strideLength by dividing stepsTaken by distanceTraveled, and stored stride length in StepCounterActivity
-    public void buttonSetStrideLength(View view) {
-        double strideLength;
-        strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / (stepCount + 1);
-        StepCounterActivity.setStrideLength(strideLength);
-
-        Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + ".", Toast.LENGTH_SHORT).show();
-
-        finish();
-    }
 }

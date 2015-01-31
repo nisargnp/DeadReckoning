@@ -4,17 +4,11 @@ public class MovingAverageStepCounter {
 	private double upperThreshold, lowerThreshold;
 
 	private double sumUpperAcc, sumLowerAcc;
-
 	private int numUpper, numLower;
-
 	private double sumAcc, avgAcc;
-
 	private int runCount;
-
 	private boolean peakFound;
-
     private double margin;
-
     private boolean hzCheck;
 
 	//Set the default values for variables

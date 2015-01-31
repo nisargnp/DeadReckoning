@@ -29,22 +29,25 @@ public class ScatterPlot {
 
         XYSeries mySeries;
         XYSeriesRenderer myRenderer;
-
         XYMultipleSeriesDataset myMultiSeries;
         XYMultipleSeriesRenderer myMultiRenderer;
 
+        //adding the x-axis data from an ArrayList to a standard array
         double[] xSet = new double[xList.size()];
         for (int i = 0; i < xList.size(); i++)
             xSet[i] = xList.get(i);
 
+        //adding the y-axis data from an ArrayList to a standard array
         double[] ySet = new double[yList.size()];
         for (int i = 0; i < yList.size(); i++)
             ySet[i] = yList.get(i);
 
+        //creating a new sequence using the x-axis and y-axis data
         mySeries = new XYSeries(seriesName);
         for (int i = 0; i < xSet.length; i++)
             mySeries.add(xSet[i], ySet[i]);
 
+        //defining chart visual properties
         myRenderer = new XYSeriesRenderer();
         myRenderer.setFillPoints(true);
         myRenderer.setPointStyle(PointStyle.CIRCLE);
@@ -77,9 +80,11 @@ public class ScatterPlot {
         myMultiRenderer.setYAxisMin(-100);
         myMultiRenderer.setYAxisMax(100);
 
+        //returns the graphical view containing the graph
         return ChartFactory.getScatterChartView(context, myMultiSeries, myMultiRenderer);
     }
 
+    //add a point to the series
     public void addPoint(double x, double y) {
         xList.add(x);
         yList.add(y);

@@ -2,6 +2,7 @@ package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,7 +23,7 @@ import nisargpatel.inertialnavigation.stepcounters.ThresholdStepCounter;
 
 public class StepCounterActivity extends ActionBarActivity implements SensorEventListener{
 
-    private static double strideLength;
+    private double strideLength;
     private static double upperThreshold = 11.5;
     private static double lowerThreshold = 6.5;
 
@@ -72,6 +73,10 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_step_counter);
+
+        final String PREFS_NAME = "Inertial Navigation Preferences";
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+        strideLength = sharedPreferences.getFloat("stride_length", 2.0f);
 
         //declaring all the views
         textThresholdSteps = (TextView) findViewById(R.id.textThreshold);
@@ -252,10 +257,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
     public static void setThresholds(double upper, double lower) {
         upperThreshold = upper;
         lowerThreshold = lower;
-    }
-
-    public static void setStrideLength(double stride) {
-        strideLength = stride;
     }
 
     private String getMessage() {

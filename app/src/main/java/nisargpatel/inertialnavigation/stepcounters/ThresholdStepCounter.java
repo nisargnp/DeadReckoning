@@ -3,7 +3,6 @@ package nisargpatel.inertialnavigation.stepcounters;
 public class ThresholdStepCounter {
 
 	private boolean peakFound;
-
 	private double upperThreshold;
 	private double lowerThreshold;
 
