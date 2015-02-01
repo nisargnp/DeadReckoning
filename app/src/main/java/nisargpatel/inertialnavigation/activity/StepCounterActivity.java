@@ -18,8 +18,8 @@ import android.widget.Toast;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.dialog.StepInfoFragment;
-import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
-import nisargpatel.inertialnavigation.stepcounters.ThresholdStepCounter;
+import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
+import nisargpatel.inertialnavigation.stepcounter.ThresholdStepCounter;
 
 public class StepCounterActivity extends ActionBarActivity implements SensorEventListener{
 
@@ -110,6 +110,30 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(StepCounterActivity.this, sensorAccelerometer);
                 sensorManager.unregisterListener(StepCounterActivity.this, sensorStepDetector);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.buttonClearCounter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                textThresholdSteps.setText("0");
+                textMovingAverageSteps.setText("0");
+                textAndroidSteps.setText("0");
+                textInstantAcc.setText("0");
+                textDistance.setText("0");
+
+                thresholdStepCount = 0;
+                movingAverageStepCount = 0;
+                androidStepCount = 0;
+
+                thresholdStepCount1 = 0;
+                thresholdStepCount2 = 0;
+                thresholdStepCount3 = 0;
+                thresholdStepCount4 = 0;
+                movingAverageStepCount1 = 0;
+                movingAverageStepCount2 = 0;
+                movingAverageStepCount3 = 0;
+                movingAverageStepCount4 = 0;
             }
         });
 

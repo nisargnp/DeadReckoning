@@ -18,7 +18,9 @@ import nisargpatel.inertialnavigation.R;
 public class OrientationTestActivity extends ActionBarActivity implements SensorEventListener{
 
     private Sensor gyroscope;
-    private Sensor rotation;
+    private Sensor rotationVector;
+    private Sensor geoRotationVector;
+    private Sensor gameRotationVector;
     private SensorManager sm;
 
     private static long recordedTimeGyro;
@@ -26,8 +28,10 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
     private double averageGyroValue;
     private double totalGyroValue;
 
-    private TextView textGyro;
-    private TextView textRotationVector;
+    private TextView textGyroscope;
+    private TextView textRotation;
+    private TextView textGeoRotation;
+    private TextView textGameRotation;
 
     boolean gyroFirstRun;
 
@@ -40,30 +44,28 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
         totalGyroValue = 0;
         gyroFirstRun = true;
 
-        textRotationVector = (TextView) findViewById(R.id.textTotalRotation);
-        textGyro = (TextView) findViewById(R.id.textTotalGyro);
+        textGyroscope = (TextView) findViewById(R.id.textGyroscope);
+        textRotation = (TextView) findViewById(R.id.textRotation);
+        textGeoRotation = (TextView) findViewById(R.id.textGeoRotation);
+        textGameRotation = (TextView) findViewById(R.id.textGameRotation);
 
         Button buttonStart = (Button) findViewById(R.id.buttonStart);
         Button buttonStop = (Button) findViewById(R.id.buttonStop);
 
         sm = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        //motion
         gyroscope = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        rotation = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-
-        //Other Sensor Types
-        //TYPE_GYROSCOPE_UNCALIBRATED is similar to TYPE_GYROSCOPE does not automatically correct for drift
-        //TYPE_ROTATION_VECTOR is a Motion Sensor
-        //TYPE_GAME_ROTATION_VECTOR and TYPE_GEOMAGNETIC_ROTATION_VECTOR are Position Sensors
-        //  TYPE_GAME_ROTATION_VECTOR is uncalibrated TYPE_ROTATION_VECTOR (it doesn't use geomagnetic field, so has increased drift)
-        //  TYPE_GEOMAGNETIC_ROTATION_VECTOR is similar to TYPE_ROTATION_VECTOR (except it uses magnetometer instead of gyroscope)
+        rotationVector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        geoRotationVector = sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        gameRotationVector = sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sm.registerListener(OrientationTestActivity.this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(OrientationTestActivity.this, rotation, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(OrientationTestActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(OrientationTestActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(OrientationTestActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 recordedTimeGyro = System.currentTimeMillis();
             }
         });
@@ -72,15 +74,19 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
             @Override
             public void onClick(View v) {
                 sm.unregisterListener(OrientationTestActivity.this, gyroscope);
-                sm.unregisterListener(OrientationTestActivity.this, rotation);
+                sm.unregisterListener(OrientationTestActivity.this, rotationVector);
+                sm.unregisterListener(OrientationTestActivity.this, geoRotationVector);
+                sm.unregisterListener(OrientationTestActivity.this, gameRotationVector);
             }
         });
 
         findViewById(R.id.buttonClear).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                textGyro.setText("");
-                textRotationVector.setText("");
+                textGyroscope.setText("0");
+                textRotation.setText("0");
+                textGeoRotation.setText("0");
+                textGameRotation.setText("0");
                 totalGyroValue = 0;
             }
         });
@@ -116,17 +122,19 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+
+        int sensorType = event.sensor.getType();
+
+        if (sensorType == Sensor.TYPE_GYROSCOPE) {
 
             double currentGyroValue = (System.currentTimeMillis() - recordedTimeGyro) * event.values[2];
-            Log.d("gyroData", "gyro: " + currentGyroValue);
 
             if (gyroFirstRun)
                 averageGyroValue = currentGyroValue;
 
             if (currentGyroValue > averageGyroValue * 100000) {
                 totalGyroValue += currentGyroValue;
-                textGyro.setText(String.valueOf(totalGyroValue));
+                textGyroscope.setText(String.valueOf(totalGyroValue));
             } else {
                 averageGyroValue = (averageGyroValue + currentGyroValue) / 2;
             }
@@ -135,8 +143,12 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
             gyroFirstRun = false;
 
-        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-            textRotationVector.setText(String.valueOf(event.values[2]));
+        } else if (sensorType == Sensor.TYPE_ROTATION_VECTOR) {
+            textRotation.setText(String.valueOf(event.values[2]));
+        } else if (sensorType == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
+            textGeoRotation.setText(String.valueOf(event.values[2]));
+        } else if (sensorType == Sensor.TYPE_GAME_ROTATION_VECTOR) {
+            textGameRotation.setText(String.valueOf(event.values[2]));
         }
     }
 

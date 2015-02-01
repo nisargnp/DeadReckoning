@@ -31,5 +31,6 @@
     <string name="title_step_counter">Step Counter</string>
     <string name="title_activity_orientation">OrientationActivity</string>
     <string name="title_activity_data_collection">DataCollectionActivity</string>
+    <string name="clear">Clear</string>
 
 </resources>

@@ -8,32 +8,56 @@
     android:id="@+id/graph_layout_relative">
 
     <Button
-        android:layout_width="160dp"
+        android:layout_width="70.5dp"
         android:layout_height="75dp"
         android:text="@string/start"
         android:id="@+id/buttonGraphStart"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textSize="20sp" />
+        android:textSize="15sp" />
 
     <Button
-        android:layout_width="160dp"
+        android:layout_width="70.5dp"
         android:layout_height="75dp"
         android:text="@string/stop"
         android:id="@+id/buttonGraphStop"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:textSize="20sp" />
+        android:textSize="15sp" />
 
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="fill_parent"
+        android:layout_width="330dp"
         android:layout_height="375dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/linearLayoutGraph"/>
+
+    <Button
+        android:layout_width="70.5dp"
+        android:layout_height="75dp"
+        android:text="Switch"
+        android:id="@+id/buttonGraphSwitch"
+        android:textSize="12sp"
+        android:layout_alignTop="@+id/buttonGraphStart"
+        android:layout_toRightOf="@+id/buttonGraphStart"
+        android:layout_toEndOf="@+id/buttonGraphStart"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"/>
+
+    <Button
+        android:layout_width="70.5dp"
+        android:layout_height="75dp"
+        android:text="@string/clear"
+        android:id="@+id/buttonGraphClear"
+        android:textSize="15sp"
+        android:layout_alignBottom="@+id/buttonGraphSwitch"
+        android:layout_alignLeft="@+id/buttonGraphSwitch"
+        android:layout_alignStart="@id/buttonGraphSwitch"
+        android:layout_marginLeft="86.5dp"
+        android:layout_marginStart="86.5dp"/>
 
 </RelativeLayout>

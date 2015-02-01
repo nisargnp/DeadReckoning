@@ -33,7 +33,7 @@ import java.io.IOException;
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
 import nisargpatel.inertialnavigation.heading.HeadingInference;
-import nisargpatel.inertialnavigation.stepcounters.MovingAverageStepCounter;
+import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
 public class GraphActivity extends ActionBarActivity implements SensorEventListener{
 
@@ -45,7 +45,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private Sensor sensorAccelerometer;
     private Sensor sensorGyroscope;
-    private Sensor sensorMagnetometer;
+    private Sensor sensorRotationVector;
     private SensorManager sensorManager;
 
     private LinearLayout linearLayout;
@@ -55,6 +55,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private long recordedTime;
 
     private float strideLength;
+
+    private boolean useGyro;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -73,15 +75,21 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         sharedPreferencesEditor.putBoolean("first_run", false).apply();
         strideLength = sharedPreferences.getFloat("stride_length", 2.5f);
 
+        useGyro = true;
+
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(1.0);
-        double gyroInput[] = {-2900, -1450, 0, 1450, 2900};
-        double radianInput[] = {-90, 0, 90, 180, 270};
+        final double gyroInput[] = {-2900, -1450, 0, 1450, 2900};
+        final double rotationInput[] = {-1.0, -0.5, 0.0, 0.5, 1.0};
+        final double radianInput[] = {-90, 0, 90, 180, 270};
+
         headingInference = new HeadingInference(gyroInput, radianInput);
 
         //declaring views
-        Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
-        Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
+        final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
+        final Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
+        final Button buttonSwitch = (Button) findViewById(R.id.buttonGraphSwitch);
+        Button buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
         //declaring sensors
@@ -89,7 +97,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        sensorMagnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        sensorRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         //setting up graph with origin
         sPlot = new ScatterPlot("Position");
@@ -112,9 +120,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 //sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(GraphActivity.this, sensorMagnetometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this, sensorRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 recordedTime = System.currentTimeMillis();
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
+
+                buttonStart.setEnabled(false);
+                buttonSwitch.setEnabled(false);
+                buttonStop.setEnabled(true);
+
             }
         });
 
@@ -124,8 +137,39 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 //sensorManager.unregisterListener(GraphActivity.this, sensorStepDetector);
                 sensorManager.unregisterListener(GraphActivity.this, sensorAccelerometer);
                 sensorManager.unregisterListener(GraphActivity.this, sensorGyroscope);
-                sensorManager.unregisterListener(GraphActivity.this, sensorMagnetometer);
+                sensorManager.unregisterListener(GraphActivity.this, sensorRotationVector);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
+
+                buttonStart.setEnabled(true);
+                buttonSwitch.setEnabled(true);
+                buttonStop.setEnabled(false);
+            }
+        });
+
+        buttonSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                useGyro = !useGyro;
+
+                if (useGyro)
+                    Toast.makeText(getApplicationContext(), "Using gyroscope.", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getApplicationContext(), "Using rotation vector.", Toast.LENGTH_SHORT).show();
+
+                if (useGyro)
+                    headingInference = new HeadingInference(gyroInput, radianInput);
+                else
+                    headingInference = new HeadingInference(rotationInput, radianInput);
+            }
+        });
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sPlot.clearSet();
+                sPlot.addPoint(0,0);
+                linearLayout.removeAllViews();
+                linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
             }
         });
 
@@ -198,11 +242,12 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private double averageGyroValue;
     private double totalGyroValue;
+    private double currentRotationValue;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE && useGyro) {
 
             double xVelocity = (double) event.values[0];
             double yVelocity = (double) event.values[1];
@@ -239,7 +284,15 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
 //                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 1);
 
-                headingInference.calcDegrees(totalGyroValue);
+
+
+                if (useGyro)
+                    headingInference.calcDegrees(totalGyroValue);
+                else
+                    headingInference.calcDegrees(currentRotationValue);
+
+
+
                 double pointX = headingInference.getXPoint(strideLength);
                 double pointY = headingInference.getYPoint(strideLength);
 
@@ -250,12 +303,16 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             } else {
 //                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 0);
             }
-        } else if (event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
+        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR && !useGyro) {
             Double xField = (double) event.values[0];
             Double yField = (double) event.values[1];
             Double zField = (double) event.values[2];
 
 //            writeToFile(fileMagnetometer, xField, yField, zField, 0);
+
+
+            currentRotationValue = event.values[2];
+
         }
     }
 

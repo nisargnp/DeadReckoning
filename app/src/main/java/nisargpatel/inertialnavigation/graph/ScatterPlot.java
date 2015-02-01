@@ -98,4 +98,9 @@ public class ScatterPlot {
         return yList.get(yList.size() - 1);
     }
 
+    public void clearSet() {
+        xList.clear();
+        yList.clear();
+    }
+
 }

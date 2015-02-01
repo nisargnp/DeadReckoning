@@ -1,4 +1,4 @@
-package nisargpatel.inertialnavigation.stepcounters;
+package nisargpatel.inertialnavigation.stepcounter;
 
 public class ThresholdStepCounter {
 

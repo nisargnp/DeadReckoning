@@ -76,7 +76,7 @@
         android:layout_alignLeft="@+id/textMovingAverage"
         android:layout_alignStart="@+id/textMovingAverage" />
     <Button
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/start"
         android:id="@+id/buttonStartCounter"
@@ -86,7 +86,7 @@
         android:layout_alignParentStart="true" />
 
     <Button
-        android:layout_width="150dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/stop"
         android:id="@+id/buttonStopCounter"
@@ -146,6 +146,15 @@
         android:textSize="20sp"
         android:layout_above="@+id/buttonStartCounter"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="25dp" />
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="75dp"
+        android:text="@string/clear"
+        android:id="@+id/buttonClearCounter"
+        android:textSize="20sp"
+        android:layout_alignBottom="@+id/buttonStartCounter"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
