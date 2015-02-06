@@ -32,5 +32,6 @@
     <string name="title_activity_orientation">OrientationActivity</string>
     <string name="title_activity_data_collection">DataCollectionActivity</string>
     <string name="clear">Clear</string>
+    <string name="title_activity_settings">SettingsActivity</string>
 
 </resources>

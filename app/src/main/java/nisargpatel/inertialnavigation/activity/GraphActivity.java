@@ -194,28 +194,35 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 //            return true;
 //        }
 
-        if (id == R.id.calibration) {
-            Intent myIntent = new Intent(this, CalibrationActivity.class);
-            startActivity(myIntent);
-        }
-
-        if (id == R.id.QRScan) {
-            QRCodeScanner();
-        }
-
-        if (id == R.id.stepCounter) {
-            Intent myIntent = new Intent(this, StepCounterActivity.class);
-            startActivity(myIntent);
-        }
-
-        if (id == R.id.orientationTest) {
-            Intent myIntent = new Intent(this, OrientationTestActivity.class);
-            startActivity(myIntent);
-        }
-
-        if (id == R.id.dataCollect) {
-            Intent myIntent = new Intent(this, DataCollectActivity.class);
-            startActivity(myIntent);
+        switch (id) {
+            case R.id.settings: {
+                Intent myIntent = new Intent(this, SettingsActivity.class);
+                startActivity(myIntent);
+                break;
+            }
+//            case R.id.calibration: {
+//                Intent myIntent = new Intent(this, CalibrationActivity.class);
+//                startActivity(myIntent);
+//                break;
+//            }
+            case R.id.QRScan:
+                QRCodeScanner();
+                break;
+            case R.id.stepCounter: {
+                Intent myIntent = new Intent(this, StepCounterActivity.class);
+                startActivity(myIntent);
+                break;
+            }
+//            case R.id.orientationTest: {
+//                Intent myIntent = new Intent(this, OrientationTestActivity.class);
+//                startActivity(myIntent);
+//                break;
+//            }
+            case R.id.dataCollect: {
+                Intent myIntent = new Intent(this, DataCollectActivity.class);
+                startActivity(myIntent);
+                break;
+            }
         }
 
         return super.onOptionsItemSelected(item);

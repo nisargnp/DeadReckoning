@@ -81,12 +81,13 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
                 if (stepCount != 0) {
                     strideLength = (double) Integer.parseInt(textCalibrationDistance.getText().toString()) / stepCount;
                 } else {
-                    Toast.makeText(getApplication(), "You have to take a few steps first!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplication(), "Take a few steps first!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                sharedPreferencesEditor.putFloat("stride_length", (float) strideLength);
-                String trimmedStrideLength = String.valueOf(strideLength).substring(0,1);
-                Toast.makeText(getApplicationContext(), "Stride length set: " + trimmedStrideLength + ".", Toast.LENGTH_SHORT).show();
+
+                sharedPreferencesEditor.putFloat("stride_length", (float) strideLength).apply();
+
+                Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + " ft/sec.", Toast.LENGTH_SHORT).show();
 
                 finish();
             }

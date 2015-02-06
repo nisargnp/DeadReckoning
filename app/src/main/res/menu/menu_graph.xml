@@ -8,8 +8,10 @@
         android:orderInCategory="100" app:showAsAction="never" />
         -->
 
+    <!--
     <item android:id="@+id/calibration" android:title="Calibration Mode"
         android:orderInCategory="1" app:showAsAction="never" />
+        -->
 
     <item android:id="@+id/QRScan" android:title="QR Code Scanner"
         android:orderInCategory="2" app:showAsAction="never" />
@@ -17,10 +19,15 @@
     <item android:id="@+id/stepCounter" android:title="Step Counter"
         android:orderInCategory="3" app:showAsAction="never" />
 
+    <!--
     <item android:id="@+id/orientationTest" android:title="Orientation Tester"
-        android:orderInCategory="4" app:showAsAction="never" />
+        android:orderInCategory="4" app:showAsAction="ifRoom" />
+        -->
 
     <item android:id="@+id/dataCollect" android:title="Data Collector"
         android:orderInCategory="5" app:showAsAction="never" />
+
+    <item android:id="@+id/settings" android:title="Settings"
+        android:orderInCategory="100" app:showAsAction="never" />
 
 </menu>
