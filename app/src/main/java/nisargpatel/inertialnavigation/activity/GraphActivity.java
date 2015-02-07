@@ -52,11 +52,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private ScatterPlot sPlot;
 
-    private long recordedTime;
+    //private long recordedTime;
+    private double recordedTime;
 
     private float strideLength;
 
     private boolean useGyro;
+
+    private float[][] orientationMatrix;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -76,6 +79,11 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         strideLength = sharedPreferences.getFloat("stride_length", 2.5f);
 
         useGyro = true;
+
+        //orientationMatrix = new float[3][3];
+        orientationMatrix = new float[][]{{1, 0, 0},
+                                          {0, 1, 0},
+                                          {0, 0, 1}};
 
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(1.0);
@@ -121,6 +129,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+
                 recordedTime = System.currentTimeMillis();
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
 
@@ -260,7 +269,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             double yVelocity = (double) event.values[1];
             double zVelocity = (double) event.values[2];
 
-            double currentGyroValue = (System.currentTimeMillis() - recordedTime) * event.values[2];
+            double currentTime = event.timestamp / 1000000L;
+            double currentGyroValue = (currentTime - recordedTime) * event.values[2];
 
             if (currentGyroValue > averageGyroValue * 100000 ) {
                 totalGyroValue += currentGyroValue;
@@ -268,7 +278,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 averageGyroValue = (averageGyroValue + currentGyroValue) / 2;
             }
 
-            recordedTime = System.currentTimeMillis();
+            recordedTime = event.timestamp / 1000000.0;
 
 //            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
 
