@@ -9,12 +9,12 @@ public final class MathFunctions {
 
     //calculate x coordinate point given radius and angle
     public static double getXFromPolar(double radius, double angle) {
-        return radius * Math.cos(Math.toRadians(angle));
+        return radius * Math.cos(angle);
     }
 
     //calculate y coordinate point given radius and angle
     public static double getYFromPolar(double radius, double angle) {
-        return radius * Math.sin(Math.toRadians(angle));
+        return radius * Math.sin(angle);
     }
 
     public static float nsToSec(float time) {

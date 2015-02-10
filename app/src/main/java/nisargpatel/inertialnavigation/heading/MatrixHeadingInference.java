@@ -13,8 +13,8 @@ public class MatrixHeadingInference {
     private float[][] c;
 
     private final float[][] IDENTITY_MATRIX = new float[][]{{1,0,0},
-                                                     {0,1,0},
-                                                     {0,0,1}};
+                                                            {0,1,0},
+                                                            {0,0,1}};
 
     private MatrixHeadingInference() {}
 
@@ -38,7 +38,7 @@ public class MatrixHeadingInference {
 
         calcMatrixC(a);
 
-        currentHeading = (float) (Math.atan2(c[0][2], c[2][2]));
+        currentHeading = (float) (2 * (Math.atan2(c[1][0], c[0][0])));
         return currentHeading;
     }
 
@@ -83,13 +83,11 @@ public class MatrixHeadingInference {
     }
 
     public double getXPoint(double radius) {
-        double angle = currentHeading % Math.PI;
-        return radius * Math.cos(angle);
+        return radius * Math.cos(currentHeading);
     }
 
     public double getYPoint(double radius) {
-        double angle = currentHeading % Math.PI;
-        return radius * Math.sin(angle);
+        return radius * Math.sin(currentHeading);
     }
 
 }
