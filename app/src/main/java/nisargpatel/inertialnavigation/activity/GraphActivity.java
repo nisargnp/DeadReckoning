@@ -32,7 +32,7 @@ import java.io.IOException;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
-import nisargpatel.inertialnavigation.heading.HeadingInference;
+import nisargpatel.inertialnavigation.heading.GyroHeadingInference;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
 public class GraphActivity extends ActionBarActivity implements SensorEventListener{
@@ -40,7 +40,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private final String PREFS_NAME = "Inertial Navigation Preferences";
     private final int ZBAR_QR_SCANNER_REQUEST = 1;
 
-    private HeadingInference headingInference;
+    private GyroHeadingInference gyroHeadingInference;
     private MovingAverageStepCounter movingStepCounter;
 
     private Sensor sensorAccelerometer;
@@ -91,7 +91,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         final double rotationInput[] = {-1.0, -0.5, 0.0, 0.5, 1.0};
         final double radianInput[] = {-90, 0, 90, 180, 270};
 
-        headingInference = new HeadingInference(gyroInput, radianInput);
+        gyroHeadingInference = new GyroHeadingInference(gyroInput, radianInput);
 
         //declaring views
         final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
@@ -166,9 +166,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                     Toast.makeText(getApplicationContext(), "Using rotation vector.", Toast.LENGTH_SHORT).show();
 
                 if (useGyro)
-                    headingInference = new HeadingInference(gyroInput, radianInput);
+                    gyroHeadingInference = new GyroHeadingInference(gyroInput, radianInput);
                 else
-                    headingInference = new HeadingInference(rotationInput, radianInput);
+                    gyroHeadingInference = new GyroHeadingInference(rotationInput, radianInput);
             }
         });
 
@@ -222,11 +222,11 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 startActivity(myIntent);
                 break;
             }
-//            case R.id.orientationTest: {
-//                Intent myIntent = new Intent(this, OrientationTestActivity.class);
-//                startActivity(myIntent);
-//                break;
-//            }
+            case R.id.orientationTest: {
+                Intent myIntent = new Intent(this, OrientationTestActivity.class);
+                startActivity(myIntent);
+                break;
+            }
             case R.id.dataCollect: {
                 Intent myIntent = new Intent(this, DataCollectActivity.class);
                 startActivity(myIntent);
@@ -282,8 +282,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
 //            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
 
-//            headingInference.calcDegrees(totalGyroValue);
-//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, headingInference.getDegree());
+//            gyroHeadingInference.calcDegrees(totalGyroValue);
+//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, gyroHeadingInference.getDegree());
 
         }
         //else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {}
@@ -304,14 +304,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
 
                 if (useGyro)
-                    headingInference.calcDegrees(totalGyroValue);
+                    gyroHeadingInference.calcDegrees(totalGyroValue);
                 else
-                    headingInference.calcDegrees(currentRotationValue);
+                    gyroHeadingInference.calcDegrees(currentRotationValue);
 
 
 
-                double pointX = headingInference.getXPoint(strideLength);
-                double pointY = headingInference.getYPoint(strideLength);
+                double pointX = gyroHeadingInference.getXPoint(strideLength);
+                double pointY = gyroHeadingInference.getYPoint(strideLength);
 
                 sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
 

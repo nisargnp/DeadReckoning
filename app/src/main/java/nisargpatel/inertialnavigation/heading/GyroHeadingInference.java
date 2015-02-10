@@ -1,13 +1,13 @@
 package nisargpatel.inertialnavigation.heading;
 
-public class HeadingInference {
+public class GyroHeadingInference {
 
     private double slope;
     private double intercept;
 
     private double degree;
 
-    public HeadingInference(double[] gyroInput, double[] radianInput) {
+    public GyroHeadingInference(double[] gyroInput, double[] radianInput) {
         double sumGyroInput = 0;
         double sumRadianInput = 0;
         double sumGyroInputTimesRadianInput = 0;

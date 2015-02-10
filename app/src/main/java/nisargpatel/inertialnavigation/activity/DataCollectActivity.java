@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import nisargpatel.inertialnavigation.R;
+import nisargpatel.inertialnavigation.math.MathFunctions;
 
 public class DataCollectActivity extends ActionBarActivity implements SensorEventListener{
 
@@ -34,6 +35,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     private Sensor sensorRotationVector;
     private Sensor sensorGeomagneticRotationVector;
     private Sensor sensorMagneticField;
+    private Sensor sensorGravity;
     private SensorManager sensorManager;
 
     private float[] rotationMatrixFromVector;
@@ -51,8 +53,6 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         setContentView(R.layout.activity_data_collect);
 
         gotAccData = gotMagData = false;
-//        accData = new float[3];
-//        magData = new float[3];
 
         rotationMatrixFromVector = new float[9];
         rotationMatrix = new float[9];
@@ -67,6 +67,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         sensorRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         sensorGeomagneticRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
 
         final Button buttonStart = (Button) findViewById(R.id.buttonDataStart);
         final Button buttonPause = (Button) findViewById(R.id.buttonDataPause);
@@ -86,6 +87,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.registerListener(DataCollectActivity.this, sensorRotationVector, SensorManager.SENSOR_DELAY_NORMAL);
                 sensorManager.registerListener(DataCollectActivity.this, sensorGeomagneticRotationVector, SensorManager.SENSOR_DELAY_NORMAL);
                 sensorManager.registerListener(DataCollectActivity.this, sensorMagneticField, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(DataCollectActivity.this, sensorGravity, SensorManager.SENSOR_DELAY_FASTEST);
 
                 try {
                     createFiles();
@@ -108,6 +110,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGeomagneticRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorMagneticField);
+                sensorManager.unregisterListener(DataCollectActivity.this, sensorGravity);
             }
         });
 
@@ -120,6 +123,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorGeomagneticRotationVector);
                 sensorManager.unregisterListener(DataCollectActivity.this, sensorMagneticField);
+                sensorManager.unregisterListener(DataCollectActivity.this, sensorGravity);
 
                 buttonStart.setEnabled(true);
                 buttonPause.setEnabled(false);
@@ -138,6 +142,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     File fileRotationMatrixFromVector;
     File fileRotationMatrix;
     File fileOrientationValues;
+    File fileGravity;
 
     private void createFiles() throws IOException{
 
@@ -151,7 +156,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
         String folderPath = myFolder.getPath();
 
-        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated", "RotationVector", "GeomagneticRotationVector", "RotationMatrixFromVector", "RotationMatrix", "OrientationValues"};
+        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated", "RotationVector", "GeomagneticRotationVector", "RotationMatrixFromVector", "RotationMatrix", "OrientationValues", "Gravity"};
 
         fileAccelerometer = new File(folderPath, getFileName(fileType[0]));
         fileGyroscopeCalibrated = new File(folderPath, getFileName(fileType[1]));
@@ -162,6 +167,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         fileRotationMatrixFromVector = new File(folderPath, getFileName(fileType[5]));
         fileRotationMatrix = new File(folderPath, getFileName(fileType[6]));
         fileOrientationValues = new File(folderPath, getFileName(fileType[7]));
+        fileGravity = new File(folderPath, getFileName(fileType[8]));
 
         createSingleFile(fileAccelerometer, fileType[0]);
         createSingleFile(fileGyroscopeCalibrated, fileType[1]);
@@ -172,6 +178,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         createSingleFile(fileRotationMatrixFromVector, fileType[5]);
         createSingleFile(fileRotationMatrix, fileType[6]);
         createSingleFile(fileOrientationValues, fileType[7]);
+        createSingleFile(fileGravity, fileType[8]);
 
     }
 
@@ -204,7 +211,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
     }
 
-    private void writeToFile(File file, long time, float[] sensorValues) {
+    private void writeToFile(File file, float time, float[] sensorValues) {
         try {
             writer = new BufferedWriter(new FileWriter(file, true));
             writer.write(String.valueOf(time));
@@ -245,7 +252,9 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        long time = System.currentTimeMillis();
+        //long time = System.currentTimeMillis();
+
+        float time  = MathFunctions.nsToSec(event.timestamp);
         float[] sensorValues = event.values.clone();
 
         switch (event.sensor.getType()) {
@@ -271,6 +280,9 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
             case Sensor.TYPE_MAGNETIC_FIELD:
                 magData = sensorValues.clone();
                 gotMagData = true;
+                break;
+            case Sensor.TYPE_GRAVITY:
+                writeToFile(fileGravity, time, sensorValues);
                 break;
 
         }

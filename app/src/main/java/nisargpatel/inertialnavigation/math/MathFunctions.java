@@ -24,13 +24,13 @@ public final class MathFunctions {
     public static float[][] multiplyMatrices(float[][] a, float[][] b) {
 
         //numRows = aRows
-        int numRows = a[0].length;
+        int numRows = a.length;
 
         //numCols = bCols
-        int numCols = b.length;
+        int numCols = b[0].length;
 
-        //numElements = aCols == bRows
-        int numElements = a.length;
+        //numElements = (aCols == bRows)
+        int numElements = b.length;
 
         float[][] c = new float[numRows][numCols];
 
@@ -48,8 +48,8 @@ public final class MathFunctions {
 
     public static float[][] addMatrices(float[][] a, float[][] b) {
 
-        int numRows = a[0].length;
-        int numColumns = a.length;
+        int numRows = a.length;
+        int numColumns = a[0].length;
 
         float[][] c = new float[numRows][numColumns];
 
@@ -63,16 +63,19 @@ public final class MathFunctions {
 
     public static float[][] scaleMatrix(float a[][], float scalar) {
 
-        int numRows = a[0].length;
-        int numColumns = a.length;
+        int numRows = a.length;
+        int numColumns = a[0].length;
+
+        float[][] b = new float[numRows][numColumns];
 
         for (int row = 0; row < numRows; row++)
             for (int column = 0; column < numColumns; column++)
-                a[row][column] = a[row][column] * scalar;
+                b[row][column] = a[row][column] * scalar;
 
-        //a[][] * c = a[][]
-        return a;
+        //a[][] * c = b[][]
+        return b;
 
     }
 
 }
+

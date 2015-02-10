@@ -37,10 +37,10 @@ public class SettingsActivity extends ActionBarActivity {
             }
         });
 
-        findViewById(R.id.buttonSettingsOrientationTest).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonSettingsSetThresholds).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent myIntent = new Intent(SettingsActivity.this, OrientationTestActivity.class);
+                Intent myIntent = new Intent(SettingsActivity.this, SetThresholdsActivity.class);
                 startActivity(myIntent);
             }
         });

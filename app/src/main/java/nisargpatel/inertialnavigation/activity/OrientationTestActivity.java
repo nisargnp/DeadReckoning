@@ -13,12 +13,15 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.heading.NewHeadingInference;
+import nisargpatel.inertialnavigation.heading.MatrixHeadingInference;
 import nisargpatel.inertialnavigation.math.MathFunctions;
 
 public class OrientationTestActivity extends ActionBarActivity implements SensorEventListener{
 
-    private NewHeadingInference newHeadingInference;
+    private final float[][] IDENTITY_MATRIX = new float[][]{{1,0,0},
+                                                            {0,1,0},
+                                                            {0,0,1}};
+    private MatrixHeadingInference matrixHeadingInference;
 
     private Sensor gyroscopeCalibrated;
     private Sensor gyroscopeUncalibrated;
@@ -27,31 +30,36 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
     private Sensor gameRotationVector;
     private SensorManager sm;
 
-    private static double recordedGyroTime;
-
-    private double averageGyroValue;
-    private double totalGyroValue;
-
     private TextView textGyroscopeMatrix;
     private TextView textGyroscope;
     private TextView textRotation;
     private TextView textGeoRotation;
     private TextView textGameRotation;
 
-    boolean isFirstGyroRun;
+    private static double recordedGyroTime;
+    double recordedGyroUTime;
+
+    private double averageGyroValue;
+    private double totalGyroValue;
+
+    int runCountGyro;
+    int runCountGyroU;
+
+//    float gyroUBiasX;
+//    float gyroUBiasY;
+//    float gyroUBiasZ;
+    float[] gyroUBias = new float[3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_orientation_test);
 
-        newHeadingInference = new NewHeadingInference(new float[][] {{1,0,0},
-                                                                     {0,1,0},
-                                                                     {0,0,1}});
+        matrixHeadingInference = new MatrixHeadingInference(IDENTITY_MATRIX.clone());
 
         averageGyroValue = 0;
         totalGyroValue = 0;
-        isFirstGyroRun = true;
+        runCountGyro = 0;
 
         textGyroscopeMatrix = (TextView) findViewById(R.id.textGyroscopeMatrix);
         textGyroscope = (TextView) findViewById(R.id.textGyroscope);
@@ -78,7 +86,7 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
                 sm.registerListener(OrientationTestActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 sm.registerListener(OrientationTestActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 sm.registerListener(OrientationTestActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                isFirstGyroRun = true;
+                runCountGyro = runCountGyroU = 0;
             }
         });
 
@@ -135,15 +143,6 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
     }
 
-    int runCountGyroU = 0;
-    double recordedGyroUTime;
-
-    float gyroUBiasX;
-    float gyroUBiasY;
-    float gyroUBiasZ;
-
-
-
     @Override
     public void onSensorChanged(SensorEvent event) {
 
@@ -153,51 +152,61 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
             runCountGyroU++;
 
+            //setting the initial timestamp on the first run
             if (runCountGyroU == 1) {
                 recordedGyroUTime = MathFunctions.nsToSec(event.timestamp);
                 return;
             }
 
+
+
             double currentGyroUTime = MathFunctions.nsToSec(event.timestamp);
+            double deltaGyroUTime = currentGyroUTime - recordedGyroUTime;
 
+            //setting the initial bias on the second run
             if (runCountGyroU == 2) {
-                gyroUBiasX = (float) (currentGyroUTime - recordedGyroUTime) * event.values[0];
-                gyroUBiasY = (float) (currentGyroUTime - recordedGyroUTime) * event.values[1];
-                gyroUBiasZ = (float) (currentGyroUTime - recordedGyroUTime) * event.values[2];
+                gyroUBias[0] = (float) deltaGyroUTime * event.values[0];
+                gyroUBias[1] = (float) deltaGyroUTime * event.values[1];
+                gyroUBias[2] = (float) deltaGyroUTime * event.values[2];
                 return;
             }
 
-            if (runCountGyroU <= 500) {
-                float currGyroUX = (float) (currentGyroUTime - recordedGyroUTime) * event.values[0];
-                float currGyroUY = (float) (currentGyroUTime - recordedGyroUTime) * event.values[1];
-                float currGyroUZ = (float) (currentGyroUTime - recordedGyroUTime) * event.values[2];
+            //averaging bias for the first few hundred data points
+            if (runCountGyroU <= 300) {
+                float[] currGyroUValue = new float[3];
+                currGyroUValue[0] = (float) deltaGyroUTime * event.values[0];
+                currGyroUValue[1] = (float) deltaGyroUTime * event.values[1];
+                currGyroUValue[2] = (float) deltaGyroUTime * event.values[2];
 
-                gyroUBiasX = (gyroUBiasX * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUX / runCountGyroU);
-                gyroUBiasY = (gyroUBiasY * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUY / runCountGyroU);
-                gyroUBiasZ = (gyroUBiasZ * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUZ / runCountGyroU);
+                gyroUBias[0] = (gyroUBias[0] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[0] / runCountGyroU);
+                gyroUBias[1] = (gyroUBias[1] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[1] / runCountGyroU);
+                gyroUBias[2] = (gyroUBias[2] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[2] / runCountGyroU);
                 return;
+            } else {
+                matrixHeadingInference.setBias(gyroUBias);
             }
 
-            float currGyroUX = (float) (currentGyroUTime - recordedGyroUTime) * event.values[0];
-            float currGyroUY = (float) (currentGyroUTime - recordedGyroUTime) * event.values[1];
-            float currGyroUZ = (float) (currentGyroUTime - recordedGyroUTime) * event.values[2];
+            float[] currGyroUValue = new float[3];
+            currGyroUValue[0] = (float) deltaGyroUTime * event.values[0];
+            currGyroUValue[1] = (float) deltaGyroUTime * event.values[1];
+            currGyroUValue[2] = (float) deltaGyroUTime * event.values[2];
 
-            newHeadingInference.setBias(gyroUBiasX, gyroUBiasY, gyroUBiasZ);
-            newHeadingInference.setValues(currGyroUX, currGyroUY, currGyroUZ);
-            float heading = newHeadingInference.getHeading();
-
+            float heading = matrixHeadingInference.getCurrentHeading(currGyroUValue);
             textGyroscopeMatrix.setText(String.valueOf(heading));
 
+            recordedGyroUTime = currentGyroUTime;
 
         } else if (sensorType == Sensor.TYPE_GYROSCOPE) {//on the first run, the timestamp of the first point needs to be set
+
+            runCountGyro++;
+
             //so that delta-t can be calculated for the next point
-            if (isFirstGyroRun) {
+            if (runCountGyro <= 1) {
                 recordedGyroTime = MathFunctions.nsToSec(event.timestamp);
-                isFirstGyroRun = false;
+                return;
             }
 
             double currentGyroTime = MathFunctions.nsToSec(event.timestamp);
-
             double currentGyroValue = (currentGyroTime - recordedGyroTime) * event.values[2];
 
             totalGyroValue += currentGyroValue;

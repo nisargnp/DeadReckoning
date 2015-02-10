@@ -24,14 +24,14 @@
         android:id="@+id/textSettingsStrideLength"
         android:textColor="#96000000"
         android:layout_alignTop="@+id/textView1"
-        android:layout_alignRight="@+id/buttonSettingsOrientationTest"
-        android:layout_alignEnd="@+id/buttonSettingsOrientationTest" />
+        android:layout_alignRight="@+id/buttonSettingsSetThresholds"
+        android:layout_alignEnd="@+id/buttonSettingsSetThresholds" />
 
     <Button
         android:layout_width="300dp"
         android:layout_height="75dp"
-        android:text="Orientation Test"
-        android:id="@+id/buttonSettingsOrientationTest"
+        android:text="Set Thresholds"
+        android:id="@+id/buttonSettingsSetThresholds"
         android:layout_above="@+id/buttonSettingsCalibration"
         android:layout_marginBottom="30dp"
         android:layout_centerHorizontal="true"/>

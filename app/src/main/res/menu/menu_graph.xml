@@ -19,10 +19,8 @@
     <item android:id="@+id/stepCounter" android:title="Step Counter"
         android:orderInCategory="3" app:showAsAction="never" />
 
-    <!--
     <item android:id="@+id/orientationTest" android:title="Orientation Tester"
         android:orderInCategory="4" app:showAsAction="ifRoom" />
-        -->
 
     <item android:id="@+id/dataCollect" android:title="Data Collector"
         android:orderInCategory="5" app:showAsAction="never" />
