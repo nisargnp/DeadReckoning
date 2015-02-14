@@ -21,6 +21,14 @@ public final class MathFunctions {
         return time / 1000000000.0f;
     }
 
+    public static int factorial(int num) {
+        int factorial = 1;
+        for (int i = 1; i <= num; i++) {
+            factorial *= i;
+        }
+        return factorial;
+    }
+
     public static float[][] multiplyMatrices(float[][] a, float[][] b) {
 
         //numRows = aRows
