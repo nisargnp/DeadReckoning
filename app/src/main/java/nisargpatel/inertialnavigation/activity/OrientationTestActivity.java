@@ -110,6 +110,8 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
                 textGeoRotation.setText("0");
                 textGameRotation.setText("0");
 
+                matrixHeadingInference.clearMatrix();
+
                 totalGyroValue = 0;
             }
         });
@@ -154,42 +156,29 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
             //setting the initial timestamp on the first run
             if (runCountGyroU == 1) {
-                recordedGyroUTime = MathFunctions.nsToSec(event.timestamp);
+                gyroUBias[0] = event.values[0];
+                gyroUBias[1] = event.values[1];
+                gyroUBias[2] = event.values[2];
                 return;
             }
-
-
 
             double currentGyroUTime = MathFunctions.nsToSec(event.timestamp);
             double deltaGyroUTime = currentGyroUTime - recordedGyroUTime;
 
-            //setting the initial bias on the second run
-            if (runCountGyroU == 2) {
-                gyroUBias[0] = (float) deltaGyroUTime * event.values[0];
-                gyroUBias[1] = (float) deltaGyroUTime * event.values[1];
-                gyroUBias[2] = (float) deltaGyroUTime * event.values[2];
-                return;
-            }
-
             //averaging bias for the first few hundred data points
             if (runCountGyroU <= 300) {
-                float[] currGyroUValue = new float[3];
-                currGyroUValue[0] = (float) deltaGyroUTime * event.values[0];
-                currGyroUValue[1] = (float) deltaGyroUTime * event.values[1];
-                currGyroUValue[2] = (float) deltaGyroUTime * event.values[2];
 
-                gyroUBias[0] = (gyroUBias[0] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[0] / runCountGyroU);
-                gyroUBias[1] = (gyroUBias[1] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[1] / runCountGyroU);
-                gyroUBias[2] = (gyroUBias[2] * ((runCountGyroU - 1) / runCountGyroU)) + (currGyroUValue[2] / runCountGyroU);
+                gyroUBias[0] = (gyroUBias[0] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[0] / runCountGyroU);
+                gyroUBias[1] = (gyroUBias[1] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[1] / runCountGyroU);
+                gyroUBias[2] = (gyroUBias[2] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[2] / runCountGyroU);
+                recordedGyroUTime = MathFunctions.nsToSec(event.timestamp);
                 return;
-            } else {
-                matrixHeadingInference.setBias(gyroUBias);
             }
 
             float[] currGyroUValue = new float[3];
-            currGyroUValue[0] = (float) deltaGyroUTime * event.values[0];
-            currGyroUValue[1] = (float) deltaGyroUTime * event.values[1];
-            currGyroUValue[2] = (float) deltaGyroUTime * event.values[2];
+            currGyroUValue[0] = (float) deltaGyroUTime * (event.values[0] - gyroUBias[0]);
+            currGyroUValue[1] = (float) deltaGyroUTime * (event.values[1] - gyroUBias[1]);
+            currGyroUValue[2] = (float) deltaGyroUTime * (event.values[2] - gyroUBias[2]);
 
             float heading = matrixHeadingInference.getCurrentHeading(currGyroUValue);
             textGyroscopeMatrix.setText(String.valueOf(heading));

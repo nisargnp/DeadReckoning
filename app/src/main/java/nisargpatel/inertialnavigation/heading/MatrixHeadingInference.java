@@ -22,23 +22,17 @@ public class MatrixHeadingInference {
         c = startingMatrix.clone();
     }
 
-    public void setBias(float[] gyroBias) {
-        this.xBias = gyroBias[0];
-        this.yBias = gyroBias[1];
-        this.zBias = gyroBias[2];
-    }
-
     public float getCurrentHeading(float[] gyroValue) {
-        float wX = gyroValue[0] - xBias;
-        float wY = gyroValue[1] - yBias;
-        float wZ = gyroValue[2] - zBias;
+        float wX = gyroValue[0];
+        float wY = gyroValue[1];
+        float wZ = gyroValue[2];
 
         float[][] b = calcMatrixB(wX, wY, wZ);
         float[][] a = calcMatrixA(b, wX, wY, wZ);
 
         calcMatrixC(a);
 
-        currentHeading = (float) (2 * (Math.atan2(c[1][0], c[0][0])));
+        currentHeading = (float) (Math.atan2(c[1][0], c[0][0]));
         return currentHeading;
     }
 
@@ -80,6 +74,10 @@ public class MatrixHeadingInference {
 
     private void calcMatrixC(float[][] a) {
         c = MathFunctions.multiplyMatrices(c, a);
+    }
+
+    public void clearMatrix() {
+        c = IDENTITY_MATRIX;
     }
 
     public double getXPoint(double radius) {
