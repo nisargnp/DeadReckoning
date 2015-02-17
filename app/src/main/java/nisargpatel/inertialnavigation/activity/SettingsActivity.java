@@ -13,7 +13,7 @@ import nisargpatel.inertialnavigation.R;
 
 public class SettingsActivity extends ActionBarActivity {
 
-    private final String PREFS_NAME = "Inertial Navigation Preferences";
+    private static final String PREFS_NAME = "Inertial Navigation Preferences";
 
     private SharedPreferences sharedPreferences;
     private TextView textStrideLength;

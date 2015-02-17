@@ -1,6 +1,9 @@
 package nisargpatel.inertialnavigation.stepcounter;
 
 public class MovingAverageStepCounter {
+
+    private static final int REQUIRED_HZ = 500;
+
 	private double upperThreshold, lowerThreshold;
 
 	private double sumUpperAcc, sumLowerAcc;
@@ -8,18 +11,18 @@ public class MovingAverageStepCounter {
 	private double sumAcc, avgAcc;
 	private int runCount;
 	private boolean peakFound;
-    private double margin;
+    private double sensitivity;
     private boolean hzCheck;
 
 	//Set the default values for variables
-	public MovingAverageStepCounter(double margin) {
+	public MovingAverageStepCounter(double sensitivity) {
 		upperThreshold = 0;
 		lowerThreshold = 0;
 		avgAcc = 0;
 		peakFound = false;
 		hzCheck = false;
 
-        this.margin = margin;
+        this.sensitivity = sensitivity;
 	}
 	
 	//determines if graph peaks (step found), and if so returns true
@@ -43,6 +46,7 @@ public class MovingAverageStepCounter {
 			if (peakFound) {
 				if (acc < lowerThreshold) {
 					peakFound = false;
+                    return false;
 				}
 			}
 
@@ -57,7 +61,6 @@ public class MovingAverageStepCounter {
 		runCount++;
 		
 		//the first time that runCount reaches half of the REQUIRED_HZ, hzCheck becomes true
-        int REQUIRED_HZ = 500;
         if (runCount >= REQUIRED_HZ / 2)
 			hzCheck = true;
 		
@@ -83,8 +86,8 @@ public class MovingAverageStepCounter {
 		if (runCount == REQUIRED_HZ) {
 			avgAcc = sumAcc / REQUIRED_HZ;
 
-			upperThreshold = (sumUpperAcc / numUpper) - margin;
-			lowerThreshold = (sumLowerAcc / numLower) - margin;
+			upperThreshold = (sumUpperAcc / numUpper) - sensitivity;
+			lowerThreshold = (sumLowerAcc / numLower) - sensitivity;
 
             sumAcc = 0;
 

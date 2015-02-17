@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,34 +33,45 @@ import java.io.IOException;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
-import nisargpatel.inertialnavigation.heading.GyroHeadingInference;
+import nisargpatel.inertialnavigation.heading.MatrixHeadingInference;
+import nisargpatel.inertialnavigation.math.MathFunctions;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
 public class GraphActivity extends ActionBarActivity implements SensorEventListener{
 
-    private final String PREFS_NAME = "Inertial Navigation Preferences";
-    private final int ZBAR_QR_SCANNER_REQUEST = 1;
+    private static final String PREFS_NAME = "Inertial Navigation Preferences";
+    private static final int ZBAR_QR_SCANNER_REQUEST = 1;
+    private static final double STEP_COUNTER_SENSITIVITY = 1.0;
 
-    private GyroHeadingInference gyroHeadingInference;
     private MovingAverageStepCounter movingStepCounter;
-
-    private Sensor sensorAccelerometer;
-    private Sensor sensorGyroscope;
-    private Sensor sensorRotationVector;
-    private SensorManager sensorManager;
+    private MatrixHeadingInference matrixHeadingInference;
+    private ScatterPlot sPlot;
 
     private LinearLayout linearLayout;
 
-    private ScatterPlot sPlot;
-
-    //private long recordedTime;
-    private double recordedTime;
+    private Sensor sensorAccelerometer;
+    private Sensor sensorGyroscopeCalibrated;
+    private Sensor sensorGyroscopeUncalibrated;
+    private SensorManager sensorManager;
 
     private float strideLength;
 
-    private boolean useGyro;
+    private boolean filesCreated;
+    private boolean useEulerAngles;
 
-    private float[][] orientationMatrix;
+    private BufferedWriter writer;
+    private File fileAccelerometer;
+    private File fileGyroscopeCalibrated;
+    private File fileGyroscopeUncalibrated;
+
+    private int runCountGyro;
+    private float lastTimestampGyro;
+    private float gyroHeading;
+
+    private int runCountGyroU;
+    private float lastTimestampGyroU;
+    private float matrixHeading;
+    private float biasGyroU[];
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -67,6 +79,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
+        //getting global settings
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
 
@@ -78,60 +91,56 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         sharedPreferencesEditor.putBoolean("first_run", false).apply();
         strideLength = sharedPreferences.getFloat("stride_length", 2.5f);
 
-        useGyro = true;
-
-        //orientationMatrix = new float[3][3];
-        orientationMatrix = new float[][]{{1, 0, 0},
-                                          {0, 1, 0},
-                                          {0, 0, 1}};
-
-        //initializing needed classes
-        movingStepCounter = new MovingAverageStepCounter(1.0);
-        final double gyroInput[] = {-2900, -1450, 0, 1450, 2900};
-        final double rotationInput[] = {-1.0, -0.5, 0.0, 0.5, 1.0};
-        final double radianInput[] = {-90, 0, 90, 180, 270};
-
-        gyroHeadingInference = new GyroHeadingInference(gyroInput, radianInput);
-
-        //declaring views
+        //defining views
         final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
         final Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
         final Button buttonSwitch = (Button) findViewById(R.id.buttonGraphSwitch);
         Button buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
-        //declaring sensors
+        //defining sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        //sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorGyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        sensorRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        sensorGyroscopeCalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorGyroscopeUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+
+        //initializing needed classes
+        movingStepCounter = new MovingAverageStepCounter(STEP_COUNTER_SENSITIVITY);
+        matrixHeadingInference = new MatrixHeadingInference(MathFunctions.getIdentityMatrix());
 
         //setting up graph with origin
         sPlot = new ScatterPlot("Position");
         sPlot.addPoint(0, 0);
         linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
 
-        //
-//        if (!sessionFilesCreated) {
-//            //creating data files
-//            createFile("accelerometer");
-//            createFile("gyroscope");
-//            createFile("magnetometer");
-//            sessionFilesCreated = true;
-//        }
+        //initializing needed variables
+        useEulerAngles = false;
+        filesCreated = false;
+        runCountGyro = 0;
+        runCountGyroU = 0;
+        gyroHeading = (float) Math.PI / 2.0f;
+        matrixHeading = 0;
+        biasGyroU = new float[3];
 
-        //buttons
+        Toast.makeText(getApplicationContext(), "Not using Euler angles.", Toast.LENGTH_SHORT).show();
+
+        //setting up buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(GraphActivity.this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(GraphActivity.this, sensorRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this, sensorGyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this, sensorGyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
 
-                recordedTime = System.currentTimeMillis();
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
+
+                if (!filesCreated) {
+                    try {
+                        createFiles();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 buttonStart.setEnabled(false);
                 buttonSwitch.setEnabled(false);
@@ -143,10 +152,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //sensorManager.unregisterListener(GraphActivity.this, sensorStepDetector);
                 sensorManager.unregisterListener(GraphActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(GraphActivity.this, sensorGyroscope);
-                sensorManager.unregisterListener(GraphActivity.this, sensorRotationVector);
+                sensorManager.unregisterListener(GraphActivity.this, sensorGyroscopeCalibrated);
+                sensorManager.unregisterListener(GraphActivity.this, sensorGyroscopeUncalibrated);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
 
                 buttonStart.setEnabled(true);
@@ -158,23 +166,22 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         buttonSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                useGyro = !useGyro;
+                useEulerAngles = !useEulerAngles;
 
-                if (useGyro)
-                    Toast.makeText(getApplicationContext(), "Using gyroscope.", Toast.LENGTH_SHORT).show();
+                if (useEulerAngles)
+                    Toast.makeText(getApplicationContext(), "Using Euler angles.", Toast.LENGTH_SHORT).show();
                 else
-                    Toast.makeText(getApplicationContext(), "Using rotation vector.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Not using Euler angles.", Toast.LENGTH_SHORT).show();
 
-                if (useGyro)
-                    gyroHeadingInference = new GyroHeadingInference(gyroInput, radianInput);
-                else
-                    gyroHeadingInference = new GyroHeadingInference(rotationInput, radianInput);
             }
         });
 
         buttonClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                gyroHeading = 0;
+                matrixHeadingInference.clearMatrix();
+
                 sPlot.clearSet();
                 sPlot.addPoint(0,0);
                 linearLayout.removeAllViews();
@@ -209,11 +216,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 startActivity(myIntent);
                 break;
             }
-//            case R.id.calibration: {
-//                Intent myIntent = new Intent(this, CalibrationActivity.class);
-//                startActivity(myIntent);
-//                break;
-//            }
             case R.id.QRScan:
                 QRCodeScanner();
                 break;
@@ -244,185 +246,109 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         if (resultCode == RESULT_OK) {
             Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
         } else if (resultCode == RESULT_CANCELED) {
-            //zBarScanner recommends the following for when the scanner is canceled, however, for some reason, it causes the app to crash
-//            String errorMessage = data.getStringExtra(ZBarConstants.ERROR_INFO);
-//            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
-            Toast.makeText(getApplicationContext(), "QR Code Scanner Canceled.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "QR Code Scanner canceled.", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    private double averageGyroValue;
-    private double totalGyroValue;
-    private double currentRotationValue;
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE && useGyro) {
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-            double xVelocity = (double) event.values[0];
-            double yVelocity = (double) event.values[1];
-            double zVelocity = (double) event.values[2];
+            runCountGyro++;
 
-            double currentTime = event.timestamp / 1000000L;
-            double currentGyroValue = (currentTime - recordedTime) * event.values[2];
-
-            if (currentGyroValue > averageGyroValue * 100000 ) {
-                totalGyroValue += currentGyroValue;
-            } else {
-                averageGyroValue = (averageGyroValue + currentGyroValue) / 2;
+            //on the first run, the timestamp of the first point needs to be set
+            //so that delta-t can be calculated for the next point
+            if (runCountGyro <= 1) {
+                lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
+                return;
             }
 
-            recordedTime = event.timestamp / 1000000.0;
+            double deltaTimeGyro = MathFunctions.nsToSec(event.timestamp) - lastTimestampGyro;
+            double deltaHeading = deltaTimeGyro * event.values[2];
 
-//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, totalGyroValue);
+            gyroHeading += deltaHeading;
 
-//            gyroHeadingInference.calcDegrees(totalGyroValue);
-//            writeToFile(fileGyroscope, xVelocity, yVelocity, zVelocity, gyroHeadingInference.getDegree());
+            writeToFile(fileGyroscopeCalibrated, event.timestamp, event.values, gyroHeading);
 
-        }
-        //else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {}
-        else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            Double xAcc = (double) event.values[0];
-            Double yAcc = (double) event.values[1];
-            Double zAcc = (double) event.values[2];
+            lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
 
-            boolean stepFound = false;
+        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-            if (movingStepCounter.stepFound(zAcc))
-                stepFound = true;
+            runCountGyroU++;
+
+            //setting the initial timestamp on the first run
+            if (runCountGyroU == 1) {
+                biasGyroU[0] = event.values[0];
+                biasGyroU[1] = event.values[1];
+                biasGyroU[2] = event.values[2];
+                return;
+            }
+
+            double currentGyroUTime = MathFunctions.nsToSec(event.timestamp);
+            double deltaGyroUTime = currentGyroUTime - lastTimestampGyroU;
+
+            //averaging bias for the first few hundred data points
+            if (runCountGyroU <= 300) {
+                biasGyroU[0] = (biasGyroU[0] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[0] / runCountGyroU);
+                biasGyroU[1] = (biasGyroU[1] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[1] / runCountGyroU);
+                biasGyroU[2] = (biasGyroU[2] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[2] / runCountGyroU);
+                lastTimestampGyroU = MathFunctions.nsToSec(event.timestamp);
+                return;
+            }
+
+            float[] deltaOrientationGyroU = new float[3];
+            deltaOrientationGyroU[0] = (float) deltaGyroUTime * (event.values[0] - biasGyroU[0]);
+            deltaOrientationGyroU[1] = (float) deltaGyroUTime * (event.values[1] - biasGyroU[1]);
+            deltaOrientationGyroU[2] = (float) deltaGyroUTime * (event.values[2] - biasGyroU[2]);
+
+            matrixHeading = matrixHeadingInference.getCurrentHeading(deltaOrientationGyroU);
+
+            writeToFile(fileGyroscopeUncalibrated, event.timestamp, event.values, matrixHeading);
+
+            lastTimestampGyroU = MathFunctions.nsToSec(event.timestamp);
+
+            Log.d("matrixHeading", String.valueOf(matrixHeading));
+
+        } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+            float zAcc = event.values[0];
+
+            //if step is found, stepFound == true
+            boolean stepFound = movingStepCounter.stepFound(zAcc);
 
             if (stepFound) {
 
-//                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 1);
+                writeToFile(fileAccelerometer, event.timestamp, event.values, 1);
 
-
-
-                if (useGyro)
-                    gyroHeadingInference.calcDegrees(totalGyroValue);
+                float heading;
+                if (useEulerAngles)
+                    heading = matrixHeading + (float) (Math.PI / 2.0);
                 else
-                    gyroHeadingInference.calcDegrees(currentRotationValue);
+                    heading = gyroHeading;
 
-
-
-                double pointX = gyroHeadingInference.getXPoint(strideLength);
-                double pointY = gyroHeadingInference.getYPoint(strideLength);
+                double pointX = MathFunctions.getXFromPolar(strideLength, heading);
+                double pointY = MathFunctions.getYFromPolar(strideLength, heading);
 
                 sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
 
                 linearLayout.removeAllViews();
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
+
+                //if step is not found
             } else {
-//                writeToFile(fileAccelerometer, xAcc, yAcc, zAcc, 0);
+                writeToFile(fileAccelerometer, event.timestamp, event.values, 0);
             }
-        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR && !useGyro) {
-            Double xField = (double) event.values[0];
-            Double yField = (double) event.values[1];
-            Double zField = (double) event.values[2];
-
-//            writeToFile(fileMagnetometer, xField, yField, zField, 0);
-
-
-            currentRotationValue = event.values[2];
 
         }
-    }
-
-    private BufferedWriter writer;
-
-    private File fileAccelerometer;
-    private File fileGyroscope;
-    private File fileMagnetometer;
-
-    private void writeToFile(File myFile, double d1, double d2, double d3, double extra) {
-        try {
-            writer = new BufferedWriter(new FileWriter(myFile, true));
-            writer.write(System.currentTimeMillis() + ";" +  d1 + ";" + d2 + ";" + d3 + ";" + extra);
-            writer.write(System.getProperty("line.separator"));
-            writer.close();
-        } catch (IOException ignored) {}
-    }
-
-    private void createFile(String type) {
-
-        String folderName = "Inertial Navigation Data";
-
-        File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
-        if (!myFolder.exists())
-            if (myFolder.mkdir())
-                Toast.makeText(getApplicationContext(), "Folder created.", Toast.LENGTH_SHORT).show();
-
-        String folderPath = myFolder.getPath();
-
-        //determines what the data file's name will be
-        String fileName = getFileName(type);
-
-        switch (type) {
-            case "accelerometer":
-                try {
-                    //creating file
-                    fileAccelerometer = new File(folderPath, fileName);
-                    if (fileAccelerometer.createNewFile())
-                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
-                    //writing the heading of the file
-                    writer = new BufferedWriter(new FileWriter(fileAccelerometer, true));
-                    writer.write("time;xAcc;yAcc;zAcc;stepFound");
-                    writer.write(System.getProperty("line.separator"));
-                    writer.close();
-                } catch (IOException ignored) {
-                }
-                break;
-            case "gyroscope":
-                try {
-                    //creating file
-                    fileGyroscope = new File(folderPath, fileName);
-                    if(fileGyroscope.createNewFile())
-                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
-                    //writing the heading of the file
-                    writer = new BufferedWriter(new FileWriter(fileGyroscope, true));
-                    writer.write("time;xVelocity;yVelocity;zVelocity;orientation");
-                    writer.write(System.getProperty("line.separator"));
-                    writer.close();
-                } catch (IOException ignored) {
-                }
-                break;
-            case "magnetometer":
-                try {
-                    //creating file
-                    fileMagnetometer = new File(folderPath, fileName);
-                    if(fileMagnetometer.createNewFile())
-                        Toast.makeText(getApplicationContext(), fileName, Toast.LENGTH_SHORT).show();
-                    //writing the heading of the file
-                    writer = new BufferedWriter(new FileWriter(fileMagnetometer, true));
-                    writer.write("time;xField;yField;zField;orientation");
-                    writer.write(System.getProperty("line.separator"));
-                    writer.close();
-                } catch (IOException ignored) {
-                }
-                break;
-        }
-
-    }
-
-    private String getFileName(String type) {
-
-        Time today = new Time(Time.getCurrentTimezone());
-        today.setToNow();
-
-        String date = "(" + today.year + "-" + today.month + "-" + today.monthDay + ")";
-        String currentTime = "(" + today.format("%H.%M.%S") + ")";
-
-        return type + " " + date + " " + currentTime + ".txt";
-
     }
 
     private void QRCodeScanner() {
-        if (isCameraAvailable()) {
+        boolean isCameraAvailable = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
+        if (isCameraAvailable) {
             Intent myIntent = new Intent(getApplicationContext(), ZBarScannerActivity.class);
             myIntent.putExtra(ZBarConstants.SCAN_MODES, new int[]{Symbol.QRCODE});
             startActivityForResult(myIntent, ZBAR_QR_SCANNER_REQUEST);
@@ -431,7 +357,69 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         }
     }
 
-    private boolean isCameraAvailable() {
-        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
+    private void createFiles() throws IOException{
+
+        //creating the folder
+        String folderName = "Inertial_Navigation_Data/Graph_Activity";
+
+        File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
+        if (!myFolder.exists())
+            if (myFolder.mkdirs())
+                Toast.makeText(getApplicationContext(), "Folder created.", Toast.LENGTH_SHORT).show();
+
+        String folderPath = myFolder.getPath();
+
+        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated"};
+
+        fileAccelerometer = new File(folderPath, getFileName(fileType[0]));
+        fileGyroscopeCalibrated = new File(folderPath, getFileName(fileType[1]));
+        fileGyroscopeUncalibrated = new File(folderPath, getFileName(fileType[2]));
+
+        createSingleFile(fileAccelerometer, fileType[0]);
+        createSingleFile(fileGyroscopeCalibrated, fileType[1]);
+        createSingleFile(fileGyroscopeUncalibrated, fileType[2]);
+
+    }
+
+    private String getFileName(String type) {
+
+        Time today = new Time(Time.getCurrentTimezone());
+        today.setToNow();
+
+        String date = "(" + today.year + "-" + (today.month + 1) + "-" + today.monthDay + ")";
+        String currentTime = "(" + today.format("%H%M%S") + ")";
+
+        return type + " " + date + " @ " + currentTime + ".txt";
+
+    }
+
+    private void createSingleFile(File file, String fileName) throws IOException {
+
+        if (file.createNewFile())
+            Log.d("dataFiles",getFileName(fileName));
+
+        writer = new BufferedWriter(new FileWriter(file, true));
+
+        writer.write("time;x;y;z");
+        if (fileName.contains("gyro"))
+            writer.write(";heading");
+        else if (fileName.contains("acc"))
+            writer.write(";stepFound");
+
+        writer.write(System.getProperty("line.separator"));
+        writer.close();
+
+    }
+
+    private void writeToFile(File file, float time, float[] sensorValues, float extraValue) {
+        try {
+            writer = new BufferedWriter(new FileWriter(file, true));
+            writer.write(String.valueOf(time));
+            for (double sensorValue : sensorValues)
+                writer.write(";" + sensorValue);
+            writer.write(";" + extraValue);
+            writer.write(System.getProperty("line.separator"));
+            writer.close();
+        } catch (IOException ignored) {}
     }
 }

@@ -5,15 +5,11 @@ import nisargpatel.inertialnavigation.math.MathFunctions;
 
 public class MatrixHeadingInference {
 
-    private float currentHeading;
-
     private float[][] c;
 
-    private final float[][] IDENTITY_MATRIX = new float[][]{{1,0,0},
-            {0,1,0},
-            {0,0,1}};
-
-    private MatrixHeadingInference() {}
+    public MatrixHeadingInference() {
+        this(MathFunctions.getIdentityMatrix());
+    }
 
     public MatrixHeadingInference(float[][] startingMatrix) {
         c = startingMatrix.clone();
@@ -28,8 +24,8 @@ public class MatrixHeadingInference {
 
         calcMatrixC(a);
 
-        currentHeading = (float) (Math.atan2(c[1][0], c[0][0]));
-        return currentHeading;
+        //calculate and return current heading
+        return (float) (Math.atan2(c[1][0], c[0][0]));
     }
 
     private float[][] calcMatrixB(float wX, float wY, float wZ) {
@@ -52,7 +48,7 @@ public class MatrixHeadingInference {
         bSq = MathFunctions.scaleMatrix(bSq, bSqScaleFactor);
 
         a = MathFunctions.addMatrices(b, bSq);
-        a = MathFunctions.addMatrices(a, IDENTITY_MATRIX);
+        a = MathFunctions.addMatrices(a, MathFunctions.getIdentityMatrix());
 
         return a;
     }
@@ -61,7 +57,7 @@ public class MatrixHeadingInference {
         return (float) (Math.sqrt(Math.pow(wX, 2) + Math.pow(wY, 2) + Math.pow(wZ, 2)));
     }
 
-    //(sin sigma) / sigma ~= 1 - (sigma^2 / 3!) + (sigma^4 / 5!)
+    //(sin σ) / σ ≈ 1 - (σ^2 / 3!) + (σ^4 / 5!)
     private float calcBScaleFactor(float sigma) {
         //return (float) ((1 - Math.cos(sigma)) / Math.pow(sigma, 2));
         float sigmaSqOverThreeFactorial = (float) Math.pow(sigma, 2) / MathFunctions.factorial(3);
@@ -69,7 +65,7 @@ public class MatrixHeadingInference {
         return (float) (1.0 - sigmaSqOverThreeFactorial + sigmaToForthOverFiveFactorial);
     }
 
-    //(1 - cos sigma) / sigma^2 ~= (1/2) - (sigma^2 / 4!) + (sigma^4 / 6!)
+    //(1 - cos σ) / σ^2 ≈ (1/2) - (σ^2 / 4!) + (σ^4 / 6!)
     private float calcBSqScaleFactor(float sigma) {
         //return (float) (Math.sin(sigma) / sigma);
         float sigmaSqOverFourFactorial = (float) Math.pow(sigma, 2) / MathFunctions.factorial(4);
@@ -82,15 +78,7 @@ public class MatrixHeadingInference {
     }
 
     public void clearMatrix() {
-        c = IDENTITY_MATRIX;
-    }
-
-    public double getXPoint(double radius) {
-        return radius * Math.cos(currentHeading);
-    }
-
-    public double getYPoint(double radius) {
-        return radius * Math.sin(currentHeading);
+        c = MathFunctions.getIdentityMatrix();
     }
 
 }

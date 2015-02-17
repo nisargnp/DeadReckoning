@@ -5,7 +5,7 @@ public final class MathFunctions {
 
     //private constructor stops class from
     //being instantiated to an object
-    private MathFunctions() {};
+    private MathFunctions() {}
 
     //calculate x coordinate point given radius and angle
     public static double getXFromPolar(double radius, double angle) {
@@ -83,6 +83,12 @@ public final class MathFunctions {
         //a[][] * c = b[][]
         return b;
 
+    }
+
+    public static float[][] getIdentityMatrix() {
+        return new float[][]{{1,0,0},
+                             {0,1,0},
+                             {0,0,1}};
     }
 
 }

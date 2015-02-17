@@ -45,6 +45,17 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     private boolean gotAccData, gotMagData;
     private float[] accData, magData;
 
+    BufferedWriter writer;
+    File fileAccelerometer;
+    File fileGyroscopeCalibrated;
+    File fileGyroscopeUncalibrated;
+    File fileRotationVector;
+    File fileGeomagneticRotationVector;
+    File fileRotationMatrixFromVector;
+    File fileRotationMatrix;
+    File fileOrientationValues;
+    File fileGravity;
+
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -90,7 +101,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.registerListener(DataCollectActivity.this, sensorGravity, SensorManager.SENSOR_DELAY_FASTEST);
 
                 try {
-                    createFiles();
+                    createAllFiles();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -133,25 +144,14 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
     }
 
-    BufferedWriter writer;
-    File fileAccelerometer;
-    File fileGyroscopeCalibrated;
-    File fileGyroscopeUncalibrated;
-    File fileRotationVector;
-    File fileGeomagneticRotationVector;
-    File fileRotationMatrixFromVector;
-    File fileRotationMatrix;
-    File fileOrientationValues;
-    File fileGravity;
-
-    private void createFiles() throws IOException{
+    private void createAllFiles() throws IOException{
 
         //creating the folder
-        String folderName = "Inertial Navigation Data";
+        String folderName = "Inertial_Navigation_Data/Data_Collect_Activity";
 
         File myFolder = new File(Environment.getExternalStorageDirectory(), folderName);
         if (!myFolder.exists())
-            if (myFolder.mkdir())
+            if (myFolder.mkdirs())
                 Toast.makeText(getApplicationContext(), "Folder created.", Toast.LENGTH_SHORT).show();
 
         String folderPath = myFolder.getPath();
