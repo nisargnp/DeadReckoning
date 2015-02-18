@@ -15,12 +15,17 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.heading.MatrixHeadingInference;
-import nisargpatel.inertialnavigation.math.MathFunctions;
+import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
+import nisargpatel.inertialnavigation.heading.GyroIntegration;
 
 public class OrientationTestActivity extends ActionBarActivity implements SensorEventListener{
 
-    private MatrixHeadingInference matrixHeadingInference;
+    private static final float EULER_GYROSCOPE_SENSITIVITY = 0.0025f;
+    private static final float GYROSCOPE_SENSITIVITY = 0f;
+
+    private EulerHeadingInference eulerHeadingInference;
+    private GyroIntegration gyroIntegration;
+    private GyroIntegration gyroIntegrationEuler;
 
     private Sensor gyroscopeCalibrated;
     private Sensor gyroscopeUncalibrated;
@@ -35,15 +40,7 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
     private TextView textGeoRotation;
     private TextView textGameRotation;
 
-    private double lastTimestampGyro;
-    private double lastTimestampGyroU;
-
     private double gyroHeading;
-
-    int runCountGyro;
-    int runCountGyroU;
-
-    float[] biasGyroU = new float[3];
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -51,10 +48,11 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_orientation_test);
 
-        matrixHeadingInference = new MatrixHeadingInference();
+        eulerHeadingInference = new EulerHeadingInference();
+        gyroIntegration = new GyroIntegration(0, GYROSCOPE_SENSITIVITY);
+        gyroIntegrationEuler = new GyroIntegration(300, EULER_GYROSCOPE_SENSITIVITY);
 
         gyroHeading = 0;
-        runCountGyro = 0;
 
         textGyroscopeMatrix = (TextView) findViewById(R.id.textGyroscopeMatrix);
         textGyroscope = (TextView) findViewById(R.id.textGyroscope);
@@ -81,7 +79,6 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
                 sm.registerListener(OrientationTestActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 sm.registerListener(OrientationTestActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
                 sm.registerListener(OrientationTestActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                runCountGyro = runCountGyroU = 0;
             }
         });
 
@@ -105,7 +102,7 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
                 textGeoRotation.setText("0");
                 textGameRotation.setText("0");
 
-                matrixHeadingInference.clearMatrix();
+                eulerHeadingInference.clearMatrix();
 
                 gyroHeading = 0;
             }
@@ -145,66 +142,24 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
 
         if (sensorType == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-            runCountGyroU++;
+            float[] deltaOrientation = gyroIntegrationEuler.getIntegratedValues(event.timestamp, event.values);
 
-            //setting the initial timestamp on the first run
-            if (runCountGyroU == 1) {
-                biasGyroU[0] = event.values[0];
-                biasGyroU[1] = event.values[1];
-                biasGyroU[2] = event.values[2];
-                return;
-            }
-
-            double currentGyroUTime = MathFunctions.nsToSec(event.timestamp);
-            double deltaGyroUTime = currentGyroUTime - lastTimestampGyroU;
-
-            //averaging bias for the first few hundred data points
-            if (runCountGyroU <= 300) {
-                biasGyroU[0] = (biasGyroU[0] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[0] / runCountGyroU);
-                biasGyroU[1] = (biasGyroU[1] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[1] / runCountGyroU);
-                biasGyroU[2] = (biasGyroU[2] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[2] / runCountGyroU);
-                lastTimestampGyroU = MathFunctions.nsToSec(event.timestamp);
-                return;
-            }
-
-            float[] deltaOrientationGyroU = new float[3];
-            deltaOrientationGyroU[0] = (float) deltaGyroUTime * (event.values[0] - biasGyroU[0]);
-            deltaOrientationGyroU[1] = (float) deltaGyroUTime * (event.values[1] - biasGyroU[1]);
-            deltaOrientationGyroU[2] = (float) deltaGyroUTime * (event.values[2] - biasGyroU[2]);
-
-            float heading = matrixHeadingInference.getCurrentHeading(deltaOrientationGyroU);
-            textGyroscopeMatrix.setText(String.valueOf(heading));
-
-            lastTimestampGyroU = currentGyroUTime;
+            float eulerHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
+            textGyroscopeMatrix.setText(String.valueOf(eulerHeading));
 
         } else if (sensorType == Sensor.TYPE_GYROSCOPE) {
 
-            runCountGyro++;
+            float[] deltaOrientation = gyroIntegration.getIntegratedValues(event.timestamp, event.values);
 
-            //on the first run, the timestamp of the first point needs to be set
-            //so that delta-t can be calculated for the next point
-            if (runCountGyro <= 1) {
-                lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
-                return;
-            }
-
-            double deltaTimeGyro = MathFunctions.nsToSec(event.timestamp) - lastTimestampGyro;
-            double deltaHeading = deltaTimeGyro * event.values[2];
-
-            gyroHeading += deltaHeading;
+            gyroHeading += deltaOrientation[2];
             textGyroscope.setText(String.valueOf(gyroHeading));
-
-            lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
 
         } else if (sensorType == Sensor.TYPE_ROTATION_VECTOR) {
             textRotation.setText(String.valueOf(event.values[2]));
-
         } else if (sensorType == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
             textGeoRotation.setText(String.valueOf(event.values[2]));
-
         } else if (sensorType == Sensor.TYPE_GAME_ROTATION_VECTOR) {
             textGameRotation.setText(String.valueOf(event.values[2]));
-
         }
     }
 

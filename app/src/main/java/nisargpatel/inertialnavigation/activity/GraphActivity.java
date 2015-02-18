@@ -33,7 +33,7 @@ import java.io.IOException;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
-import nisargpatel.inertialnavigation.heading.MatrixHeadingInference;
+import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
 import nisargpatel.inertialnavigation.math.MathFunctions;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
@@ -44,7 +44,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private static final double STEP_COUNTER_SENSITIVITY = 1.0;
 
     private MovingAverageStepCounter movingStepCounter;
-    private MatrixHeadingInference matrixHeadingInference;
+    private EulerHeadingInference eulerHeadingInference;
     private ScatterPlot sPlot;
 
     private LinearLayout linearLayout;
@@ -106,7 +106,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(STEP_COUNTER_SENSITIVITY);
-        matrixHeadingInference = new MatrixHeadingInference(MathFunctions.getIdentityMatrix());
+        eulerHeadingInference = new EulerHeadingInference(MathFunctions.getIdentityMatrix());
 
         //setting up graph with origin
         sPlot = new ScatterPlot("Position");
@@ -136,7 +136,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
                 if (!filesCreated) {
                     try {
-                        createFiles();
+                        createDataFiles();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -180,7 +180,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             @Override
             public void onClick(View v) {
                 gyroHeading = 0;
-                matrixHeadingInference.clearMatrix();
+                eulerHeadingInference.clearMatrix();
 
                 sPlot.clearSet();
                 sPlot.addPoint(0,0);
@@ -305,7 +305,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             deltaOrientationGyroU[1] = (float) deltaGyroUTime * (event.values[1] - biasGyroU[1]);
             deltaOrientationGyroU[2] = (float) deltaGyroUTime * (event.values[2] - biasGyroU[2]);
 
-            matrixHeading = matrixHeadingInference.getCurrentHeading(deltaOrientationGyroU);
+            matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientationGyroU);
 
             writeToFile(fileGyroscopeUncalibrated, event.timestamp, event.values, matrixHeading);
 
@@ -357,7 +357,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         }
     }
 
-    private void createFiles() throws IOException{
+    private void createDataFiles() throws IOException{
 
         //creating the folder
         String folderName = "Inertial_Navigation_Data/Graph_Activity";
@@ -375,9 +375,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         fileGyroscopeCalibrated = new File(folderPath, getFileName(fileType[1]));
         fileGyroscopeUncalibrated = new File(folderPath, getFileName(fileType[2]));
 
-        createSingleFile(fileAccelerometer, fileType[0]);
-        createSingleFile(fileGyroscopeCalibrated, fileType[1]);
-        createSingleFile(fileGyroscopeUncalibrated, fileType[2]);
+        createDataFile(fileAccelerometer, fileType[0]);
+        createDataFile(fileGyroscopeCalibrated, fileType[1]);
+        createDataFile(fileGyroscopeUncalibrated, fileType[2]);
 
     }
 
@@ -393,7 +393,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     }
 
-    private void createSingleFile(File file, String fileName) throws IOException {
+    private void createDataFile(File file, String fileName) throws IOException {
 
         if (file.createNewFile())
             Log.d("dataFiles",getFileName(fileName));

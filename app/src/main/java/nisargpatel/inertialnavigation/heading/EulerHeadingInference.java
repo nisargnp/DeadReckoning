@@ -3,15 +3,15 @@ package nisargpatel.inertialnavigation.heading;
 
 import nisargpatel.inertialnavigation.math.MathFunctions;
 
-public class MatrixHeadingInference {
+public class EulerHeadingInference {
 
     private float[][] c;
 
-    public MatrixHeadingInference() {
+    public EulerHeadingInference() {
         this(MathFunctions.getIdentityMatrix());
     }
 
-    public MatrixHeadingInference(float[][] startingMatrix) {
+    public EulerHeadingInference(float[][] startingMatrix) {
         c = startingMatrix.clone();
     }
 

@@ -101,7 +101,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 sensorManager.registerListener(DataCollectActivity.this, sensorGravity, SensorManager.SENSOR_DELAY_FASTEST);
 
                 try {
-                    createAllFiles();
+                    createDataFiles();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -144,7 +144,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
     }
 
-    private void createAllFiles() throws IOException{
+    private void createDataFiles() throws IOException{
 
         //creating the folder
         String folderName = "Inertial_Navigation_Data/Data_Collect_Activity";
@@ -169,16 +169,16 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         fileOrientationValues = new File(folderPath, getFileName(fileType[7]));
         fileGravity = new File(folderPath, getFileName(fileType[8]));
 
-        createSingleFile(fileAccelerometer, fileType[0]);
-        createSingleFile(fileGyroscopeCalibrated, fileType[1]);
-        createSingleFile(fileGyroscopeUncalibrated, fileType[2]);
-        createSingleFile(fileRotationVector, fileType[3]);
-        createSingleFile(fileGeomagneticRotationVector, fileType[4]);
+        createDataFile(fileAccelerometer, fileType[0]);
+        createDataFile(fileGyroscopeCalibrated, fileType[1]);
+        createDataFile(fileGyroscopeUncalibrated, fileType[2]);
+        createDataFile(fileRotationVector, fileType[3]);
+        createDataFile(fileGeomagneticRotationVector, fileType[4]);
 
-        createSingleFile(fileRotationMatrixFromVector, fileType[5]);
-        createSingleFile(fileRotationMatrix, fileType[6]);
-        createSingleFile(fileOrientationValues, fileType[7]);
-        createSingleFile(fileGravity, fileType[8]);
+        createDataFile(fileRotationMatrixFromVector, fileType[5]);
+        createDataFile(fileRotationMatrix, fileType[6]);
+        createDataFile(fileOrientationValues, fileType[7]);
+        createDataFile(fileGravity, fileType[8]);
 
     }
 
@@ -194,7 +194,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
     }
 
-    private void createSingleFile(File file, String fileName) throws IOException {
+    private void createDataFile(File file, String fileName) throws IOException {
 
         if (file.createNewFile())
             info.setText(info.getText() + "\n\n" + getFileName(fileName));
