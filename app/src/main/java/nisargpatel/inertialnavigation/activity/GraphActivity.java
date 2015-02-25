@@ -34,6 +34,7 @@ import java.io.IOException;
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
 import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
+import nisargpatel.inertialnavigation.heading.GyroIntegration;
 import nisargpatel.inertialnavigation.math.MathFunctions;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
@@ -43,35 +44,29 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private static final int ZBAR_QR_SCANNER_REQUEST = 1;
     private static final double STEP_COUNTER_SENSITIVITY = 1.0;
 
+    public static SharedPreferences sharedPreferences;
+    public static SharedPreferences.Editor sharedPreferencesEditor;
+
     private MovingAverageStepCounter movingStepCounter;
+    private GyroIntegration gyroIntegration;
     private EulerHeadingInference eulerHeadingInference;
     private ScatterPlot sPlot;
 
     private LinearLayout linearLayout;
 
     private Sensor sensorAccelerometer;
-    private Sensor sensorGyroscopeCalibrated;
     private Sensor sensorGyroscopeUncalibrated;
     private SensorManager sensorManager;
 
     private float strideLength;
 
     private boolean filesCreated;
-    private boolean useEulerAngles;
 
     private BufferedWriter writer;
     private File fileAccelerometer;
-    private File fileGyroscopeCalibrated;
     private File fileGyroscopeUncalibrated;
 
-    private int runCountGyro;
-    private float lastTimestampGyro;
-    private float gyroHeading;
-
-    private int runCountGyroU;
-    private float lastTimestampGyroU;
     private float matrixHeading;
-    private float biasGyroU[];
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -80,8 +75,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         setContentView(R.layout.activity_graph);
 
         //getting global settings
-        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
+        sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+        sharedPreferencesEditor = sharedPreferences.edit();
 
         if (sharedPreferences.getBoolean("first_run", true)) {
             Intent myIntent = new Intent(GraphActivity.this, CalibrationActivity.class);
@@ -94,18 +89,18 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //defining views
         final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
         final Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
-        final Button buttonSwitch = (Button) findViewById(R.id.buttonGraphSwitch);
+        final Button buttonCalibrate = (Button) findViewById(R.id.buttonGraphCalibrate);
         Button buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
         //defining sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorGyroscopeCalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorGyroscopeUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
 
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(STEP_COUNTER_SENSITIVITY);
+        gyroIntegration = new GyroIntegration(300, 0.0025f);
         eulerHeadingInference = new EulerHeadingInference(MathFunctions.getIdentityMatrix());
 
         //setting up graph with origin
@@ -114,22 +109,13 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
 
         //initializing needed variables
-        useEulerAngles = false;
         filesCreated = false;
-        runCountGyro = 0;
-        runCountGyroU = 0;
-        gyroHeading = (float) Math.PI / 2.0f;
-        matrixHeading = 0;
-        biasGyroU = new float[3];
-
-        Toast.makeText(getApplicationContext(), "Not using Euler angles.", Toast.LENGTH_SHORT).show();
 
         //setting up buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(GraphActivity.this, sensorGyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
 
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
@@ -143,7 +129,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 }
 
                 buttonStart.setEnabled(false);
-                buttonSwitch.setEnabled(false);
+                buttonCalibrate.setEnabled(false);
                 buttonStop.setEnabled(true);
 
             }
@@ -153,33 +139,26 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             @Override
             public void onClick(View v) {
                 sensorManager.unregisterListener(GraphActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(GraphActivity.this, sensorGyroscopeCalibrated);
                 sensorManager.unregisterListener(GraphActivity.this, sensorGyroscopeUncalibrated);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
 
                 buttonStart.setEnabled(true);
-                buttonSwitch.setEnabled(true);
+                buttonCalibrate.setEnabled(true);
                 buttonStop.setEnabled(false);
             }
         });
 
-        buttonSwitch.setOnClickListener(new View.OnClickListener() {
+        buttonCalibrate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                useEulerAngles = !useEulerAngles;
-
-                if (useEulerAngles)
-                    Toast.makeText(getApplicationContext(), "Using Euler angles.", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(getApplicationContext(), "Not using Euler angles.", Toast.LENGTH_SHORT).show();
-
+                Intent myIntent = new Intent(GraphActivity.this, CalibrationActivity.class);
+                startActivity(myIntent);
             }
         });
 
         buttonClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gyroHeading = 0;
                 eulerHeadingInference.clearMatrix();
 
                 sPlot.clearSet();
@@ -255,63 +234,11 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-
-            runCountGyro++;
-
-            //on the first run, the timestamp of the first point needs to be set
-            //so that delta-t can be calculated for the next point
-            if (runCountGyro <= 1) {
-                lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
-                return;
-            }
-
-            double deltaTimeGyro = MathFunctions.nsToSec(event.timestamp) - lastTimestampGyro;
-            double deltaHeading = deltaTimeGyro * event.values[2];
-
-            gyroHeading += deltaHeading;
-
-            writeToFile(fileGyroscopeCalibrated, event.timestamp, event.values, gyroHeading);
-
-            lastTimestampGyro = MathFunctions.nsToSec(event.timestamp);
-
-        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
-
-            runCountGyroU++;
-
-            //setting the initial timestamp on the first run
-            if (runCountGyroU == 1) {
-                biasGyroU[0] = event.values[0];
-                biasGyroU[1] = event.values[1];
-                biasGyroU[2] = event.values[2];
-                return;
-            }
-
-            double currentGyroUTime = MathFunctions.nsToSec(event.timestamp);
-            double deltaGyroUTime = currentGyroUTime - lastTimestampGyroU;
-
-            //averaging bias for the first few hundred data points
-            if (runCountGyroU <= 300) {
-                biasGyroU[0] = (biasGyroU[0] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[0] / runCountGyroU);
-                biasGyroU[1] = (biasGyroU[1] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[1] / runCountGyroU);
-                biasGyroU[2] = (biasGyroU[2] * ((runCountGyroU - 1) / runCountGyroU)) + (event.values[2] / runCountGyroU);
-                lastTimestampGyroU = MathFunctions.nsToSec(event.timestamp);
-                return;
-            }
-
-            float[] deltaOrientationGyroU = new float[3];
-            deltaOrientationGyroU[0] = (float) deltaGyroUTime * (event.values[0] - biasGyroU[0]);
-            deltaOrientationGyroU[1] = (float) deltaGyroUTime * (event.values[1] - biasGyroU[1]);
-            deltaOrientationGyroU[2] = (float) deltaGyroUTime * (event.values[2] - biasGyroU[2]);
-
-            matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientationGyroU);
-
+            float[] deltaOrientation = gyroIntegration.getIntegratedValues(event.timestamp, event.values);
+            matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
             writeToFile(fileGyroscopeUncalibrated, event.timestamp, event.values, matrixHeading);
-
-            lastTimestampGyroU = MathFunctions.nsToSec(event.timestamp);
-
-            Log.d("matrixHeading", String.valueOf(matrixHeading));
 
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
@@ -324,12 +251,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
                 writeToFile(fileAccelerometer, event.timestamp, event.values, 1);
 
-                float heading;
-                if (useEulerAngles)
-                    heading = matrixHeading + (float) (Math.PI / 2.0);
-                else
-                    heading = gyroHeading;
-
+                float heading = matrixHeading + (float) (Math.PI / 2.0);
                 double pointX = MathFunctions.getXFromPolar(strideLength, heading);
                 double pointY = MathFunctions.getYFromPolar(strideLength, heading);
 
@@ -369,15 +291,13 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         String folderPath = myFolder.getPath();
 
-        String[] fileType = {"Accelerometer", "GyroCalibrated", "GyroUncalibrated"};
+        String[] fileType = {"Accelerometer", "GyroUncalibrated"};
 
         fileAccelerometer = new File(folderPath, getFileName(fileType[0]));
-        fileGyroscopeCalibrated = new File(folderPath, getFileName(fileType[1]));
-        fileGyroscopeUncalibrated = new File(folderPath, getFileName(fileType[2]));
+        fileGyroscopeUncalibrated = new File(folderPath, getFileName(fileType[1]));
 
         createDataFile(fileAccelerometer, fileType[0]);
-        createDataFile(fileGyroscopeCalibrated, fileType[1]);
-        createDataFile(fileGyroscopeUncalibrated, fileType[2]);
+        createDataFile(fileGyroscopeUncalibrated, fileType[1]);
 
     }
 

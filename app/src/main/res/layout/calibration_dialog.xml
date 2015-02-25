@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Enter stride length below (ft/steps) and press 'Okay' OR go to auto-calibration mode."
+        android:id="@+id/textViewDialog1"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="1dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/textDialogStride"
+        android:layout_below="@+id/textViewDialog1"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>

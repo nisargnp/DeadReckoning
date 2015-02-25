@@ -33,5 +33,6 @@
     <string name="title_activity_data_collection">DataCollectionActivity</string>
     <string name="clear">Clear</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_user">UserActivity</string>
 
 </resources>

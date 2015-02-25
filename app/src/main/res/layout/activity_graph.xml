@@ -39,9 +39,9 @@
     <Button
         android:layout_width="70.5dp"
         android:layout_height="75dp"
-        android:text="Switch"
-        android:id="@+id/buttonGraphSwitch"
-        android:textSize="12sp"
+        android:text="Calibrate"
+        android:id="@+id/buttonGraphCalibrate"
+        android:textSize="8sp"
         android:layout_alignTop="@+id/buttonGraphStart"
         android:layout_toRightOf="@+id/buttonGraphStart"
         android:layout_toEndOf="@+id/buttonGraphStart"
@@ -54,9 +54,9 @@
         android:text="@string/clear"
         android:id="@+id/buttonGraphClear"
         android:textSize="15sp"
-        android:layout_alignBottom="@+id/buttonGraphSwitch"
-        android:layout_alignLeft="@+id/buttonGraphSwitch"
-        android:layout_alignStart="@id/buttonGraphSwitch"
+        android:layout_alignBottom="@+id/buttonGraphCalibrate"
+        android:layout_alignLeft="@+id/buttonGraphCalibrate"
+        android:layout_alignStart="@id/buttonGraphCalibrate"
         android:layout_marginLeft="86.5dp"
         android:layout_marginStart="86.5dp"/>
 

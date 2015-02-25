@@ -1,6 +1,7 @@
 package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -90,6 +91,10 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
                 Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + " ft/sec.", Toast.LENGTH_SHORT).show();
 
                 finish();
+
+//                Intent myIntent = new Intent(CalibrationActivity.this, GraphActivity.class);
+//                startActivity(myIntent);
+
             }
         });
 
