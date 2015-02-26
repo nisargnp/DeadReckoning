@@ -1,11 +1,12 @@
 package nisargpatel.inertialnavigation.activity;
 
 import android.app.AlertDialog;
-import android.app.ListActivity;
+import android.app.ListFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,13 +17,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import nisargpatel.inertialnavigation.R;
+import nisargpatel.inertialnavigation.dialog.CalibrationFragment;
 
-public class UserActivity extends ListActivity {
+public class UserListActivity extends FragmentActivity {
 
-    String[] users = {"Default", "Custom User 1", "Custom User 2"};
+    public static String[] users = {"Default", "Custom User 1", "Custom User 2"};
 
     private static final String PREFS_NAME = "Inertial Navigation Preferences";
 
+    private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPreferencesEditor;
 
     @Override
@@ -30,16 +33,14 @@ public class UserActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
+        sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
         sharedPreferencesEditor = sharedPreferences.edit();
         sharedPreferencesEditor.apply();
 
-        setListAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, users));
-
-        //onListItemClick(new OrientationTestActivity());
+        TestList testing = new TestList();
+        getFragmentManager().beginTransaction().add(android.R.id.content, testing).commit();
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -63,30 +64,12 @@ public class UserActivity extends ListActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
-
-        switch (position) {
-            case 0:
-                openDialog();
-                break;
-            case 1:
-                Toast.makeText(this, "Use Default.", Toast.LENGTH_SHORT).show();
-                break;
-            case 2:
-                Toast.makeText(this, "Use Default.", Toast.LENGTH_SHORT).show();
-                break;
-        }
-
-    }
-
     public void openDialog() {
 
-        LayoutInflater layoutInflater = LayoutInflater.from(UserActivity.this);
+        LayoutInflater layoutInflater = LayoutInflater.from(UserListActivity.this);
         View dialogBox = layoutInflater.inflate(R.layout.calibration_dialog, null);
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(UserActivity.this);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(UserListActivity.this);
         alertDialogBuilder.setView(dialogBox);
 
         final EditText textStrideLength = (EditText) dialogBox.findViewById(R.id.textDialogStride);
@@ -102,7 +85,7 @@ public class UserActivity extends ListActivity {
                                 sharedPreferencesEditor.apply();
 
                                 Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + " ft/sec.", Toast.LENGTH_SHORT).show();
-                                Intent myIntent = new Intent(UserActivity.this, GraphActivity.class);
+                                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
                                 startActivity(myIntent);
                             }
                         })
@@ -110,10 +93,10 @@ public class UserActivity extends ListActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Intent myIntent = new Intent(UserActivity.this, GraphActivity.class);
+                                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
                                 startActivity(myIntent);
 
-                                myIntent = new Intent(UserActivity.this, CalibrationActivity.class);
+                                myIntent = new Intent(UserListActivity.this, CalibrationActivity.class);
                                 startActivity(myIntent);
                             }
                         });
@@ -121,5 +104,39 @@ public class UserActivity extends ListActivity {
         AlertDialog alertDialog = alertDialogBuilder.create();
 
         alertDialog.show();
+    }
+
+    private static CalibrationFragment calibrationDialog;
+
+    public static class TestList extends ListFragment {
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+
+            setListAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, UserListActivity.users));
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            FragmentActivity myActivity = (FragmentActivity)v.getContext();
+
+            calibrationDialog = new CalibrationFragment();
+            calibrationDialog.setDialogMessage("This is a test.");
+
+            switch (position) {
+                case 0:
+                    calibrationDialog.show(myActivity.getSupportFragmentManager(), "Calibration");
+                    break;
+                case 1:
+                    Toast.makeText(getActivity(), "Use Default.", Toast.LENGTH_SHORT).show();
+                    break;
+                case 2:
+                    Toast.makeText(getActivity(), "Use Default.", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+
+        }
     }
 }

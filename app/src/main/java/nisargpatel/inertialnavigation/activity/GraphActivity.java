@@ -9,9 +9,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
@@ -30,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
@@ -65,6 +66,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private BufferedWriter writer;
     private File fileAccelerometer;
     private File fileGyroscopeUncalibrated;
+    private File fileXYDataSet;
 
     private float matrixHeading;
 
@@ -238,7 +240,11 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             float[] deltaOrientation = gyroIntegration.getIntegratedValues(event.timestamp, event.values);
             matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
-            writeToFile(fileGyroscopeUncalibrated, event.timestamp, event.values, matrixHeading);
+
+            ArrayList<Float> dataValues = arrayToList(event.values);
+            dataValues.add(matrixHeading);
+
+            writeToFile(fileGyroscopeUncalibrated, event.timestamp, dataValues);
 
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
@@ -249,20 +255,34 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             if (stepFound) {
 
-                writeToFile(fileAccelerometer, event.timestamp, event.values, 1);
+                ArrayList<Float> dataValues = arrayToList(event.values);
+                dataValues.add(1f);
+                writeToFile(fileAccelerometer, event.timestamp, dataValues);
 
                 float heading = matrixHeading + (float) (Math.PI / 2.0);
                 double pointX = MathFunctions.getXFromPolar(strideLength, heading);
                 double pointY = MathFunctions.getYFromPolar(strideLength, heading);
 
-                sPlot.addPoint(sPlot.getLastXPoint() + pointX, sPlot.getLastYPoint() + pointY);
+                pointX += sPlot.getLastXPoint();
+                pointY += sPlot.getLastYPoint();
+                sPlot.addPoint(pointX, pointY);
+
+                dataValues.clear();
+                dataValues.add(strideLength);
+                dataValues.add(matrixHeading);
+                dataValues.add((float)pointX);
+                dataValues.add((float)pointY);
+
+                writeToFile(fileXYDataSet, event.timestamp, dataValues);
 
                 linearLayout.removeAllViews();
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
 
                 //if step is not found
             } else {
-                writeToFile(fileAccelerometer, event.timestamp, event.values, 0);
+                ArrayList<Float> dataValues = arrayToList(event.values);
+                dataValues.add(0f);
+                writeToFile(fileAccelerometer, event.timestamp, dataValues);
             }
 
         }
@@ -291,13 +311,15 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         String folderPath = myFolder.getPath();
 
-        String[] fileType = {"Accelerometer", "GyroUncalibrated"};
+        String[] fileType = {"Accelerometer", "GyroUncalibrated", "XYDataSet"};
 
         fileAccelerometer = new File(folderPath, getFileName(fileType[0]));
         fileGyroscopeUncalibrated = new File(folderPath, getFileName(fileType[1]));
+        fileXYDataSet = new File(folderPath, getFileName(fileType[2]));
 
         createDataFile(fileAccelerometer, fileType[0]);
         createDataFile(fileGyroscopeUncalibrated, fileType[1]);
+        createDataFile(fileXYDataSet, fileType[2]);
 
     }
 
@@ -320,26 +342,33 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         writer = new BufferedWriter(new FileWriter(file, true));
 
-        writer.write("time;x;y;z");
         if (fileName.contains("gyro"))
-            writer.write(";heading");
+            writer.write("dt;Gx;Gy;Gz;heading");
         else if (fileName.contains("acc"))
-            writer.write(";stepFound");
+            writer.write("dt;Ax;Ay;Az;stepFound");
+        else if (fileName.contains("XY"))
+            writer.write("dt;strideLength;heading;pointX;pointY");
 
         writer.write(System.getProperty("line.separator"));
         writer.close();
 
     }
 
-    private void writeToFile(File file, float time, float[] sensorValues, float extraValue) {
+    private void writeToFile(File file, float time, ArrayList<Float> dataValues) {
         try {
             writer = new BufferedWriter(new FileWriter(file, true));
             writer.write(String.valueOf(time));
-            for (double sensorValue : sensorValues)
-                writer.write(";" + sensorValue);
-            writer.write(";" + extraValue);
+            for (float dataValue : dataValues)
+                writer.write(";" + dataValue);
             writer.write(System.getProperty("line.separator"));
             writer.close();
         } catch (IOException ignored) {}
+    }
+
+    private ArrayList<Float> arrayToList(float[] staticArray) {
+        ArrayList<Float> dynamicList = new ArrayList<>();
+        for (float staticArrayValue : staticArray)
+            dynamicList.add(staticArrayValue);
+        return dynamicList;
     }
 }

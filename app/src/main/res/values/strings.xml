@@ -34,5 +34,6 @@
     <string name="clear">Clear</string>
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="title_activity_user">UserActivity</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

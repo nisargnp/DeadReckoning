@@ -14,18 +14,20 @@ public class StepInfoFragment extends DialogFragment{
 
     private String message;
 
-    AlertDialog.Builder builder;
-
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(message).setNeutralButton(R.string.okay, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //Don't need to do anything on button click except exit the DialogFragment
-            }
-        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder
+                .setMessage(message)
+                .setNeutralButton(R.string.okay,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //Don't need to do anything on button click except exit the DialogFragment
+                            }
+                        });
         return builder.create();
     }
 
