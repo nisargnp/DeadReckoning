@@ -2,14 +2,13 @@ package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,12 +21,9 @@ import nisargpatel.inertialnavigation.R;
 
 public class CalibrationActivity extends ActionBarActivity implements SensorEventListener {
 
-    private final String PREFS_NAME = "Inertial Navigation Preferences";
-    private SharedPreferences.Editor sharedPreferencesEditor;
-
-    private TextView textAndroid2;
+    private TextView textAndroidSteps;
     private TextView textCalibrationDistance;
-    private TextView textInstantAcc2;
+    private TextView textInstantAcc;
 
     private Sensor accelerometer;
     private Sensor androidStepCounter;
@@ -41,13 +37,11 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calibration);
 
-        sharedPreferencesEditor = getSharedPreferences(PREFS_NAME, 0).edit();
-
         stepCount = 0;
 
-        textAndroid2 = (TextView) findViewById(R.id.textAndroid2);
+        textAndroidSteps = (TextView) findViewById(R.id.textCalibrateSteps);
         textCalibrationDistance = (TextView) findViewById(R.id.textCalibrationDistance);
-        textInstantAcc2 = (TextView) findViewById(R.id.textInstantAcc2);
+        textInstantAcc = (TextView) findViewById(R.id.textCalibrateInstantAcc);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -74,7 +68,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         });
 
         //when the button is pressed, determine the strideLength by dividing stepsTaken
-        //by distanceTraveled, and stored stride length in StepCounterActivity
+        //by distanceTraveled, and stored stride length in StepCountActivity
         findViewById(R.id.buttonSetStrideLength).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,14 +80,12 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
                     return;
                 }
 
-                sharedPreferencesEditor.putFloat("stride_length", (float) strideLength).apply();
-
                 Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + " ft/sec.", Toast.LENGTH_SHORT).show();
 
+                Intent myIntent = getIntent();
+                myIntent.putExtra("stride_length", strideLength);
+                setResult(RESULT_OK, myIntent);
                 finish();
-
-//                Intent myIntent = new Intent(CalibrationActivity.this, GraphActivity.class);
-//                startActivity(myIntent);
 
             }
         });
@@ -103,7 +95,7 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_calibration, menu);
+//        getMenuInflater().inflate(R.menu.menu_calibration, menu);
         return true;
     }
 
@@ -128,13 +120,13 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         //if the sensor data is of step counter type, increment stepCount
         if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
             if (event.values[0] == 1.0) {
-                textInstantAcc2.setText(Arrays.toString(event.values));
+                textInstantAcc.setText(Arrays.toString(event.values));
                 stepCount++;
-                textAndroid2.setText(String.valueOf(stepCount));
+                textAndroidSteps.setText(String.valueOf(stepCount));
             }
             //if the data is of accelerometer type, display the instantaneous acceleration
         } else {
-            textInstantAcc2.setText(String.valueOf(event.values[2]).substring(0, 5));
+            textInstantAcc.setText(String.valueOf(event.values[2]).substring(0, 5));
         }
     }
 

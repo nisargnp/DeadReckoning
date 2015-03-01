@@ -1,6 +1,6 @@
 package nisargpatel.inertialnavigation.heading;
 
-import nisargpatel.inertialnavigation.math.MathFunctions;
+import nisargpatel.inertialnavigation.extra.NPExtras;
 
 public class GyroIntegration {
 
@@ -31,14 +31,14 @@ public class GyroIntegration {
         //if no bias is to be calculated
         //get the timestamp, and set the bias to the 0
         if (numTrialsBias == 0 && runCount == 1) {
-            lastTimestamp = MathFunctions.nsToSec(timestamp);
+            lastTimestamp = NPExtras.nsToSec(timestamp);
             calcBias(runCount, new float[3]);
         }
 
         //if bias is to be calculated
         //get timestamp and calculate bias using mov. avg. for the given number of data points
         if (runCount <= numTrialsBias) {
-            lastTimestamp = MathFunctions.nsToSec(timestamp);
+            lastTimestamp = NPExtras.nsToSec(timestamp);
             calcBias(runCount, rawGyroValues);
             return new float[3];
         }
@@ -80,7 +80,7 @@ public class GyroIntegration {
     }
 
     private float[] calcIntegratedValues(long timestamp, float[] gyroValues) {
-        double currentTime = MathFunctions.nsToSec(timestamp);
+        double currentTime = NPExtras.nsToSec(timestamp);
         double deltaTime = currentTime - lastTimestamp;
 
         float[] deltaOrientation = new float[3];

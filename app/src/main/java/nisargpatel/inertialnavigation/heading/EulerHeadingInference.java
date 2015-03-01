@@ -1,14 +1,15 @@
 
 package nisargpatel.inertialnavigation.heading;
 
-import nisargpatel.inertialnavigation.math.MathFunctions;
+import nisargpatel.inertialnavigation.extra.NPExtras;
 
+//heading inference determine using Euler angles and the Direction Cosine Matrix
 public class EulerHeadingInference {
 
     private float[][] c;
 
     public EulerHeadingInference() {
-        this(MathFunctions.getIdentityMatrix());
+        this(NPExtras.getIdentityMatrix());
     }
 
     public EulerHeadingInference(float[][] startingMatrix) {
@@ -38,17 +39,17 @@ public class EulerHeadingInference {
 
         float[][] a;
         float[][] b = calcMatrixB(wX, wY, wZ);
-        float[][] bSq = MathFunctions.multiplyMatrices(b, b);
+        float[][] bSq = NPExtras.multiplyMatrices(b, b);
 
         float norm = calcNorm(wX, wY, wZ);
         float bScaleFactor = calcBScaleFactor(norm);
         float bSqScaleFactor = calcBSqScaleFactor(norm);
 
-        b = MathFunctions.scaleMatrix(b, bScaleFactor);
-        bSq = MathFunctions.scaleMatrix(bSq, bSqScaleFactor);
+        b = NPExtras.scaleMatrix(b, bScaleFactor);
+        bSq = NPExtras.scaleMatrix(bSq, bSqScaleFactor);
 
-        a = MathFunctions.addMatrices(b, bSq);
-        a = MathFunctions.addMatrices(a, MathFunctions.getIdentityMatrix());
+        a = NPExtras.addMatrices(b, bSq);
+        a = NPExtras.addMatrices(a, NPExtras.getIdentityMatrix());
 
         return a;
     }
@@ -60,25 +61,25 @@ public class EulerHeadingInference {
     //(sin σ) / σ ≈ 1 - (σ^2 / 3!) + (σ^4 / 5!)
     private float calcBScaleFactor(float sigma) {
         //return (float) ((1 - Math.cos(sigma)) / Math.pow(sigma, 2));
-        float sigmaSqOverThreeFactorial = (float) Math.pow(sigma, 2) / MathFunctions.factorial(3);
-        float sigmaToForthOverFiveFactorial = (float) Math.pow(sigma, 4) / MathFunctions.factorial(5);
+        float sigmaSqOverThreeFactorial = (float) Math.pow(sigma, 2) / NPExtras.factorial(3);
+        float sigmaToForthOverFiveFactorial = (float) Math.pow(sigma, 4) / NPExtras.factorial(5);
         return (float) (1.0 - sigmaSqOverThreeFactorial + sigmaToForthOverFiveFactorial);
     }
 
     //(1 - cos σ) / σ^2 ≈ (1/2) - (σ^2 / 4!) + (σ^4 / 6!)
     private float calcBSqScaleFactor(float sigma) {
         //return (float) (Math.sin(sigma) / sigma);
-        float sigmaSqOverFourFactorial = (float) Math.pow(sigma, 2) / MathFunctions.factorial(4);
-        float sigmaToForthOverSixFactorial = (float) Math.pow(sigma, 4) / MathFunctions.factorial(6);
+        float sigmaSqOverFourFactorial = (float) Math.pow(sigma, 2) / NPExtras.factorial(4);
+        float sigmaToForthOverSixFactorial = (float) Math.pow(sigma, 4) / NPExtras.factorial(6);
         return (float) (0.5 - sigmaSqOverFourFactorial + sigmaToForthOverSixFactorial);
     }
 
     private void calcMatrixC(float[][] a) {
-        c = MathFunctions.multiplyMatrices(c, a);
+        c = NPExtras.multiplyMatrices(c, a);
     }
 
     public void clearMatrix() {
-        c = MathFunctions.getIdentityMatrix();
+        c = NPExtras.getIdentityMatrix();
     }
 
 }

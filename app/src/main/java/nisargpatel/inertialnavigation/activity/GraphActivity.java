@@ -2,8 +2,6 @@ package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,9 +20,6 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.dm.zbar.android.scanner.ZBarConstants;
-import com.dm.zbar.android.scanner.ZBarScannerActivity;
-
-import net.sourceforge.zbar.Symbol;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,20 +28,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
+import nisargpatel.inertialnavigation.extra.NPExtras;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
 import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
 import nisargpatel.inertialnavigation.heading.GyroIntegration;
-import nisargpatel.inertialnavigation.math.MathFunctions;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 
 public class GraphActivity extends ActionBarActivity implements SensorEventListener{
 
-    private static final String PREFS_NAME = "Inertial Navigation Preferences";
-    private static final int ZBAR_QR_SCANNER_REQUEST = 1;
     private static final double STEP_COUNTER_SENSITIVITY = 1.0;
-
-    public static SharedPreferences sharedPreferences;
-    public static SharedPreferences.Editor sharedPreferencesEditor;
 
     private MovingAverageStepCounter movingStepCounter;
     private GyroIntegration gyroIntegration;
@@ -77,21 +67,14 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         setContentView(R.layout.activity_graph);
 
         //getting global settings
-        sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        sharedPreferencesEditor = sharedPreferences.edit();
+        strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
+        String userName = getIntent().getStringExtra("user_name");
 
-        if (sharedPreferences.getBoolean("first_run", true)) {
-            Intent myIntent = new Intent(GraphActivity.this, CalibrationActivity.class);
-            startActivity(myIntent);
-        }
-
-        sharedPreferencesEditor.putBoolean("first_run", false).apply();
-        strideLength = sharedPreferences.getFloat("stride_length", 2.5f);
+        Toast.makeText(GraphActivity.this, "Username: " + userName + "\n" + "Stride Length: " + strideLength, Toast.LENGTH_SHORT).show();
 
         //defining views
         final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
         final Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
-        final Button buttonCalibrate = (Button) findViewById(R.id.buttonGraphCalibrate);
         Button buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
@@ -103,7 +86,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //initializing needed classes
         movingStepCounter = new MovingAverageStepCounter(STEP_COUNTER_SENSITIVITY);
         gyroIntegration = new GyroIntegration(300, 0.0025f);
-        eulerHeadingInference = new EulerHeadingInference(MathFunctions.getIdentityMatrix());
+        eulerHeadingInference = new EulerHeadingInference(NPExtras.getIdentityMatrix());
 
         //setting up graph with origin
         sPlot = new ScatterPlot("Position");
@@ -131,7 +114,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 }
 
                 buttonStart.setEnabled(false);
-                buttonCalibrate.setEnabled(false);
                 buttonStop.setEnabled(true);
 
             }
@@ -145,16 +127,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
 
                 buttonStart.setEnabled(true);
-                buttonCalibrate.setEnabled(true);
                 buttonStop.setEnabled(false);
-            }
-        });
-
-        buttonCalibrate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent myIntent = new Intent(GraphActivity.this, CalibrationActivity.class);
-                startActivity(myIntent);
             }
         });
 
@@ -175,7 +148,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_graph, menu);
+//        getMenuInflater().inflate(R.menu.menu_graph, menu);
         return true;
     }
 
@@ -184,38 +157,12 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+//        int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
 //        if (id == R.id.action_settings) {
 //            return true;
 //        }
-
-        switch (id) {
-            case R.id.settings: {
-                Intent myIntent = new Intent(this, SettingsActivity.class);
-                startActivity(myIntent);
-                break;
-            }
-            case R.id.QRScan:
-                QRCodeScanner();
-                break;
-            case R.id.stepCounter: {
-                Intent myIntent = new Intent(this, StepCounterActivity.class);
-                startActivity(myIntent);
-                break;
-            }
-            case R.id.orientationTest: {
-                Intent myIntent = new Intent(this, OrientationTestActivity.class);
-                startActivity(myIntent);
-                break;
-            }
-            case R.id.dataCollect: {
-                Intent myIntent = new Intent(this, DataCollectActivity.class);
-                startActivity(myIntent);
-                break;
-            }
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -260,8 +207,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 writeToFile(fileAccelerometer, event.timestamp, dataValues);
 
                 float heading = matrixHeading + (float) (Math.PI / 2.0);
-                double pointX = MathFunctions.getXFromPolar(strideLength, heading);
-                double pointY = MathFunctions.getYFromPolar(strideLength, heading);
+                double pointX = NPExtras.getXFromPolar(strideLength, heading);
+                double pointY = NPExtras.getYFromPolar(strideLength, heading);
 
                 pointX += sPlot.getLastXPoint();
                 pointY += sPlot.getLastYPoint();
@@ -285,17 +232,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 writeToFile(fileAccelerometer, event.timestamp, dataValues);
             }
 
-        }
-    }
-
-    private void QRCodeScanner() {
-        boolean isCameraAvailable = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
-        if (isCameraAvailable) {
-            Intent myIntent = new Intent(getApplicationContext(), ZBarScannerActivity.class);
-            myIntent.putExtra(ZBarConstants.SCAN_MODES, new int[]{Symbol.QRCODE});
-            startActivityForResult(myIntent, ZBAR_QR_SCANNER_REQUEST);
-        } else {
-            Toast.makeText(getApplicationContext(), "Camera not available.", Toast.LENGTH_SHORT).show();
         }
     }
 

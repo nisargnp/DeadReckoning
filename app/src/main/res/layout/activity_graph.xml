@@ -8,7 +8,7 @@
     android:id="@+id/graph_layout_relative">
 
     <Button
-        android:layout_width="70.5dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/start"
         android:id="@+id/buttonGraphStart"
@@ -18,7 +18,7 @@
         android:textSize="15sp" />
 
     <Button
-        android:layout_width="70.5dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/stop"
         android:id="@+id/buttonGraphStop"
@@ -37,27 +37,13 @@
         android:id="@+id/linearLayoutGraph"/>
 
     <Button
-        android:layout_width="70.5dp"
-        android:layout_height="75dp"
-        android:text="Calibrate"
-        android:id="@+id/buttonGraphCalibrate"
-        android:textSize="8sp"
-        android:layout_alignTop="@+id/buttonGraphStart"
-        android:layout_toRightOf="@+id/buttonGraphStart"
-        android:layout_toEndOf="@+id/buttonGraphStart"
-        android:layout_marginLeft="16dp"
-        android:layout_marginStart="16dp"/>
-
-    <Button
-        android:layout_width="70.5dp"
+        android:layout_width="100dp"
         android:layout_height="75dp"
         android:text="@string/clear"
         android:id="@+id/buttonGraphClear"
         android:textSize="15sp"
-        android:layout_alignBottom="@+id/buttonGraphCalibrate"
-        android:layout_alignLeft="@+id/buttonGraphCalibrate"
-        android:layout_alignStart="@id/buttonGraphCalibrate"
         android:layout_marginLeft="86.5dp"
-        android:layout_marginStart="86.5dp"/>
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

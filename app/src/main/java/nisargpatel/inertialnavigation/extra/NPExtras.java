@@ -1,11 +1,17 @@
-package nisargpatel.inertialnavigation.math;
+package nisargpatel.inertialnavigation.extra;
+
+import android.content.SharedPreferences;
+
+import java.util.ArrayList;
 
 //final class cannot be extended by another class
-public final class MathFunctions {
+public final class NPExtras {
 
     //private constructor stops class from
     //being instantiated to an object
-    private MathFunctions() {}
+    private NPExtras() {}
+
+    public static final String PREFS_NAME = "Inertial Navigation Preferences";
 
     //calculate x coordinate point given radius and angle
     public static double getXFromPolar(double radius, double angle) {
@@ -89,6 +95,28 @@ public final class MathFunctions {
         return new float[][]{{1,0,0},
                              {0,1,0},
                              {0,0,1}};
+    }
+
+    public static void addArrayToSharedPreferences(String arrayName, ArrayList<String> array, SharedPreferences.Editor editor) {
+        editor.putInt(arrayName + "_size", array.size());
+        for (int i = 0; i < array.size(); i++) {
+            editor.putString(arrayName + "_" + i, array.get(i));
+        }
+        editor.apply();
+    }
+
+    public static ArrayList<String> getArrayFromSharedPreferences(String arrayName, SharedPreferences prefs) {
+
+        int arraySize = prefs.getInt(arrayName + "_size", 0);
+
+        ArrayList<String> newArray = new ArrayList<>();
+
+        for (int i = 0; i < arraySize; i++) {
+            newArray.add(prefs.getString(arrayName + "_" + i, null));
+        }
+
+        return newArray;
+
     }
 
 }

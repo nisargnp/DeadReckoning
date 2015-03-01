@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".activity.StepCounterActivity"
+            android:name=".activity.StepCountActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_step_counter"
             android:screenOrientation="portrait" >
@@ -34,7 +34,7 @@
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name=".activity.OrientationTestActivity"
+            android:name=".activity.HeadingActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_orientation"
             android:screenOrientation="portrait" >
@@ -46,10 +46,14 @@
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name=".activity.SettingsActivity"
+            android:name=".activity.UserActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_settings"
+            android:label="@string/title_activity_user"
             android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".activity.QRCodeActivity"
+            android:label="@string/title_activity_qr_code_scanner" >
         </activity>
         <activity
             android:name=".activity.UserListActivity"
@@ -62,6 +66,10 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activity.DebugToolsActivity"
+            android:label="@string/title_activity_debug_tools" >
         </activity>
     </application>
 

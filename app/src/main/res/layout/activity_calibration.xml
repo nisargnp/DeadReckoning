@@ -22,13 +22,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/zero"
-        android:id="@+id/textAndroid2"
+        android:id="@+id/textCalibrateSteps"
         android:textSize="30sp"
-        android:layout_above="@+id/textView5"
-        android:layout_alignRight="@+id/buttonStopCalibration"
-        android:layout_alignEnd="@+id/buttonStopCalibration"
-        android:layout_marginRight="36dp"
-        android:layout_marginEnd="36dp" />
+        android:layout_marginRight="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignEnd="@+id/buttonStopCalibration" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -37,10 +35,9 @@
         android:text="@string/enter_distance_traveled"
         android:id="@+id/textView5"
         android:textSize="20sp"
-        android:layout_below="@+id/textView2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="42dp" />
+        android:layout_marginTop="45dp"
+        android:layout_below="@+id/buttonStartCalibration"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="150dp"
@@ -48,8 +45,8 @@
         android:text="@string/start"
         android:id="@+id/buttonStartCalibration"
         android:textSize="20sp"
-        android:layout_alignTop="@+id/buttonStopCalibration"
-        android:layout_alignParentLeft="true"
+        android:layout_marginTop="40dp"
+        android:layout_below="@+id/textView3"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -58,8 +55,7 @@
         android:text="@string/stop"
         android:id="@+id/buttonStopCalibration"
         android:textSize="20sp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/buttonStartCalibration"
         android:layout_alignParentEnd="true" />
 
     <EditText
@@ -70,9 +66,9 @@
         android:id="@+id/textCalibrationDistance"
         android:text="@string/zero"
         android:textSize="35sp"
-        android:layout_below="@+id/textView5"
-        android:layout_toLeftOf="@+id/buttonStopCalibration"
-        android:layout_toStartOf="@+id/buttonStopCalibration" />
+        android:layout_alignTop="@+id/textView5"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="25dp" />
 
     <Button
         android:layout_width="150dp"
@@ -80,8 +76,9 @@
         android:text="@string/set_stride_length"
         android:id="@+id/buttonSetStrideLength"
         android:textSize="20sp"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/textCalibrationDistance"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -89,18 +86,17 @@
         android:text="@string/instant_acc"
         android:id="@+id/textView3"
         android:textSize="30sp"
-        android:layout_above="@+id/buttonStopCalibration"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="25dp"/>
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/textView2"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/zero"
-        android:id="@+id/textInstantAcc2"
+        android:id="@+id/textCalibrateInstantAcc"
         android:textSize="30sp"
         android:layout_alignTop="@+id/textView3"
-        android:layout_alignRight="@+id/textAndroid2" />
+        android:layout_alignRight="@+id/textCalibrateSteps" />
 
 </RelativeLayout>

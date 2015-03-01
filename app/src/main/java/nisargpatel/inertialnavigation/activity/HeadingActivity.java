@@ -18,7 +18,7 @@ import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
 import nisargpatel.inertialnavigation.heading.GyroIntegration;
 
-public class OrientationTestActivity extends ActionBarActivity implements SensorEventListener{
+public class HeadingActivity extends ActionBarActivity implements SensorEventListener{
 
     private static final float EULER_GYROSCOPE_SENSITIVITY = 0.0025f;
     private static final float GYROSCOPE_SENSITIVITY = 0f;
@@ -46,7 +46,7 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_orientation_test);
+        setContentView(R.layout.activity_heading);
 
         eulerHeadingInference = new EulerHeadingInference();
         gyroIntegration = new GyroIntegration(0, GYROSCOPE_SENSITIVITY);
@@ -74,22 +74,22 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sm.registerListener(OrientationTestActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(OrientationTestActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(OrientationTestActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(OrientationTestActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(OrientationTestActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(HeadingActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sm.registerListener(HeadingActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
             }
         });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sm.unregisterListener(OrientationTestActivity.this, gyroscopeUncalibrated);
-                sm.unregisterListener(OrientationTestActivity.this, gyroscopeCalibrated);
-                sm.unregisterListener(OrientationTestActivity.this, rotationVector);
-                sm.unregisterListener(OrientationTestActivity.this, geoRotationVector);
-                sm.unregisterListener(OrientationTestActivity.this, gameRotationVector);
+                sm.unregisterListener(HeadingActivity.this, gyroscopeUncalibrated);
+                sm.unregisterListener(HeadingActivity.this, gyroscopeCalibrated);
+                sm.unregisterListener(HeadingActivity.this, rotationVector);
+                sm.unregisterListener(HeadingActivity.this, geoRotationVector);
+                sm.unregisterListener(HeadingActivity.this, gameRotationVector);
             }
         });
 
@@ -113,7 +113,7 @@ public class OrientationTestActivity extends ActionBarActivity implements Sensor
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_orientation, menu);
+//        getMenuInflater().inflate(R.menu.menu_heading, menu);
         return true;
     }
 

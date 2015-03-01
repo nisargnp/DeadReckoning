@@ -32,8 +32,12 @@
     <string name="title_activity_orientation">OrientationActivity</string>
     <string name="title_activity_data_collection">DataCollectionActivity</string>
     <string name="clear">Clear</string>
-    <string name="title_activity_settings">SettingsActivity</string>
     <string name="title_activity_user">UserActivity</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="debug_tools">Debug Tools</string>
+    <string name="title_activity_debug_tools">DebugToolsActivity</string>
+    <string name="title_activity_qr_code_scanner">QR Code Scanner</string>
+    <string name="delete_user">Delete User</string>
+    <string name="title_activity_testing_activity_ignore">TestingActivityIgnore</string>
 
 </resources>

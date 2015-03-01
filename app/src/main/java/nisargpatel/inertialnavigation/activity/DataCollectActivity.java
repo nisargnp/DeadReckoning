@@ -23,7 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.math.MathFunctions;
+import nisargpatel.inertialnavigation.extra.NPExtras;
 
 public class DataCollectActivity extends ActionBarActivity implements SensorEventListener{
 
@@ -254,7 +254,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
         //long time = System.currentTimeMillis();
 
-        float time  = MathFunctions.nsToSec(event.timestamp);
+        float time  = NPExtras.nsToSec(event.timestamp);
         float[] sensorValues = event.values.clone();
 
         switch (event.sensor.getType()) {

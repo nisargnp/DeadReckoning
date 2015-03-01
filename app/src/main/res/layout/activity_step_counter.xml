@@ -18,7 +18,8 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textSize="30sp" />
+        android:textSize="30sp"
+        android:layout_marginTop="10dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -101,10 +102,8 @@
         android:text="@string/instant_acc"
         android:id="@+id/txtViewDyDt"
         android:textSize="30sp"
-        android:layout_below="@+id/textViewDistance"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="25dp" />
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -116,37 +115,15 @@
         android:layout_alignRight="@+id/txtViewMovingAverage"
         android:layout_alignEnd="@+id/txtViewMovingAverage" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/distance_traveled"
-        android:id="@+id/textViewDistance"
-        android:textSize="30sp"
-        android:layout_below="@+id/txtViewAndroidSteps"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="25dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/zero"
-        android:id="@+id/textDistance"
-        android:textSize="30sp"
-        android:layout_alignTop="@+id/textViewDistance"
-        android:layout_toLeftOf="@+id/textAndroid"
-        android:layout_toStartOf="@+id/textAndroid" />
-
     <Button
         android:layout_width="150dp"
         android:layout_height="75dp"
         android:text="@string/step_info"
         android:id="@+id/buttonStepInfo"
         android:textSize="20sp"
+        android:layout_marginBottom="35dp"
         android:layout_above="@+id/buttonStartCounter"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp" />
+        android:layout_toStartOf="@+id/textInstantAcc" />
 
     <Button
         android:layout_width="100dp"

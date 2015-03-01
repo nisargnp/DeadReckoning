@@ -18,17 +18,17 @@ public class StepInfoFragment extends DialogFragment{
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+        dialogBuilder
                 .setMessage(message)
                 .setNeutralButton(R.string.okay,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                //Don't need to do anything on button click except exit the DialogFragment
+                                dismiss();
                             }
                         });
-        return builder.create();
+        return dialogBuilder.create();
     }
 
     //get the message to be outputted by the DialogFragment

@@ -51,7 +51,7 @@ public class SetThresholdsActivity extends ActionBarActivity {
     public void buttonSetThresholds(View view) {
         double upper = Double.parseDouble(textUpperThreshold.getText().toString());
         double lower = Double.parseDouble(textLowerThreshold.getText().toString());
-        StepCounterActivity.setThresholds(upper, lower);
+        StepCountActivity.setThresholds(upper, lower);
 
         Toast.makeText(getApplicationContext(), R.string.threshold_set, Toast.LENGTH_SHORT).show();
 

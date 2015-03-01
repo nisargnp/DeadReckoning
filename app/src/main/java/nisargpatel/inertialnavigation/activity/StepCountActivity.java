@@ -2,14 +2,13 @@ package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,9 +20,8 @@ import nisargpatel.inertialnavigation.dialog.StepInfoFragment;
 import nisargpatel.inertialnavigation.stepcounter.MovingAverageStepCounter;
 import nisargpatel.inertialnavigation.stepcounter.ThresholdStepCounter;
 
-public class StepCounterActivity extends ActionBarActivity implements SensorEventListener{
+public class StepCountActivity extends ActionBarActivity implements SensorEventListener{
 
-    private double strideLength;
     private static double upperThreshold = 11.5;
     private static double lowerThreshold = 6.5;
 
@@ -46,7 +44,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
     private TextView textMovingAverageSteps;
     private TextView textAndroidSteps;
     private TextView textInstantAcc;
-    private TextView textDistance;
 
     private StepInfoFragment myDialog;
 
@@ -74,16 +71,11 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_step_counter);
 
-        final String PREFS_NAME = "Inertial Navigation Preferences";
-        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        strideLength = sharedPreferences.getFloat("stride_length", 2.0f);
-
         //declaring all the views
         textThresholdSteps = (TextView) findViewById(R.id.textThreshold);
         textMovingAverageSteps = (TextView) findViewById(R.id.textMovingAverage);
         textAndroidSteps = (TextView) findViewById(R.id.textAndroid);
         textInstantAcc = (TextView) findViewById(R.id.textInstantAcc);
-        textDistance = (TextView) findViewById(R.id.textDistance);
 
         myDialog = new StepInfoFragment();
 
@@ -96,8 +88,8 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         findViewById(R.id.buttonStartCounter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(StepCounterActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(StepCounterActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StepCountActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StepCountActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
                 thresholdCountSteps.setThresholds(upperThreshold, lowerThreshold);
                 Toast.makeText(getApplicationContext(), "Step counter started.", Toast.LENGTH_SHORT).show();
             }
@@ -107,8 +99,8 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
         findViewById(R.id.buttonStopCounter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(StepCounterActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(StepCounterActivity.this, sensorStepDetector);
+                sensorManager.unregisterListener(StepCountActivity.this, sensorAccelerometer);
+                sensorManager.unregisterListener(StepCountActivity.this, sensorStepDetector);
                 Toast.makeText(getApplicationContext(), "Step counter stopped.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -120,7 +112,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                 textMovingAverageSteps.setText("0");
                 textAndroidSteps.setText("0");
                 textInstantAcc.setText("0");
-                textDistance.setText("0");
 
                 thresholdStepCount = 0;
                 movingAverageStepCount = 0;
@@ -266,7 +257,6 @@ public class StepCounterActivity extends ActionBarActivity implements SensorEven
                             @Override
                             public void run() {
                                 textAndroidSteps.setText(String.valueOf(androidStepCount));
-                                textDistance.setText(String.valueOf(strideLength * androidStepCount).substring(0,3));
                             }
                         });
 

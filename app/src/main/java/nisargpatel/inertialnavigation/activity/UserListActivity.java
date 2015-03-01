@@ -1,51 +1,102 @@
 package nisargpatel.inertialnavigation.activity;
 
-import android.app.AlertDialog;
-import android.app.ListFragment;
-import android.content.DialogInterface;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.dialog.CalibrationFragment;
+import nisargpatel.inertialnavigation.dialog.UserDetailsFragment;
+import nisargpatel.inertialnavigation.dialog.UserSettingsFragment;
+import nisargpatel.inertialnavigation.extra.NPExtras;
 
-public class UserListActivity extends FragmentActivity {
+public class UserListActivity extends FragmentActivity{
 
-    public static String[] users = {"Default", "Custom User 1", "Custom User 2"};
+    private static final int REQUEST_CODE = 0;
 
-    private static final String PREFS_NAME = "Inertial Navigation Preferences";
+    public static ArrayList<String> userList;
+    public static ArrayList<String> strideList;
 
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor sharedPreferencesEditor;
+    private static SharedPreferences.Editor sharedPreferencesEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user);
+        setContentView(R.layout.activity_user_list);
 
-        sharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        sharedPreferencesEditor = sharedPreferences.edit();
+        SharedPreferences sharedPreference = getSharedPreferences(NPExtras.PREFS_NAME, 0);
+        sharedPreferencesEditor = sharedPreference.edit();
         sharedPreferencesEditor.apply();
 
-        TestList testing = new TestList();
-        getFragmentManager().beginTransaction().add(android.R.id.content, testing).commit();
+        userList = NPExtras.getArrayFromSharedPreferences("user_list", sharedPreference);
+        strideList = NPExtras.getArrayFromSharedPreferences("stride_list", sharedPreference);
+
+        ListView myList = (ListView) findViewById(R.id.listView);
+        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, userList);
+        myList.setAdapter(listAdapter);
+
+        myList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Log.d("itemClick", "click position: " + position);
+
+                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
+                myIntent.putExtra("user_name", userList.get(position));
+                myIntent.putExtra("stride_length", Float.parseFloat(strideList.get(position)));
+                startActivity(myIntent);
+
+            }
+        });
+
+        myList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Log.d("itemClick", "long click position: " + position);
+
+                UserSettingsFragment userSettingsDialog = new UserSettingsFragment();
+                userSettingsDialog.setUserName(userList.get(position));
+                userSettingsDialog.setStrideLength(strideList.get(position));
+                userSettingsDialog.show(getFragmentManager(), "User Settings");
+
+                return true;
+
+            }
+        });
+
+        Button buttonNewUser = (Button) findViewById(R.id.buttonNewUser);
+        buttonNewUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                UserDetailsFragment userDetailsDialog = new UserDetailsFragment();
+                userDetailsDialog.setHandler(new UserSettingsDialogHandler());
+                userDetailsDialog.addingUser(true);
+                userDetailsDialog.show(getSupportFragmentManager(), "Calibration");
+
+            }
+        });
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_user, menu);
+        getMenuInflater().inflate(R.menu.menu_user_list, menu);
         return true;
     }
 
@@ -57,86 +108,79 @@ public class UserListActivity extends FragmentActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+
+        if (id == R.id.debug_tools) {
+            Intent myIntent = new Intent(UserListActivity.this, DebugToolsActivity.class);
+            startActivity(myIntent);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void openDialog() {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        LayoutInflater layoutInflater = LayoutInflater.from(UserListActivity.this);
-        View dialogBox = layoutInflater.inflate(R.layout.calibration_dialog, null);
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(UserListActivity.this);
-        alertDialogBuilder.setView(dialogBox);
+            String userName = data.getStringExtra("user_name");
+            String strideLength = String.valueOf(data.getDoubleExtra("stride_length", 2.5));
 
-        final EditText textStrideLength = (EditText) dialogBox.findViewById(R.id.textDialogStride);
+            userList.add(userName);
+            strideList.add(strideLength);
+            updatePrefs();
 
-        alertDialogBuilder
-                .setCancelable(false)
-                .setNegativeButton("Ok",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                float strideLength = Float.valueOf(textStrideLength.getText().toString());
-                                sharedPreferencesEditor.putFloat("stride_length", strideLength);
-                                sharedPreferencesEditor.apply();
+            refreshListView();
 
-                                Toast.makeText(getApplicationContext(), "Stride length set: " + strideLength + " ft/sec.", Toast.LENGTH_SHORT).show();
-                                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
-                                startActivity(myIntent);
-                            }
-                        })
-                .setPositiveButton("Auto-Calibration Mode",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
-                                startActivity(myIntent);
-
-                                myIntent = new Intent(UserListActivity.this, CalibrationActivity.class);
-                                startActivity(myIntent);
-                            }
-                        });
-
-        AlertDialog alertDialog = alertDialogBuilder.create();
-
-        alertDialog.show();
+        }
     }
 
-    private static CalibrationFragment calibrationDialog;
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-    public static class TestList extends ListFragment {
+        refreshListView();
+    }
+
+    private void refreshListView() {
+        ListView myList = (ListView) findViewById(R.id.listView);
+        myList.setAdapter(null);
+
+        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, userList);
+        myList.setAdapter(listAdapter);
+    }
+
+    public static void updatePrefs() {
+        NPExtras.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
+        NPExtras.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
+    }
+
+    //this handler will let UserListActivity know when the UserDetailsFragment dialog has been dismissed.
+    private class UserSettingsDialogHandler extends Handler {
+
         @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
 
-            setListAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, UserListActivity.users));
-        }
+            refreshListView();
 
-        @Override
-        public void onListItemClick(ListView l, View v, int position, long id) {
-            super.onListItemClick(l, v, position, id);
-
-            FragmentActivity myActivity = (FragmentActivity)v.getContext();
-
-            calibrationDialog = new CalibrationFragment();
-            calibrationDialog.setDialogMessage("This is a test.");
-
-            switch (position) {
-                case 0:
-                    calibrationDialog.show(myActivity.getSupportFragmentManager(), "Calibration");
-                    break;
-                case 1:
-                    Toast.makeText(getActivity(), "Use Default.", Toast.LENGTH_SHORT).show();
-                    break;
-                case 2:
-                    Toast.makeText(getActivity(), "Use Default.", Toast.LENGTH_SHORT).show();
-                    break;
+            if (msg.getData().getBoolean("adding_user", false)) {
+                Intent myIntent = new Intent(getApplicationContext(), CalibrationActivity.class);
+                myIntent.putExtra("user_name", msg.getData().getString("user_name"));
+                startActivityForResult(myIntent, REQUEST_CODE);
             }
 
+
         }
     }
+
+
 }
+
+
+
+
