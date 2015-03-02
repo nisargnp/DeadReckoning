@@ -9,8 +9,6 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -131,7 +129,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         findViewById(R.id.buttonStepInfo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                myDialog.setDialogMessage(getMessage());
+                myDialog.setDialogMessage(getDialogMessage());
                 myDialog.show(getSupportFragmentManager(), "Step Info");
             }
         });
@@ -147,32 +145,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_step_counter, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    //this method is required to implement SensorEventListener, but is not used
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     //This only works as long as the sensor is registered
     //Registration of the sensor is controlled by the OnClick methods in OnCreate
@@ -273,7 +246,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         lowerThreshold = lower;
     }
 
-    private String getMessage() {
+    private String getDialogMessage() {
 
         String message;
 

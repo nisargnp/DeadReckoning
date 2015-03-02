@@ -6,12 +6,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.text.format.Time;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -203,8 +201,16 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
         if (fileName.contains("Matrix"))
             writer.write("time;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3)");
-        else
-            writer.write("time;x;y;z");
+        else if (fileName.contains("Acc"))
+            writer.write("dt;Ax;Ay;Az");
+        else if (fileName.contains("Gyro"))
+            writer.write("dt;Gx;Gy;Gz");
+        else if (fileName.contains("Rotation"))
+            writer.write("dt;Rx;Ry;Rz");
+        else if (fileName.contains("Orientation"))
+            writer.write("dt;Ox;Oy;Oz");
+        else if (fileName.contains("Gravity"))
+            writer.write("dt;gx;gy;gz");
 
         writer.write(System.getProperty("line.separator"));
         writer.close();
@@ -223,31 +229,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_data_collection, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -286,20 +268,6 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 break;
 
         }
-
-//        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-//
-//        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-//
-//        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
-//
-//        } else if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-//
-//        } else if (event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
-//
-//        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-//
-//        }
 
         if (gotAccData && gotMagData) {
             SensorManager.getRotationMatrix(rotationMatrix, null, accData, magData);
