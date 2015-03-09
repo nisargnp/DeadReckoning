@@ -1,5 +1,7 @@
 package nisargpatel.inertialnavigation.activity;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,7 +14,6 @@ import android.widget.TextView;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.dialog.UserDetailsFragment;
-import nisargpatel.inertialnavigation.dialog.UserSettingsFragment;
 
 public class UserActivity extends ActionBarActivity {
 
@@ -47,7 +48,7 @@ public class UserActivity extends ActionBarActivity {
                 UserDetailsFragment userDetailsDialog = new UserDetailsFragment();
                 userDetailsDialog.addingUser(false);
                 userDetailsDialog.setUserName(userName);
-                userDetailsDialog.setHandler(new UserSettingsDialogHandler());
+                userDetailsDialog.setHandler(new UserSettingsDialogHandler(UserActivity.this, textStrideLength, userName));
                 userDetailsDialog.show(getSupportFragmentManager(), "Calibration");
             }
         });
@@ -109,21 +110,40 @@ public class UserActivity extends ActionBarActivity {
 
 
     //this handler will let UserActivity know when the UserDetailsFragment dialog has been dismissed.
-    private class UserSettingsDialogHandler extends Handler {
+    private static class UserSettingsDialogHandler extends Handler {
+
+        private Context context;
+        private TextView textStrideLength;
+        private String userName;
+
+        public UserSettingsDialogHandler(Context context, TextView textStrideLength, String userName) {
+            this.context = context;
+            this.textStrideLength = textStrideLength;
+            this.userName = userName;
+        }
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
 
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(getApplicationContext(), CalibrationActivity.class);
+                Intent myIntent = new Intent(context, CalibrationActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
-                startActivityForResult(myIntent, REQUEST_CODE);
+                ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
             } else {
                 refreshStrideLength();
             }
 
-
         }
+
+        private void refreshStrideLength() {
+            int index = UserListActivity.userList.indexOf(userName);
+            String strideLength = UserListActivity.strideList.get(index);
+            if (strideLength.length() > 3)
+                textStrideLength.setText(strideLength.substring(0,3));
+            else
+                textStrideLength.setText(strideLength);
+        }
+
     }
 }

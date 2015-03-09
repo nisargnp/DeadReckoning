@@ -9,9 +9,7 @@ import android.os.Bundle;
 
 import nisargpatel.inertialnavigation.activity.UserActivity;
 
-public class UserSettingsFragment extends DialogFragment {
-
-    private static final String DIALOG_MESSAGE = "Go to selected user's settings?";
+public class AccessUserFragment extends DialogFragment {
 
     private String userName;
     private String strideLength;
@@ -19,6 +17,8 @@ public class UserSettingsFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        final String DIALOG_MESSAGE = "Go to " + userName + "'s settings?";
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
         dialogBuilder

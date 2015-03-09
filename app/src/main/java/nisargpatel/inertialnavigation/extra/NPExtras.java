@@ -3,6 +3,7 @@ package nisargpatel.inertialnavigation.extra;
 import android.content.SharedPreferences;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 //final class cannot be extended by another class
 public final class NPExtras {
@@ -117,6 +118,19 @@ public final class NPExtras {
 
         return newArray;
 
+    }
+
+    public static ArrayList<Float> arrayToList(float[] staticArray) {
+        ArrayList<Float> dynamicList = new ArrayList<>();
+        for (float staticArrayValue : staticArray)
+            dynamicList.add(staticArrayValue);
+        return dynamicList;
+    }
+
+    public static ArrayList<String> arrayToList(String[] staticArray) {
+        ArrayList<String> dynamicList = new ArrayList<>();
+        Collections.addAll(dynamicList, staticArray);
+        return dynamicList;
     }
 
 }

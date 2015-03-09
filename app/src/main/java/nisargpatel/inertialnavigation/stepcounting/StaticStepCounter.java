@@ -1,16 +1,24 @@
-package nisargpatel.inertialnavigation.stepcounter;
+package nisargpatel.inertialnavigation.stepcounting;
 
-public class ThresholdStepCounter {
+public class StaticStepCounter {
 
 	private boolean peakFound;
 	private double upperThreshold;
 	private double lowerThreshold;
+    private int stepCount;
+
+    public StaticStepCounter() {
+        upperThreshold = 10.8;
+        lowerThreshold = 8.8;
+        stepCount = 0;
+        peakFound = false;
+    }
 
 	//constructor sets the values for the upper and lower thresholds
-	public ThresholdStepCounter(double upper, double lower) {
+	public StaticStepCounter(double upper, double lower) {
+        this();
         upperThreshold = upper;
         lowerThreshold = lower;
-		peakFound = false;
 	}
 	
 	//change the thresholds after the program is instantiated
@@ -20,12 +28,13 @@ public class ThresholdStepCounter {
 	}
 	
 	//determines if graph peaks (step found), and if so returns true
-	public boolean stepFound( double acc) {
+	public boolean findStep(double acc) {
 		
 		//if no new peak is found, then the program will look for a peak which is above the upperThreshold
 		if (!peakFound) {
 			if (acc > upperThreshold) {
 				peakFound = true;
+                stepCount++;
 				return true;
 			}
 		}
@@ -40,4 +49,19 @@ public class ThresholdStepCounter {
 		return false;
 	}
 
+    public double getUpperThreshold() {
+        return upperThreshold;
+    }
+
+    public double getLowerThreshold() {
+        return lowerThreshold;
+    }
+
+    public int getStepCount() {
+        return stepCount;
+    }
+
+    public void clearStepCount() {
+        stepCount = 0;
+    }
 }

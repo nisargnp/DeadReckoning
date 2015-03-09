@@ -7,30 +7,22 @@
     tools:context="nisargpatel.inertialnavigation.activity.HeadingActivity"
     android:id="@+id/orientation_layout_relative">
 
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="Start"
-        android:id="@+id/buttonStart"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Gyroscope Matrix"
+        android:id="@+id/textView4"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="Stop"
-        android:id="@+id/buttonStop"
-        android:layout_alignBottom="@+id/buttonStart"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="@string/clear"
-        android:id="@+id/buttonClear"
-        android:layout_alignParentBottom="true"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/zero"
+        android:id="@+id/textGyroscopeMatrix"
+        android:layout_below="@+id/textView4"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -109,23 +101,28 @@
         android:layout_below="@+id/textView10"
         android:layout_centerHorizontal="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Gyroscope Matrix"
-        android:id="@+id/textView4"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="70dp"
+        android:text="Start"
+        android:id="@+id/buttonStart"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/zero"
-        android:id="@+id/textGyroscopeMatrix"
-        android:layout_below="@+id/textView4"
-        android:layout_centerHorizontal="true" />
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="70dp"
+        android:text="Stop"
+        android:id="@+id/buttonStop"
+        android:layout_alignBottom="@+id/buttonStart"
+        android:layout_alignParentEnd="true" />
 
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="70dp"
+        android:text="@string/clear"
+        android:id="@+id/buttonClear"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

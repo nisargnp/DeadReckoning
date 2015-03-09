@@ -2,7 +2,7 @@ package nisargpatel.inertialnavigation.heading;
 
 import nisargpatel.inertialnavigation.extra.NPExtras;
 
-public class GyroIntegration {
+public class GyroscopeIntegration {
 
     int numTrialsBias;
     int runCount;
@@ -12,14 +12,14 @@ public class GyroIntegration {
 
     float lastTimestamp;
 
-    public GyroIntegration() {
+    public GyroscopeIntegration() {
         this.gyroBias = new float[3];
         this.sensitivity = 0.0025f;
         this.runCount = 0;
         this.numTrialsBias = 300;
     }
 
-    public GyroIntegration(int numTrialsBias, float sensitivity) {
+    public GyroscopeIntegration(int numTrialsBias, float sensitivity) {
         this();
         this.sensitivity = sensitivity;
         this.numTrialsBias = numTrialsBias;

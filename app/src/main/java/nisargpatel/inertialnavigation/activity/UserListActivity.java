@@ -1,6 +1,7 @@
 package nisargpatel.inertialnavigation.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,12 +21,14 @@ import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.dialog.UserDetailsFragment;
-import nisargpatel.inertialnavigation.dialog.UserSettingsFragment;
+import nisargpatel.inertialnavigation.dialog.AccessUserFragment;
 import nisargpatel.inertialnavigation.extra.NPExtras;
 
 public class UserListActivity extends FragmentActivity{
 
     private static final int REQUEST_CODE = 0;
+
+    private ListView myList;
 
     public static ArrayList<String> userList;
     public static ArrayList<String> strideList;
@@ -44,9 +47,8 @@ public class UserListActivity extends FragmentActivity{
         userList = NPExtras.getArrayFromSharedPreferences("user_list", sharedPreference);
         strideList = NPExtras.getArrayFromSharedPreferences("stride_list", sharedPreference);
 
-        ListView myList = (ListView) findViewById(R.id.listView);
-        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, userList);
-        myList.setAdapter(listAdapter);
+        myList = (ListView) findViewById(R.id.listView);
+        refreshListView();
 
         myList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -68,10 +70,10 @@ public class UserListActivity extends FragmentActivity{
 
                 Log.d("itemClick", "long click position: " + position);
 
-                UserSettingsFragment userSettingsDialog = new UserSettingsFragment();
-                userSettingsDialog.setUserName(userList.get(position));
-                userSettingsDialog.setStrideLength(strideList.get(position));
-                userSettingsDialog.show(getFragmentManager(), "User Settings");
+                AccessUserFragment accessUserDialog = new AccessUserFragment();
+                accessUserDialog.setUserName(userList.get(position));
+                accessUserDialog.setStrideLength(strideList.get(position));
+                accessUserDialog.show(getFragmentManager(), "User Settings");
 
                 return true;
 
@@ -83,8 +85,14 @@ public class UserListActivity extends FragmentActivity{
             @Override
             public void onClick(View v) {
 
+                ListView myList = (ListView) findViewById(R.id.listView);
+                myList.setAdapter(null);
+
+                ArrayAdapter<String> listAdapter = new ArrayAdapter<>(UserListActivity.this, android.R.layout.simple_list_item_1, userList);
+                myList.setAdapter(listAdapter);
+
                 UserDetailsFragment userDetailsDialog = new UserDetailsFragment();
-                userDetailsDialog.setHandler(new UserSettingsDialogHandler());
+                userDetailsDialog.setHandler(new UserSettingsDialogHandler(UserListActivity.this, myList));
                 userDetailsDialog.addingUser(true);
                 userDetailsDialog.show(getSupportFragmentManager(), "Calibration");
 
@@ -147,10 +155,7 @@ public class UserListActivity extends FragmentActivity{
     }
 
     private void refreshListView() {
-        ListView myList = (ListView) findViewById(R.id.listView);
-        myList.setAdapter(null);
-
-        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, userList);
+        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(UserListActivity.this, android.R.layout.simple_list_item_1, userList);
         myList.setAdapter(listAdapter);
     }
 
@@ -159,8 +164,16 @@ public class UserListActivity extends FragmentActivity{
         NPExtras.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
     }
 
-    //this handler will let UserListActivity know when the UserDetailsFragment dialog has been dismissed.
-    private class UserSettingsDialogHandler extends Handler {
+    //this handler will let UserListActivity know when the UserDetailsFragment dialog has been dismissed
+    private static class UserSettingsDialogHandler extends Handler {
+
+        Context context;
+        ListView myList;
+
+        public UserSettingsDialogHandler(Context context, ListView myList) {
+            this.context = context;
+            this.myList = myList;
+        }
 
         @Override
         public void handleMessage(Message msg) {
@@ -168,19 +181,22 @@ public class UserListActivity extends FragmentActivity{
 
             refreshListView();
 
+            //Starting the CalibrationActivity from the context of UserListActivity so that
+            //CalibrationActivity triggers UserListActivity's OnActivityResult() on finish()
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(getApplicationContext(), CalibrationActivity.class);
+                Intent myIntent = new Intent(context, CalibrationActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
-                startActivityForResult(myIntent, REQUEST_CODE);
+                ((FragmentActivity)context).startActivityForResult(myIntent, REQUEST_CODE);
             }
 
-
         }
+
+        private void refreshListView() {
+            ArrayAdapter<String> listAdapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, userList);
+            myList.setAdapter(listAdapter);
+        }
+
     }
 
 
 }
-
-
-
-
