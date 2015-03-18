@@ -25,9 +25,9 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
     private StepInfoFragment myDialog;
 
     //declaring views
-    private TextView textThresholdSteps;
-    private TextView textMovingAvgSteps;
-    private TextView textAndroidSteps;
+    private TextView textStaticCounter;
+    private TextView textDynamicCounter;
+    private TextView textAndroidCounter;
     private TextView textInstantAcc;
 
     //declaring sensors
@@ -36,8 +36,8 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
     private SensorManager sensorManager;
 
     //declaring step detectors
-    StaticStepCounter[] thresholdStepCounter;
-    DynamicStepCounter[] movAvgStepCounter;
+    StaticStepCounter[] staticStepCounters;
+    DynamicStepCounter[] dynamicStepCounters;
 
     //declaring step counts
     private int androidStepCount;
@@ -51,9 +51,9 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         myDialog = new StepInfoFragment();
 
         //defining views
-        textThresholdSteps = (TextView) findViewById(R.id.textThreshold);
-        textMovingAvgSteps = (TextView) findViewById(R.id.textMovingAverage);
-        textAndroidSteps = (TextView) findViewById(R.id.textAndroid);
+        textStaticCounter = (TextView) findViewById(R.id.textThreshold);
+        textDynamicCounter = (TextView) findViewById(R.id.textMovingAverage);
+        textAndroidCounter = (TextView) findViewById(R.id.textAndroid);
         textInstantAcc = (TextView) findViewById(R.id.textInstantAcc);
 
         //defining sensors
@@ -62,19 +62,19 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //defining step detectors
-        thresholdStepCounter = new StaticStepCounter[5];
-        thresholdStepCounter[0] = new StaticStepCounter(upperThreshold, lowerThreshold);
-        thresholdStepCounter[1] = new StaticStepCounter(10, 8);
-        thresholdStepCounter[2] = new StaticStepCounter(11, 7);
-        thresholdStepCounter[3] = new StaticStepCounter(12, 6);
-        thresholdStepCounter[4] = new StaticStepCounter(13, 5);
+        staticStepCounters = new StaticStepCounter[5];
+        staticStepCounters[0] = new StaticStepCounter(upperThreshold, lowerThreshold);
+        staticStepCounters[1] = new StaticStepCounter(10, 8);
+        staticStepCounters[2] = new StaticStepCounter(11, 7);
+        staticStepCounters[3] = new StaticStepCounter(12, 6);
+        staticStepCounters[4] = new StaticStepCounter(13, 5);
 
-        movAvgStepCounter = new DynamicStepCounter[5];
-        movAvgStepCounter[0] = new DynamicStepCounter(5.0);
-        movAvgStepCounter[1] = new DynamicStepCounter(3.0);
-        movAvgStepCounter[2] = new DynamicStepCounter(4.0);
-        movAvgStepCounter[3] = new DynamicStepCounter(6.0);
-        movAvgStepCounter[4] = new DynamicStepCounter(7.0);
+        dynamicStepCounters = new DynamicStepCounter[5];
+        dynamicStepCounters[0] = new DynamicStepCounter(5.0);
+        dynamicStepCounters[1] = new DynamicStepCounter(3.0);
+        dynamicStepCounters[2] = new DynamicStepCounter(4.0);
+        dynamicStepCounters[3] = new DynamicStepCounter(6.0);
+        dynamicStepCounters[4] = new DynamicStepCounter(7.0);
 
         clearCounters();
 
@@ -82,7 +82,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         findViewById(R.id.buttonStartCounter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                thresholdStepCounter[0].setThresholds(upperThreshold, lowerThreshold);
+                staticStepCounters[0].setThresholds(upperThreshold, lowerThreshold);
                 sensorManager.registerListener(StepCountActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(StepCountActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
             }
@@ -135,73 +135,42 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
 
             if (event.values[0] == 1.0) {
                 androidStepCount++;
-                textAndroidSteps.setText(String.valueOf(androidStepCount));
+                textAndroidCounter.setText(String.valueOf(androidStepCount));
             }
 
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
             final Double norm = Math.sqrt(Math.pow(event.values[0], 2) +
-                                    Math.pow(event.values[1], 2) +
-                                    Math.pow(event.values[2], 2));
+                    Math.pow(event.values[1], 2) +
+                    Math.pow(event.values[2], 2));
             final Double acc = (double) event.values[2];
 
             //display the instantaneous acceleration to let the user know the step counter is working
             textInstantAcc.setText(String.valueOf(acc).substring(0, 5));
 
+            //using separate thread for step counters to minimize load on UI Thread
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    if (thresholdStepCounter[0].findStep(acc)) {
 
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                textThresholdSteps.setText(String.valueOf(thresholdStepCounter[0].getStepCount()));
-                            }
-                        });
+                    for (StaticStepCounter staticStepCounter : staticStepCounters)
+                        staticStepCounter.findStep(acc);
 
-                    }
+                    for (DynamicStepCounter dynamicStepCounter : dynamicStepCounters)
+                        dynamicStepCounter.findStep(acc);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textStaticCounter.setText(String.valueOf(staticStepCounters[0].getStepCount()));
+                            textDynamicCounter.setText(String.valueOf(dynamicStepCounters[0].getStepCount()));
+                        }
+                    });
+
                 }
             }).start();
-
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    if (movAvgStepCounter[0].findStep(acc)) {
-//
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                textMovingAvgSteps.setText(String.valueOf(movAvgStepCounter[0].getStepCount()));
-//                            }
-//                        });
-//                    }
-//                }
-//            }).start();
-
-            //using alternate threads for the other step counters to minimize load on UI Thread
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    thresholdStepCounter[1].findStep(acc);
-                    thresholdStepCounter[2].findStep(acc);
-                    thresholdStepCounter[3].findStep(acc);
-                    thresholdStepCounter[4].findStep(acc);
-                }
-            }).start();
-//
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    if (movAvgStepCounter[1].findStep(acc)) movingAvgStepCount[1]++;
-//                    if (movAvgStepCounter[2].findStep(acc)) movingAvgStepCount[2]++;
-//                    if (movAvgStepCounter[3].findStep(acc)) movingAvgStepCount[3]++;
-//                    if (movAvgStepCounter[4].findStep(acc)) movingAvgStepCount[4]++;
-//                }
-//            }).start();
 
         }
-
 
     }
 
@@ -215,15 +184,15 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
 
         String message;
 
-        String t1 = String.format("T(%.1f, %.1f) = %d", thresholdStepCounter[1].getUpperThreshold(), thresholdStepCounter[1].getLowerThreshold(), thresholdStepCounter[1].getStepCount());
-        String t2 = String.format("T(%.1f, %.1f) = %d", thresholdStepCounter[2].getUpperThreshold(), thresholdStepCounter[2].getLowerThreshold(), thresholdStepCounter[2].getStepCount());
-        String t3 = String.format("T(%.1f, %.1f) = %d", thresholdStepCounter[3].getUpperThreshold(), thresholdStepCounter[3].getLowerThreshold(), thresholdStepCounter[3].getStepCount());
-        String t4 = String.format("T(%.1f, %.1f) = %d", thresholdStepCounter[4].getUpperThreshold(), thresholdStepCounter[4].getLowerThreshold(), thresholdStepCounter[4].getStepCount());
+        String t1 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[1].getUpperThreshold(), staticStepCounters[1].getLowerThreshold(), staticStepCounters[1].getStepCount());
+        String t2 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[2].getUpperThreshold(), staticStepCounters[2].getLowerThreshold(), staticStepCounters[2].getStepCount());
+        String t3 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[3].getUpperThreshold(), staticStepCounters[3].getLowerThreshold(), staticStepCounters[3].getStepCount());
+        String t4 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[4].getUpperThreshold(), staticStepCounters[4].getLowerThreshold(), staticStepCounters[4].getStepCount());
 
-        String a1 = String.format("A(%.1f) = %d", movAvgStepCounter[1].getSensitivity(), movAvgStepCounter[1].getStepCount());
-        String a2 = String.format("A(%.1f) = %d", movAvgStepCounter[2].getSensitivity(), movAvgStepCounter[2].getStepCount());
-        String a3 = String.format("A(%.1f) = %d", movAvgStepCounter[3].getSensitivity(), movAvgStepCounter[3].getStepCount());
-        String a4 = String.format("A(%.1f) = %d", movAvgStepCounter[4].getSensitivity(), movAvgStepCounter[4].getStepCount());
+        String a1 = String.format("A(%.1f) = %d", dynamicStepCounters[1].getSensitivity(), dynamicStepCounters[1].getStepCount());
+        String a2 = String.format("A(%.1f) = %d", dynamicStepCounters[2].getSensitivity(), dynamicStepCounters[2].getStepCount());
+        String a3 = String.format("A(%.1f) = %d", dynamicStepCounters[3].getSensitivity(), dynamicStepCounters[3].getStepCount());
+        String a4 = String.format("A(%.1f) = %d", dynamicStepCounters[4].getSensitivity(), dynamicStepCounters[4].getStepCount());
 
         message = t1 + "\n" + t2 + "\n" + t3 + "\n" + t4 + "\n" + "\n" + a1 + "\n" + a2 + "\n" + a3 + "\n" + a4;
 
@@ -232,19 +201,19 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
 
     private void clearCounters() {
 
-        textThresholdSteps.setText("0");
-        textMovingAvgSteps.setText("0");
-        textAndroidSteps.setText("0");
+        textStaticCounter.setText("0");
+        textDynamicCounter.setText("0");
+        textAndroidCounter.setText("0");
         textInstantAcc.setText("0");
 
         androidStepCount = 0;
 
-        for (StaticStepCounter aThresholdStepCounter : thresholdStepCounter) {
-            aThresholdStepCounter.clearStepCount();
+        for (StaticStepCounter staticStepCounter : staticStepCounters) {
+            staticStepCounter.clearStepCount();
         }
 
-        for (DynamicStepCounter aMovAvgStepCounter : movAvgStepCounter) {
-            aMovAvgStepCounter.clearStepCount();
+        for (DynamicStepCounter dynamicStepCounter : dynamicStepCounters) {
+            dynamicStepCounter.clearStepCount();
         }
 
     }

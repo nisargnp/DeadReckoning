@@ -13,10 +13,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/threshold_steps"
+        android:text="Static Counter:"
         android:id="@+id/txtViewThresholds"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:textSize="30sp"
         android:layout_marginTop="10dp"/>
@@ -25,11 +24,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/moving_average_steps"
+        android:text="Dynamic Counter:"
         android:id="@+id/txtViewMovingAverage"
         android:textSize="30sp"
         android:layout_below="@+id/txtViewThresholds"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp" />
 
@@ -37,11 +35,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/android_steps"
+        android:text="Android Counter:"
         android:id="@+id/txtViewAndroidSteps"
         android:textSize="30sp"
         android:layout_below="@id/txtViewMovingAverage"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="25dp" />
 
@@ -51,11 +48,8 @@
         android:text="@string/zero"
         android:id="@+id/textThreshold"
         android:textSize="30sp"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/buttonStopCounter"
-        android:layout_alignEnd="@+id/buttonStopCounter"
-        android:layout_marginRight="23dp"
-        android:layout_marginEnd="23dp" />
+        android:layout_alignTop="@+id/txtViewThresholds"
+        android:layout_toEndOf="@+id/buttonStepInfo" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -63,9 +57,8 @@
         android:text="@string/zero"
         android:id="@+id/textMovingAverage"
         android:textSize="30sp"
-        android:layout_above="@+id/txtViewAndroidSteps"
-        android:layout_alignLeft="@+id/textThreshold"
-        android:layout_alignStart="@+id/textThreshold" />
+        android:layout_alignTop="@+id/txtViewMovingAverage"
+        android:layout_toEndOf="@+id/buttonStepInfo" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -74,8 +67,7 @@
         android:id="@+id/textAndroid"
         android:textSize="30sp"
         android:layout_alignTop="@+id/txtViewAndroidSteps"
-        android:layout_alignLeft="@+id/textMovingAverage"
-        android:layout_alignStart="@+id/textMovingAverage" />
+        android:layout_toEndOf="@+id/buttonStepInfo" />
     <Button
         android:layout_width="100dp"
         android:layout_height="75dp"
@@ -83,7 +75,6 @@
         android:id="@+id/buttonStartCounter"
         android:textSize="20sp"
         android:layout_alignTop="@+id/buttonStopCounter"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -93,7 +84,6 @@
         android:id="@+id/buttonStopCounter"
         android:textSize="20sp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
     <TextView
@@ -112,15 +102,15 @@
         android:id="@+id/textInstantAcc"
         android:textSize="30sp"
         android:layout_alignTop="@+id/txtViewDyDt"
-        android:layout_toEndOf="@+id/buttonStepInfo" />
+        android:layout_alignStart="@+id/buttonStopCounter" />
 
     <Button
-        android:layout_width="150dp"
+        android:layout_width="200dp"
         android:layout_height="75dp"
         android:text="@string/step_info"
         android:id="@+id/buttonStepInfo"
         android:textSize="20sp"
-        android:layout_marginBottom="35dp"
+        android:layout_marginBottom="40dp"
         android:layout_above="@+id/buttonStartCounter"
         android:layout_centerHorizontal="true" />
 

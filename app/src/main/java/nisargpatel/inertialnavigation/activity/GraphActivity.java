@@ -35,10 +35,10 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private static final double LOWER_THRESHOLD = 6.5;
 
     private static final String FOLDER_NAME = "Inertial_Navigation_Data/Graph_Activity";
-    private static final String[] DATA_FILE_NAMES = {"Accelerometer", "GyroscopeUncalibrated", "XYDataSet"};
-    private static final String[] DATA_FILE_HEADINGS = {"dt;Ax;Ay;Az;findStep",
-                                                        "dt;Gx;Gy;Gz;heading",
-                                                        "dt;strideLength;heading;pointX;pointY"};
+    private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Gyroscope-Uncalibrated", "XY-Data-Set"};
+    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;findStep",
+                                                        "t;uGx;uGy;uGz;heading",
+                                                        "t;strideLength;heading;pointX;pointY"};
 
     private StaticStepCounter thresholdStepCounter;
     private GyroscopeIntegration gyroscopeIntegration;
@@ -170,7 +170,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             dataValues.add(0, (float) event.timestamp);
             dataValues.add(matrixHeading);
 
-            dataFileWriter.writeToFile("GyroscopeUncalibrated", dataValues);
+            dataFileWriter.writeToFile("Gyroscope-Uncalibrated", dataValues);
 
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
@@ -203,7 +203,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 dataValues.add((float)pointX);
                 dataValues.add((float)pointY);
 
-                dataFileWriter.writeToFile("XYDataSet", dataValues);
+                dataFileWriter.writeToFile("XY-Data-Set", dataValues);
 
                 linearLayout.removeAllViews();
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));

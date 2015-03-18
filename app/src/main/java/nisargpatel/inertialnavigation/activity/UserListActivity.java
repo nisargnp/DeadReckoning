@@ -181,12 +181,12 @@ public class UserListActivity extends FragmentActivity{
 
             refreshListView();
 
-            //Starting the CalibrationActivity from the context of UserListActivity so that
-            //CalibrationActivity triggers UserListActivity's OnActivityResult() on finish()
+            //Starting the StrideLengthActivity from the context of UserListActivity so that
+            //StrideLengthActivity triggers UserListActivity's OnActivityResult() on finish()
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(context, CalibrationActivity.class);
+                Intent myIntent = new Intent(context, StrideLengthActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
-                ((FragmentActivity)context).startActivityForResult(myIntent, REQUEST_CODE);
+                ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
             }
 
         }

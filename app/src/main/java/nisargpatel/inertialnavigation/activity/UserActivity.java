@@ -127,7 +127,7 @@ public class UserActivity extends ActionBarActivity {
             super.handleMessage(msg);
 
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(context, CalibrationActivity.class);
+                Intent myIntent = new Intent(context, StrideLengthActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
                 ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
             } else {

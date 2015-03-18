@@ -78,10 +78,10 @@ public class DataFileWriter {
         Time today = new Time(Time.getCurrentTimezone());
         today.setToNow();
 
-        String date = "(" + today.year + "-" + (today.month + 1) + "-" + today.monthDay + ")";
-        String currentTime = "(" + today.format("%H%M%S") + ")";
+        String date = today.year + "-" + (today.month + 1) + "-" + today.monthDay;
+        String currentTime = today.format("%H-%M-%S");
 
-        return fileName + " " + date + " @ " + currentTime + ".txt";
+        return fileName + "_" + date + "_" + currentTime + ".txt";
 
     }
 

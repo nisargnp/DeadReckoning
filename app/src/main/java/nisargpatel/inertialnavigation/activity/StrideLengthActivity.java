@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 import nisargpatel.inertialnavigation.R;
 
-public class CalibrationActivity extends ActionBarActivity implements SensorEventListener {
+public class StrideLengthActivity extends ActionBarActivity implements SensorEventListener {
 
     private TextView textAndroidSteps;
     private TextView textCalibrationDistance;
@@ -49,8 +49,8 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         findViewById(R.id.buttonStartCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(CalibrationActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(CalibrationActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StrideLengthActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StrideLengthActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
             }
         });
 
@@ -58,8 +58,8 @@ public class CalibrationActivity extends ActionBarActivity implements SensorEven
         findViewById(R.id.buttonStopCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(CalibrationActivity.this, accelerometer);
-                sensorManager.unregisterListener(CalibrationActivity.this, androidStepCounter);
+                sensorManager.unregisterListener(StrideLengthActivity.this, accelerometer);
+                sensorManager.unregisterListener(StrideLengthActivity.this, androidStepCounter);
             }
         });
 

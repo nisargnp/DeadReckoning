@@ -4,65 +4,35 @@ import nisargpatel.inertialnavigation.extra.NPExtras;
 
 public class GyroscopeIntegration {
 
-    int numTrialsBias;
-    int runCount;
-    float sensitivity;
+    private boolean isFirstRun;
+    private float sensitivity;
+    private float lastTimestamp;
+    private float[] gyroBias;
 
-    float[] gyroBias;
-
-    float lastTimestamp;
 
     public GyroscopeIntegration() {
         this.gyroBias = new float[3];
         this.sensitivity = 0.0025f;
-        this.runCount = 0;
-        this.numTrialsBias = 300;
+        this.isFirstRun = true;
     }
 
-    public GyroscopeIntegration(int numTrialsBias, float sensitivity) {
+    public GyroscopeIntegration(int numTrialsBias, float sensitivity, float[] gyroBias) {
         this();
         this.sensitivity = sensitivity;
-        this.numTrialsBias = numTrialsBias;
+        this.gyroBias = gyroBias;
     }
 
     public float[] getIntegratedValues(long timestamp, float[] rawGyroValues) {
-        runCount++;
-
-        //if no bias is to be calculated
-        //get the timestamp, and set the bias to the 0
-        if (numTrialsBias == 0 && runCount == 1) {
+        //get the first timestamp
+        if (isFirstRun) {
             lastTimestamp = NPExtras.nsToSec(timestamp);
-            calcBias(runCount, new float[3]);
-        }
-
-        //if bias is to be calculated
-        //get timestamp and calculate bias using mov. avg. for the given number of data points
-        if (runCount <= numTrialsBias) {
-            lastTimestamp = NPExtras.nsToSec(timestamp);
-            calcBias(runCount, rawGyroValues);
-            return new float[3];
+            isFirstRun = false;
         }
 
         float[] unbiasedGyroValues = removeBias(rawGyroValues);
 
         //return deltaOrientation[]
         return calcIntegratedValues(timestamp, unbiasedGyroValues);
-    }
-
-    private void calcBias(int runCount, float[] rawGyroValues) {
-        if (runCount == 1) {
-            gyroBias[0] = rawGyroValues[0];
-            gyroBias[1] = rawGyroValues[1];
-            gyroBias[2] = rawGyroValues[2];
-            return;
-        }
-
-        //averaging bias for the first few hundred data points
-        //movingAverage = movingAverage * ((n-1)/n) + newValue * (1/n)
-        float n = (float) runCount;
-        gyroBias[0] = gyroBias[0] * ((n-1)/n) + rawGyroValues[0] * (1/n);
-        gyroBias[1] = gyroBias[1] * ((n-1)/n) + rawGyroValues[1] * (1/n);
-        gyroBias[2] = gyroBias[2] * ((n-1)/n) + rawGyroValues[2] * (1/n);
     }
 
     private float[] removeBias(float[] rawGyroValues) {

@@ -22,7 +22,7 @@
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name=".activity.CalibrationActivity"
+            android:name=".activity.StrideLengthActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_calibration"
             android:screenOrientation="portrait" >
