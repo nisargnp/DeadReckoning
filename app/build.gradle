@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:support-v4:21.0.3'
     compile files('src/libs/achartengine-1.1.0.jar')
     compile project(':zBarScannerLibrary')
+    compile files('src/libs/EJML-core-0.26.jar')
 }

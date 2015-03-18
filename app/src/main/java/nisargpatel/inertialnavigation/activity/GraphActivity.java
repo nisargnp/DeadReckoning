@@ -1,7 +1,6 @@
 package nisargpatel.inertialnavigation.activity;
 
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,19 +8,16 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.dm.zbar.android.scanner.ZBarConstants;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.extra.NPExtras;
+import nisargpatel.inertialnavigation.extra.ExtraFunctions;
 import nisargpatel.inertialnavigation.filewriting.DataFileWriter;
 import nisargpatel.inertialnavigation.graph.ScatterPlot;
 import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
@@ -36,9 +32,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private static final String FOLDER_NAME = "Inertial_Navigation_Data/Graph_Activity";
     private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Gyroscope-Uncalibrated", "XY-Data-Set"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;findStep",
-                                                        "t;uGx;uGy;uGz;heading",
-                                                        "t;strideLength;heading;pointX;pointY"};
+    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;findStep;",
+                                                        "t;uGx;uGy;uGz;xBias;yBias;zBias;heading;",
+                                                        "t;strideLength;heading;pointX;pointY;"};
 
     private StaticStepCounter thresholdStepCounter;
     private GyroscopeIntegration gyroscopeIntegration;
@@ -67,8 +63,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //getting global settings
         strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
         String userName = getIntent().getStringExtra("user_name");
-
-        Toast.makeText(GraphActivity.this, "Username: " + userName + "\n" + "Stride Length: " + strideLength, Toast.LENGTH_SHORT).show();
+        float[] gyroBias = getIntent().getFloatArrayExtra("gyroscope_bias");
+        float[][] initialOrientation = ExtraFunctions.stringArrayToFloatArray((String[][]) getIntent().getSerializableExtra("initial_orientation")); //converting from Serialized to String[][] to float[][]
 
         //defining views
         final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
@@ -83,8 +79,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
         //initializing needed classes
         thresholdStepCounter = new StaticStepCounter(UPPER_THRESHOLD, LOWER_THRESHOLD);
-        gyroscopeIntegration = new GyroscopeIntegration(300, 0.0025f);
-        eulerHeadingInference = new EulerHeadingInference(NPExtras.getIdentityMatrix());
+        gyroscopeIntegration = new GyroscopeIntegration(0.0025f, gyroBias);
+        eulerHeadingInference = new EulerHeadingInference(initialOrientation);
 
         //setting up graph with origin
         sPlot = new ScatterPlot("Position");
@@ -94,6 +90,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         //initializing needed variables
         filesCreated = false;
         matrixHeading = 0;
+
+        Toast.makeText(GraphActivity.this, "user: " + userName + "\n" + "stride length: " + strideLength, Toast.LENGTH_SHORT).show();
 
         //setting up buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
@@ -106,7 +104,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
                 if (!filesCreated) {
                     try {
-                        dataFileWriter = new DataFileWriter(FOLDER_NAME, NPExtras.arrayToList(DATA_FILE_NAMES), NPExtras.arrayToList(DATA_FILE_HEADINGS));
+                        dataFileWriter = new DataFileWriter(FOLDER_NAME, ExtraFunctions.arrayToList(DATA_FILE_NAMES), ExtraFunctions.arrayToList(DATA_FILE_HEADINGS));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -146,17 +144,6 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            Toast.makeText(getApplicationContext(), data.getStringExtra(ZBarConstants.SCAN_RESULT), Toast.LENGTH_LONG).show();
-        } else if (resultCode == RESULT_CANCELED) {
-            Toast.makeText(getApplicationContext(), "QR Code Scanner canceled.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
@@ -166,7 +153,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
             float[] deltaOrientation = gyroscopeIntegration.getIntegratedValues(event.timestamp, event.values);
             matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
 
-            ArrayList<Float> dataValues = NPExtras.arrayToList(event.values);
+            ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
             dataValues.add(0, (float) event.timestamp);
             dataValues.add(matrixHeading);
 
@@ -181,17 +168,15 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
             if (stepFound) {
 
-                Log.d("step_counter", "step found");
-
-                ArrayList<Float> dataValues = NPExtras.arrayToList(event.values);
+                ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
                 dataValues.add(0, (float) event.timestamp);
                 dataValues.add(1f);
                 dataFileWriter.writeToFile("Accelerometer", dataValues);
 
                 //rotation heading output by 90 degrees (pi/2)
                 float heading = matrixHeading + (float) (Math.PI / 2.0);
-                double pointX = NPExtras.getXFromPolar(strideLength, heading);
-                double pointY = NPExtras.getYFromPolar(strideLength, heading);
+                double pointX = ExtraFunctions.getXFromPolar(strideLength, heading);
+                double pointY = ExtraFunctions.getYFromPolar(strideLength, heading);
 
                 pointX += sPlot.getLastXPoint();
                 pointY += sPlot.getLastYPoint();
@@ -210,7 +195,7 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
                 //if step is not found
             } else {
-                ArrayList<Float> dataValues = NPExtras.arrayToList(event.values);
+                ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
                 dataValues.add(0, (float) event.timestamp);
                 dataValues.add(0f);
                 dataFileWriter.writeToFile("Accelerometer", dataValues);

@@ -17,21 +17,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
-import nisargpatel.inertialnavigation.extra.NPExtras;
+import nisargpatel.inertialnavigation.extra.ExtraFunctions;
 import nisargpatel.inertialnavigation.filewriting.DataFileWriter;
 
 public class DataCollectActivity extends ActionBarActivity implements SensorEventListener{
 
     private static final String FOLDER_NAME = "Inertial_Navigation_Data/Data_Collect_Activity";
     private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Linear-Acceleration", "Gyroscope-Calibrated", "Gyroscope-Uncalibrated", "Magnetic-Field", "Magnetic-Field-Uncalibrated", "Gravity", "Rotation-Matrix"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az",
-                                                        "t;LAx;LAy;LAz",
-                                                        "t;Gx;Gy;Gz",
-                                                        "t;uGx;uGy;uGz",
-                                                        "t;Mx;My;Mz",
-                                                        "t;uMx;uMy;uMz",
-                                                        "t;gx;gy;gz",
-                                                        "t;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3)"};
+    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;",
+                                                        "t;LAx;LAy;LAz;",
+                                                        "t;Gx;Gy;Gz;",
+                                                        "t;uGx;uGy;uGz;xBias;yBias;zBias;",
+                                                        "t;Mx;My;Mz;",
+                                                        "t;uMx;uMy;uMz;xBias;yBias;zBias;",
+                                                        "t;gx;gy;gz;",
+                                                        "t;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3);"};
 
     DataFileWriter dataFileWriter;
 
@@ -93,7 +93,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
 
 
                 try {
-                    dataFileWriter = new DataFileWriter(FOLDER_NAME, NPExtras.arrayToList(DATA_FILE_NAMES), NPExtras.arrayToList(DATA_FILE_HEADINGS));
+                    dataFileWriter = new DataFileWriter(FOLDER_NAME, ExtraFunctions.arrayToList(DATA_FILE_NAMES), ExtraFunctions.arrayToList(DATA_FILE_HEADINGS));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -134,9 +134,9 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        float time  = NPExtras.nsToSec(event.timestamp);
+        float time  = ExtraFunctions.nsToSec(event.timestamp);
 
-        ArrayList<Float> sensorValuesList = NPExtras.arrayToList(event.values);
+        ArrayList<Float> sensorValuesList = ExtraFunctions.arrayToList(event.values);
         sensorValuesList.add(0, time);
 
         switch (event.sensor.getType()) {
@@ -171,7 +171,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         if (gotAccData && gotMagData) {
             SensorManager.getRotationMatrix(rotationMatrix, null, accData, magData);
 
-            ArrayList<Float> rotationMatrixList = NPExtras.arrayToList(rotationMatrix);
+            ArrayList<Float> rotationMatrixList = ExtraFunctions.arrayToList(rotationMatrix);
             rotationMatrixList.add(0, time);
             dataFileWriter.writeToFile("Rotation-Matrix", rotationMatrixList);
 

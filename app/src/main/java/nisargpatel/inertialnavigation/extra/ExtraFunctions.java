@@ -6,13 +6,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 //final class cannot be extended by another class
-public final class NPExtras {
+public final class ExtraFunctions {
 
     //private constructor stops class from
     //being instantiated to an object
-    private NPExtras() {}
+    private ExtraFunctions() {}
 
     public static final String PREFS_NAME = "Inertial Navigation Preferences";
+
+    public static final float[][] IDENTITY_MATRIX = {{1,0,0},
+                                                     {0,1,0},
+                                                     {0,0,1}};
 
     //calculate x coordinate point given radius and angle
     public static double getXFromPolar(double radius, double angle) {
@@ -92,12 +96,6 @@ public final class NPExtras {
 
     }
 
-    public static float[][] getIdentityMatrix() {
-        return new float[][]{{1,0,0},
-                             {0,1,0},
-                             {0,0,1}};
-    }
-
     public static void addArrayToSharedPreferences(String arrayName, ArrayList<String> array, SharedPreferences.Editor editor) {
         editor.putInt(arrayName + "_size", array.size());
         for (int i = 0; i < array.size(); i++) {
@@ -132,6 +130,23 @@ public final class NPExtras {
         Collections.addAll(dynamicList, staticArray);
         return dynamicList;
     }
+
+    public static String[][] floatArrayToStringArray(float[][] floatArray) {
+        String[][] stringArray = new String[floatArray.length][floatArray[0].length];
+        for (int row = 0; row < floatArray.length; row++)
+            for (int col = 0; col < floatArray[0].length; col++)
+                stringArray[row][col] = String.valueOf(floatArray[row][col]);
+        return stringArray;
+    }
+
+    public static float[][] stringArrayToFloatArray(String[][] stringArray) {
+        float[][] floatArray = new float[stringArray.length][stringArray[0].length];
+        for (int row = 0; row < stringArray.length; row++)
+            for (int col = 0; col < stringArray[0].length; col++)
+                floatArray[row][col] = Float.parseFloat(stringArray[row][col]);
+        return floatArray;
+    }
+
 
 }
 

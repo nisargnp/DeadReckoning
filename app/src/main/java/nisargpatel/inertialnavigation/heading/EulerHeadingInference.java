@@ -1,19 +1,19 @@
 
 package nisargpatel.inertialnavigation.heading;
 
-import nisargpatel.inertialnavigation.extra.NPExtras;
+import nisargpatel.inertialnavigation.extra.ExtraFunctions;
 
 //heading inference determine using Euler angles and the Direction Cosine Matrix
 public class EulerHeadingInference {
 
-    private float[][] c;
+    private float[][] C;
 
     public EulerHeadingInference() {
-        this(NPExtras.getIdentityMatrix());
+        this(ExtraFunctions.IDENTITY_MATRIX);
     }
 
     public EulerHeadingInference(float[][] startingMatrix) {
-        c = startingMatrix.clone();
+        C = startingMatrix.clone();
     }
 
     public float getCurrentHeading(float[] gyroValue) {
@@ -21,12 +21,12 @@ public class EulerHeadingInference {
         float wY = gyroValue[1];
         float wZ = gyroValue[2];
 
-        float[][] a = calcMatrixA(wX, wY, wZ);
+        float[][] A = calcMatrixA(wX, wY, wZ);
 
-        calcMatrixC(a);
+        calcMatrixC(A);
 
         //calculate and return current heading
-        return (float) (Math.atan2(c[1][0], c[0][0]));
+        return (float) (Math.atan2(C[1][0], C[0][0]));
     }
 
     private float[][] calcMatrixB(float wX, float wY, float wZ) {
@@ -37,21 +37,21 @@ public class EulerHeadingInference {
 
     private float[][] calcMatrixA(float wX, float wY, float wZ) {
 
-        float[][] a;
-        float[][] b = calcMatrixB(wX, wY, wZ);
-        float[][] bSq = NPExtras.multiplyMatrices(b, b);
+        float[][] A;
+        float[][] B = calcMatrixB(wX, wY, wZ);
+        float[][] B_sq = ExtraFunctions.multiplyMatrices(B, B);
 
         float norm = calcNorm(wX, wY, wZ);
-        float bScaleFactor = calcBScaleFactor(norm);
-        float bSqScaleFactor = calcBSqScaleFactor(norm);
+        float B_scaleFactor = calcBScaleFactor(norm);
+        float B_sqScaleFactor = calcBSqScaleFactor(norm);
 
-        b = NPExtras.scaleMatrix(b, bScaleFactor);
-        bSq = NPExtras.scaleMatrix(bSq, bSqScaleFactor);
+        B = ExtraFunctions.scaleMatrix(B, B_scaleFactor);
+        B_sq = ExtraFunctions.scaleMatrix(B_sq, B_sqScaleFactor);
 
-        a = NPExtras.addMatrices(b, bSq);
-        a = NPExtras.addMatrices(a, NPExtras.getIdentityMatrix());
+        A = ExtraFunctions.addMatrices(B, B_sq);
+        A = ExtraFunctions.addMatrices(A, ExtraFunctions.IDENTITY_MATRIX);
 
-        return a;
+        return A;
     }
 
     private float calcNorm(float wX, float wY, float wZ) {
@@ -61,25 +61,25 @@ public class EulerHeadingInference {
     //(sin σ) / σ ≈ 1 - (σ^2 / 3!) + (σ^4 / 5!)
     private float calcBScaleFactor(float sigma) {
         //return (float) ((1 - Math.cos(sigma)) / Math.pow(sigma, 2));
-        float sigmaSqOverThreeFactorial = (float) Math.pow(sigma, 2) / NPExtras.factorial(3);
-        float sigmaToForthOverFiveFactorial = (float) Math.pow(sigma, 4) / NPExtras.factorial(5);
+        float sigmaSqOverThreeFactorial = (float) Math.pow(sigma, 2) / ExtraFunctions.factorial(3);
+        float sigmaToForthOverFiveFactorial = (float) Math.pow(sigma, 4) / ExtraFunctions.factorial(5);
         return (float) (1.0 - sigmaSqOverThreeFactorial + sigmaToForthOverFiveFactorial);
     }
 
     //(1 - cos σ) / σ^2 ≈ (1/2) - (σ^2 / 4!) + (σ^4 / 6!)
     private float calcBSqScaleFactor(float sigma) {
         //return (float) (Math.sin(sigma) / sigma);
-        float sigmaSqOverFourFactorial = (float) Math.pow(sigma, 2) / NPExtras.factorial(4);
-        float sigmaToForthOverSixFactorial = (float) Math.pow(sigma, 4) / NPExtras.factorial(6);
+        float sigmaSqOverFourFactorial = (float) Math.pow(sigma, 2) / ExtraFunctions.factorial(4);
+        float sigmaToForthOverSixFactorial = (float) Math.pow(sigma, 4) / ExtraFunctions.factorial(6);
         return (float) (0.5 - sigmaSqOverFourFactorial + sigmaToForthOverSixFactorial);
     }
 
     private void calcMatrixC(float[][] a) {
-        c = NPExtras.multiplyMatrices(c, a);
+        C = ExtraFunctions.multiplyMatrices(C, a);
     }
 
     public void clearMatrix() {
-        c = NPExtras.getIdentityMatrix();
+        C = ExtraFunctions.IDENTITY_MATRIX;
     }
 
 }

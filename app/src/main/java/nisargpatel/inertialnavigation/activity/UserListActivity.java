@@ -20,9 +20,10 @@ import android.widget.ListView;
 import java.util.ArrayList;
 
 import nisargpatel.inertialnavigation.R;
+import nisargpatel.inertialnavigation.dialog.CalibrationFragment;
 import nisargpatel.inertialnavigation.dialog.UserDetailsFragment;
 import nisargpatel.inertialnavigation.dialog.AccessUserFragment;
-import nisargpatel.inertialnavigation.extra.NPExtras;
+import nisargpatel.inertialnavigation.extra.ExtraFunctions;
 
 public class UserListActivity extends FragmentActivity{
 
@@ -40,12 +41,12 @@ public class UserListActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_list);
 
-        SharedPreferences sharedPreference = getSharedPreferences(NPExtras.PREFS_NAME, 0);
+        SharedPreferences sharedPreference = getSharedPreferences(ExtraFunctions.PREFS_NAME, 0);
         sharedPreferencesEditor = sharedPreference.edit();
         sharedPreferencesEditor.apply();
 
-        userList = NPExtras.getArrayFromSharedPreferences("user_list", sharedPreference);
-        strideList = NPExtras.getArrayFromSharedPreferences("stride_list", sharedPreference);
+        userList = ExtraFunctions.getArrayFromSharedPreferences("user_list", sharedPreference);
+        strideList = ExtraFunctions.getArrayFromSharedPreferences("stride_list", sharedPreference);
 
         myList = (ListView) findViewById(R.id.listView);
         refreshListView();
@@ -56,10 +57,17 @@ public class UserListActivity extends FragmentActivity{
 
                 Log.d("itemClick", "click position: " + position);
 
-                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
-                myIntent.putExtra("user_name", userList.get(position));
-                myIntent.putExtra("stride_length", Float.parseFloat(strideList.get(position)));
-                startActivity(myIntent);
+//                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
+//                myIntent.putExtra("user_name", userList.get(position));
+//                myIntent.putExtra("stride_length", Float.parseFloat(strideList.get(position)));
+//                startActivity(myIntent);
+
+                CalibrationFragment calibrationDialog = new CalibrationFragment();
+                Bundle mBundle = new Bundle();
+                mBundle.putString("user_name", userList.get(position));
+                mBundle.putFloat("stride_length", Float.parseFloat(strideList.get(position)));
+                calibrationDialog.setArguments(mBundle);
+                calibrationDialog.show(getFragmentManager(), "Calibrate Sensors");
 
             }
         });
@@ -160,8 +168,8 @@ public class UserListActivity extends FragmentActivity{
     }
 
     public static void updatePrefs() {
-        NPExtras.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
-        NPExtras.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
+        ExtraFunctions.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
+        ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
     }
 
     //this handler will let UserListActivity know when the UserDetailsFragment dialog has been dismissed

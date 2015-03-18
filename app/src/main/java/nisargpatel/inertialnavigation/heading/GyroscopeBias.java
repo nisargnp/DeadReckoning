@@ -12,16 +12,22 @@ public class GyroscopeBias {
         gyroBias = new float[3];
     }
 
-    GyroscopeBias(int trials) {
+    public GyroscopeBias(int trials) {
         this();
         this.trials = trials;
     }
 
-    private boolean calcBias(float[] rawGyroValues) {
+    public boolean calcBias(float[] rawGyroValues) {
         runCount++;
 
         if (runCount >= trials)
             return true;
+
+        for (float rawGyroValue : rawGyroValues)
+            if (Math.abs(rawGyroValue) > 1) {
+                runCount--;
+                return false;
+            }
 
         if (runCount == 1) {
             gyroBias[0] = rawGyroValues[0];

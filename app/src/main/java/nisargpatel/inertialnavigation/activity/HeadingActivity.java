@@ -47,8 +47,8 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
         setContentView(R.layout.activity_heading);
 
         eulerHeadingInference = new EulerHeadingInference();
-        gyroscopeIntegration = new GyroscopeIntegration(0, GYROSCOPE_SENSITIVITY);
-        gyroscopeIntegrationEuler = new GyroscopeIntegration(300, EULER_GYROSCOPE_SENSITIVITY);
+        gyroscopeIntegration = new GyroscopeIntegration(GYROSCOPE_SENSITIVITY, null);
+        gyroscopeIntegrationEuler = new GyroscopeIntegration( EULER_GYROSCOPE_SENSITIVITY, null);
 
         gyroHeading = 0;
 

@@ -1,6 +1,6 @@
 package nisargpatel.inertialnavigation.heading;
 
-import nisargpatel.inertialnavigation.extra.NPExtras;
+import nisargpatel.inertialnavigation.extra.ExtraFunctions;
 
 public class GyroscopeIntegration {
 
@@ -16,7 +16,7 @@ public class GyroscopeIntegration {
         this.isFirstRun = true;
     }
 
-    public GyroscopeIntegration(int numTrialsBias, float sensitivity, float[] gyroBias) {
+    public GyroscopeIntegration(float sensitivity, float[] gyroBias) {
         this();
         this.sensitivity = sensitivity;
         this.gyroBias = gyroBias;
@@ -25,7 +25,7 @@ public class GyroscopeIntegration {
     public float[] getIntegratedValues(long timestamp, float[] rawGyroValues) {
         //get the first timestamp
         if (isFirstRun) {
-            lastTimestamp = NPExtras.nsToSec(timestamp);
+            lastTimestamp = ExtraFunctions.nsToSec(timestamp);
             isFirstRun = false;
         }
 
@@ -50,7 +50,7 @@ public class GyroscopeIntegration {
     }
 
     private float[] calcIntegratedValues(long timestamp, float[] gyroValues) {
-        double currentTime = NPExtras.nsToSec(timestamp);
+        double currentTime = ExtraFunctions.nsToSec(timestamp);
         double deltaTime = currentTime - lastTimestamp;
 
         float[] deltaOrientation = new float[3];
