@@ -3,7 +3,7 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="app_name">Inertial Navigation</string>
+    <string name="app_name">Location Track</string>
     <string name="threshold_steps">Threshold Steps:</string>
     <string name="moving_average_steps">Moving Avg. Steps:</string>
     <string name="android_steps">Android Steps:</string>
