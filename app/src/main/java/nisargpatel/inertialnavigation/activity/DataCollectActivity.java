@@ -46,6 +46,12 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
     private boolean gotAccData, gotMagData;
     private float[] accData, magData;
 
+    private boolean wasRunning;
+
+    private Button buttonStart;
+    private Button buttonPause;
+    private Button buttonStop;
+
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -54,6 +60,7 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         setContentView(R.layout.activity_data_collect);
 
         gotAccData = gotMagData = false;
+        wasRunning = false;
 
         rotationMatrix = new float[9];
 
@@ -69,17 +76,13 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
         sensors[5] = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
         sensors[6] = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
 
-        final Button buttonStart = (Button) findViewById(R.id.buttonDataStart);
-        final Button buttonPause = (Button) findViewById(R.id.buttonDataPause);
-        final Button buttonStop = (Button) findViewById(R.id.buttonDataStop);
-
-        buttonPause.setEnabled(false);
-        buttonStop.setEnabled(false);
+        buttonStart = (Button) findViewById(R.id.buttonDataStart);
+        buttonPause = (Button) findViewById(R.id.buttonDataPause);
+        buttonStop = (Button) findViewById(R.id.buttonDataStop);
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Time today = new Time(Time.getCurrentTimezone());
                 today.setToNow();
                 String currentTime = today.format("%H:%M:%S");
@@ -91,40 +94,70 @@ public class DataCollectActivity extends ActionBarActivity implements SensorEven
                 for (Sensor sensor : sensors)
                     sensorManager.registerListener(DataCollectActivity.this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
 
-
                 try {
                     dataFileWriter = new DataFileWriter(FOLDER_NAME, ExtraFunctions.arrayToList(DATA_FILE_NAMES), ExtraFunctions.arrayToList(DATA_FILE_HEADINGS));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                buttonStart.setEnabled(false);
-                buttonPause.setEnabled(true);
-                buttonStop.setEnabled(true);
+                enableStopButton();
+
+                wasRunning = true;
             }
         });
 
         buttonPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 for (Sensor sensor : sensors)
                     sensorManager.unregisterListener(DataCollectActivity.this, sensor);
+                wasRunning = false;
             }
         });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 for (Sensor sensor : sensors)
                     sensorManager.unregisterListener(DataCollectActivity.this, sensor);
 
-                buttonStart.setEnabled(true);
-                buttonPause.setEnabled(false);
-                buttonStop.setEnabled(false);
+                enableStartButton();
+
+                wasRunning = false;
             }
         });
+
+    }
+
+    private void enableStopButton() {
+        buttonStart.setEnabled(false);
+        buttonPause.setEnabled(true);
+        buttonStop.setEnabled(true);
+    }
+
+    private void enableStartButton() {
+        buttonStart.setEnabled(true);
+        buttonPause.setEnabled(false);
+        buttonStop.setEnabled(false);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (wasRunning) {
+            for (Sensor sensor : sensors)
+                sensorManager.registerListener(DataCollectActivity.this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+            enableStopButton();
+        } else {
+            enableStartButton();
+        }
 
     }
 

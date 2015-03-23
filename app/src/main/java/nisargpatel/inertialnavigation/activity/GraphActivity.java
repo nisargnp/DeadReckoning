@@ -42,6 +42,9 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
     private DataFileWriter dataFileWriter;
     private ScatterPlot sPlot;
 
+    private Button buttonStart;
+    private Button buttonStop;
+    private Button buttonClear;
     private LinearLayout linearLayout;
 
     private Sensor sensorAccelerometer;
@@ -54,6 +57,8 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
 
     private float matrixHeading;
 
+    private boolean wasRunning;
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,12 +69,12 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
         strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
         String userName = getIntent().getStringExtra("user_name");
         float[] gyroBias = getIntent().getFloatArrayExtra("gyroscope_bias");
-        float[][] initialOrientation = ExtraFunctions.stringArrayToFloatArray((String[][]) getIntent().getSerializableExtra("initial_orientation")); //converting from Serialized to String[][] to float[][]
+        float[][] initialOrientation = (float[][]) getIntent().getSerializableExtra("initial_orientation");
 
         //defining views
-        final Button buttonStart = (Button) findViewById(R.id.buttonGraphStart);
-        final Button buttonStop = (Button) findViewById(R.id.buttonGraphStop);
-        Button buttonClear = (Button) findViewById(R.id.buttonGraphClear);
+        buttonStart = (Button) findViewById(R.id.buttonGraphStart);
+        buttonStop = (Button) findViewById(R.id.buttonGraphStop);
+        buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
         //defining sensors
@@ -113,19 +118,22 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 buttonStart.setEnabled(false);
                 buttonStop.setEnabled(true);
 
+                wasRunning = true;
+
             }
         });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(GraphActivity.this, sensorAccelerometer);
-                sensorManager.unregisterListener(GraphActivity.this, sensorGyroscopeUncalibrated);
+                sensorManager.unregisterListener(GraphActivity.this);
 
                 Toast.makeText(getApplicationContext(), "Tracking stopped.", Toast.LENGTH_SHORT).show();
 
                 buttonStart.setEnabled(true);
                 buttonStop.setEnabled(false);
+
+                wasRunning = false;
             }
         });
 
@@ -140,6 +148,31 @@ public class GraphActivity extends ActionBarActivity implements SensorEventListe
                 linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
             }
         });
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (wasRunning) {
+            sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(GraphActivity.this, sensorGyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+
+            buttonStart.setEnabled(false);
+            buttonStop.setEnabled(true);
+            buttonClear.setEnabled(true);
+        } else {
+            buttonStart.setEnabled(true);
+            buttonStop.setEnabled(false);
+            buttonClear.setEnabled(true);
+        }
 
     }
 

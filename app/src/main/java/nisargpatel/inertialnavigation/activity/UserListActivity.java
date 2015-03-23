@@ -55,12 +55,7 @@ public class UserListActivity extends FragmentActivity{
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                Log.d("itemClick", "click position: " + position);
-
-//                Intent myIntent = new Intent(UserListActivity.this, GraphActivity.class);
-//                myIntent.putExtra("user_name", userList.get(position));
-//                myIntent.putExtra("stride_length", Float.parseFloat(strideList.get(position)));
-//                startActivity(myIntent);
+                Log.d("User_List_Activity", "click position: " + position);
 
                 CalibrationFragment calibrationDialog = new CalibrationFragment();
                 Bundle mBundle = new Bundle();
@@ -76,7 +71,7 @@ public class UserListActivity extends FragmentActivity{
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                Log.d("itemClick", "long click position: " + position);
+                Log.d("User_List_Activity", "long click position: " + position);
 
                 AccessUserFragment accessUserDialog = new AccessUserFragment();
                 accessUserDialog.setUserName(userList.get(position));
@@ -122,11 +117,6 @@ public class UserListActivity extends FragmentActivity{
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
 
         if (id == R.id.debug_tools) {
             Intent myIntent = new Intent(UserListActivity.this, DebugToolsActivity.class);

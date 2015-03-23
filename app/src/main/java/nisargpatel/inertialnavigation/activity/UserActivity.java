@@ -69,11 +69,6 @@ public class UserActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
         //remove the current user_name and his/her stride_length from the global database
         if (id == R.id.delete_user) {
             int index = UserListActivity.userList.indexOf(userName);

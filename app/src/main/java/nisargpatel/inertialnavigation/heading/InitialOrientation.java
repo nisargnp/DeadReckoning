@@ -52,10 +52,6 @@ public final class InitialOrientation {
     }
 
     private static double[] removeBias(float[] M_init, float[] M_bias) {
-
-        Log.d("calibrate", "M_init length = " + M_init.length);
-        Log.d("calibrate", "M_bias length = " + M_bias.length);
-
         double[] M_biasRemoved = new double[M_init.length];
         for (int i = 0; i < M_init.length; i++)
             M_biasRemoved[i] = M_init[i] - M_bias[i];

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,11 +24,17 @@ public class StrideLengthActivity extends ActionBarActivity implements SensorEve
     private TextView textCalibrationDistance;
     private TextView textInstantAcc;
 
+    private Button buttonStartCalibration;
+    private Button buttonStopCalibraton;
+    private Button buttonSetStrideLength;
+
     private Sensor accelerometer;
     private Sensor androidStepCounter;
     private SensorManager sensorManager;
 
     private static int stepCount;
+
+    private boolean wasRunning;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -41,31 +48,46 @@ public class StrideLengthActivity extends ActionBarActivity implements SensorEve
         textCalibrationDistance = (TextView) findViewById(R.id.textCalibrationDistance);
         textInstantAcc = (TextView) findViewById(R.id.textCalibrateInstantAcc);
 
+        buttonStartCalibration = (Button) findViewById(R.id.buttonStartCalibration);
+        buttonStopCalibraton = (Button) findViewById(R.id.buttonStopCalibration);
+        buttonSetStrideLength = (Button) findViewById(R.id.buttonSetStrideLength);
+
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         androidStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //activate sensors when start button is pressed
-        findViewById(R.id.buttonStartCalibration).setOnClickListener(new View.OnClickListener() {
+        buttonStartCalibration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 sensorManager.registerListener(StrideLengthActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(StrideLengthActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+
+                buttonStartCalibration.setEnabled(false);
+                buttonSetStrideLength.setEnabled(false);
+                buttonStopCalibraton.setEnabled(true);
+
+                wasRunning = true;
             }
         });
 
         //deactivate sensors when stop button is pressed
-        findViewById(R.id.buttonStopCalibration).setOnClickListener(new View.OnClickListener() {
+        buttonStopCalibraton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(StrideLengthActivity.this, accelerometer);
-                sensorManager.unregisterListener(StrideLengthActivity.this, androidStepCounter);
+                sensorManager.unregisterListener(StrideLengthActivity.this);
+
+                buttonStartCalibration.setEnabled(true);
+                buttonSetStrideLength.setEnabled(true);
+                buttonStopCalibraton.setEnabled(false);
+
+                wasRunning = false;
             }
         });
 
         //when the button is pressed, determine the strideLength by dividing stepsTaken
         //by distanceTraveled, and stored stride length in StepCountActivity
-        findViewById(R.id.buttonSetStrideLength).setOnClickListener(new View.OnClickListener() {
+        buttonSetStrideLength.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 double strideLength;
@@ -85,6 +107,31 @@ public class StrideLengthActivity extends ActionBarActivity implements SensorEve
 
             }
         });
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (wasRunning) {
+            sensorManager.registerListener(StrideLengthActivity.this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(StrideLengthActivity.this, androidStepCounter, SensorManager.SENSOR_DELAY_FASTEST);
+
+            buttonStartCalibration.setEnabled(false);
+            buttonSetStrideLength.setEnabled(false);
+            buttonStopCalibraton.setEnabled(true);
+        } else {
+            buttonStartCalibration.setEnabled(true);
+            buttonSetStrideLength.setEnabled(true);
+            buttonStopCalibraton.setEnabled(false);
+        }
 
     }
 

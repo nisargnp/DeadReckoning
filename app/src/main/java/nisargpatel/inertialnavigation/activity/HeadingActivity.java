@@ -32,7 +32,7 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
     private Sensor rotationVector;
     private Sensor geoRotationVector;
     private Sensor gameRotationVector;
-    private SensorManager sm;
+    private SensorManager sensorManager;
 
     private TextView textGyroscopeMatrix;
     private TextView textGyroscope;
@@ -40,7 +40,12 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
     private TextView textGeoRotation;
     private TextView textGameRotation;
 
+    private Button buttonStart;
+    private Button buttonStop;
+
     private double gyroHeading;
+
+    private boolean wasRunning;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -61,36 +66,42 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
         textGeoRotation = (TextView) findViewById(R.id.textGeoRotation);
         textGameRotation = (TextView) findViewById(R.id.textGameRotation);
 
-        Button buttonStart = (Button) findViewById(R.id.buttonStart);
-        Button buttonStop = (Button) findViewById(R.id.buttonStop);
+        buttonStart = (Button) findViewById(R.id.buttonStart);
+        buttonStop = (Button) findViewById(R.id.buttonStop);
 
-        sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        gyroscopeUncalibrated = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
-        gyroscopeCalibrated = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        rotationVector = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        geoRotationVector = sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-        gameRotationVector = sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        gyroscopeUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        gyroscopeCalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        rotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        geoRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        gameRotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sm.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(HeadingActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                sm.registerListener(HeadingActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(HeadingActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(HeadingActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+
+                buttonStart.setEnabled(false);
+                buttonStop.setEnabled(true);
+
+                wasRunning = true;
             }
         });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sm.unregisterListener(HeadingActivity.this, gyroscopeUncalibrated);
-                sm.unregisterListener(HeadingActivity.this, gyroscopeCalibrated);
-                sm.unregisterListener(HeadingActivity.this, rotationVector);
-                sm.unregisterListener(HeadingActivity.this, geoRotationVector);
-                sm.unregisterListener(HeadingActivity.this, gameRotationVector);
+                sensorManager.unregisterListener(HeadingActivity.this);
+
+                buttonStart.setEnabled(true);
+                buttonStop.setEnabled(false);
+
+                wasRunning = false;
             }
         });
 
@@ -109,6 +120,30 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
             }
         });
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (wasRunning) {
+            sensorManager.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, geoRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, gameRotationVector, SensorManager.SENSOR_DELAY_FASTEST);
+
+            buttonStart.setEnabled(false);
+            buttonStop.setEnabled(true);
+        } else {
+            buttonStart.setEnabled(true);
+            buttonStop.setEnabled(false);
+        }
     }
 
     @Override

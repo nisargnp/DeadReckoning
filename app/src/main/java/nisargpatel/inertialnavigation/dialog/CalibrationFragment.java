@@ -137,18 +137,11 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
         }
 
         if (gyroscopeBias.calcBias(event.values) && magneticFieldBias.calcBias(event.values)) {
+
             sensorManager.unregisterListener(this);
             startGraphActivity();
+
         }
-    }
-
-    private void startGraphActivity() {
-        Intent myIntent = new Intent(getActivity(), GraphActivity.class);
-        myIntent = addExtras(myIntent);
-        startActivity(myIntent);
-
-        progressDialog.dismiss();
-        getDialog().dismiss();
     }
 
     private Intent addExtras(Intent myIntent) {
@@ -159,11 +152,20 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
         myIntent.putExtra("stride_length", getArguments().getDouble("stride_length", 2.5));
 
         myIntent.putExtra("gyroscope_bias", gyroscopeBias.getBias());
-        myIntent.putExtra("initial_orientation", ExtraFunctions.floatArrayToStringArray(initialOrientation)); //this is getting serialized since it's a String[][] matrix (putExtra() only accepts vectors)
+
+        myIntent.putExtra("initial_orientation", initialOrientation); //float[][] will get serialized
 
         return myIntent;
 
     }
 
+    private void startGraphActivity() {
+        Intent myIntent = new Intent(getActivity(), GraphActivity.class);
+        myIntent = addExtras(myIntent);
+        startActivity(myIntent);
+
+        progressDialog.dismiss();
+        getDialog().dismiss();
+    }
 
 }
