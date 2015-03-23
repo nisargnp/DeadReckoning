@@ -35,6 +35,10 @@ public class GyroscopeIntegration {
         return calcIntegratedValues(timestamp, unbiasedGyroValues);
     }
 
+    public void setBias(float[] gyroBias) {
+        this.gyroBias = gyroBias;
+    }
+
     private float[] removeBias(float[] rawGyroValues) {
         float[] unbiasedGyroValues = new float[3];
 

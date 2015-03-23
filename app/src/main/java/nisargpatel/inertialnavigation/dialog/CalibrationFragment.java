@@ -12,13 +12,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import nisargpatel.inertialnavigation.activity.GraphActivity;
 import nisargpatel.inertialnavigation.extra.ExtraFunctions;
@@ -52,8 +50,6 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
 
     private ProgressDialog progressDialog;
 
-    boolean startGraph;
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
@@ -72,8 +68,6 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
 
         gyroscopeBias = new GyroscopeBias(300);
         magneticFieldBias = new MagneticFieldBias(300);
-
-        startGraph = false;
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
         dialogBuilder
@@ -94,6 +88,8 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
     public void onStart() {
         super.onStart();
 
+        //overriding the button listeners because by default, the dialog dismisses itself as soon as a button is pressed
+        //we want to wait until the calibration is finished before manually dismissing the dialog
         AlertDialog alertDialog = (AlertDialog)getDialog();
         if (alertDialog != null) {
             Button negativeButton = alertDialog.getButton(Dialog.BUTTON_NEGATIVE);
@@ -141,31 +137,18 @@ public class CalibrationFragment extends DialogFragment implements SensorEventLi
         }
 
         if (gyroscopeBias.calcBias(event.values) && magneticFieldBias.calcBias(event.values)) {
-
-            Log.d("bias", "magnetic field bias = " + Arrays.toString(gyroscopeBias.getBias()));
-
-            startGraph = true;
             sensorManager.unregisterListener(this);
-            progressDialog.dismiss();
-            getDialog().dismiss();
-
+            startGraphActivity();
         }
     }
 
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        super.onDismiss(dialog);
+    private void startGraphActivity() {
+        Intent myIntent = new Intent(getActivity(), GraphActivity.class);
+        myIntent = addExtras(myIntent);
+        startActivity(myIntent);
 
-        Log.d("checkpoint", "onDismiss called");
-
-        if (startGraph) {
-
-            Intent myIntent = new Intent(getActivity(), GraphActivity.class);
-            myIntent = addExtras(myIntent);
-
-            startActivity(myIntent);
-        }
-
+        progressDialog.dismiss();
+        getDialog().dismiss();
     }
 
     private Intent addExtras(Intent myIntent) {

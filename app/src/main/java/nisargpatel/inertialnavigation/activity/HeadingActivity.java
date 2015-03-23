@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import nisargpatel.inertialnavigation.R;
 import nisargpatel.inertialnavigation.heading.EulerHeadingInference;
+import nisargpatel.inertialnavigation.heading.GyroscopeBias;
 import nisargpatel.inertialnavigation.heading.GyroscopeIntegration;
 
 public class HeadingActivity extends ActionBarActivity implements SensorEventListener{
@@ -21,9 +22,10 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
     private static final float EULER_GYROSCOPE_SENSITIVITY = 0.0025f;
     private static final float GYROSCOPE_SENSITIVITY = 0f;
 
+    private GyroscopeBias gyroBias;
     private EulerHeadingInference eulerHeadingInference;
     private GyroscopeIntegration gyroscopeIntegration;
-    private GyroscopeIntegration gyroscopeIntegrationEuler;
+    private GyroscopeIntegration gyroscopeUncalibratedIntegration;
 
     private Sensor gyroscopeCalibrated;
     private Sensor gyroscopeUncalibrated;
@@ -46,9 +48,10 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_heading);
 
+        gyroBias = new GyroscopeBias(300);
         eulerHeadingInference = new EulerHeadingInference();
-        gyroscopeIntegration = new GyroscopeIntegration(GYROSCOPE_SENSITIVITY, null);
-        gyroscopeIntegrationEuler = new GyroscopeIntegration( EULER_GYROSCOPE_SENSITIVITY, null);
+        gyroscopeIntegration = new GyroscopeIntegration(GYROSCOPE_SENSITIVITY, new float[3]);
+        gyroscopeUncalibratedIntegration = new GyroscopeIntegration(EULER_GYROSCOPE_SENSITIVITY, null);
 
         gyroHeading = 0;
 
@@ -118,15 +121,17 @@ public class HeadingActivity extends ActionBarActivity implements SensorEventLis
 
         if (sensorType == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-            float[] deltaOrientation = gyroscopeIntegrationEuler.getIntegratedValues(event.timestamp, event.values);
+            if (gyroBias.calcBias(event.values)) {
+                gyroscopeUncalibratedIntegration.setBias(gyroBias.getBias());
 
-            float eulerHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
-            textGyroscopeMatrix.setText(String.valueOf(eulerHeading));
+                float[] deltaOrientation = gyroscopeUncalibratedIntegration.getIntegratedValues(event.timestamp, event.values);
+                float eulerHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
+                textGyroscopeMatrix.setText(String.valueOf(eulerHeading));
+            }
 
         } else if (sensorType == Sensor.TYPE_GYROSCOPE) {
 
             float[] deltaOrientation = gyroscopeIntegration.getIntegratedValues(event.timestamp, event.values);
-
             gyroHeading += deltaOrientation[2];
             textGyroscope.setText(String.valueOf(gyroHeading));
 

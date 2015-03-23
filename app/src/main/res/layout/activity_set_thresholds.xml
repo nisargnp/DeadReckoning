@@ -60,7 +60,6 @@
     android:layout_height="75dp"
     android:text="@string/set_thresholds"
     android:id="@+id/buttonSetThresholds"
-    android:onClick="buttonSetThresholds"
     android:textSize="20sp"
     android:layout_below="@+id/textLower"
     android:layout_centerHorizontal="true"

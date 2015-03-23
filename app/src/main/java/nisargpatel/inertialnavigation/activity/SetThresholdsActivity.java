@@ -21,16 +21,20 @@ public class SetThresholdsActivity extends ActionBarActivity {
        textUpperThreshold = (TextView) findViewById(R.id.textUpper);
        textLowerThreshold = (TextView) findViewById(R.id.textLower);
 
-    }
+        findViewById(R.id.buttonSetThresholds).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String upper = textUpperThreshold.getText().toString();
+                String lower = textLowerThreshold.getText().toString();
+                if (upper.length() != 0 && lower.length() != 0) {
+                    StepCountActivity.setThresholds(Double.parseDouble(upper), Double.parseDouble(lower));
+                    Toast.makeText(getApplicationContext(), R.string.threshold_set, Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(SetThresholdsActivity.this, "Enter valid thresholds.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
-    //set the thresholds when the button the pressed
-    public void buttonSetThresholds(View view) {
-        double upper = Double.parseDouble(textUpperThreshold.getText().toString());
-        double lower = Double.parseDouble(textLowerThreshold.getText().toString());
-        StepCountActivity.setThresholds(upper, lower);
-
-        Toast.makeText(getApplicationContext(), R.string.threshold_set, Toast.LENGTH_SHORT).show();
-
-        finish();
     }
 }

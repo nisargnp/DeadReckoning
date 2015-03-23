@@ -32,6 +32,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
 
     //declaring sensors
     private Sensor sensorAccelerometer;
+    private Sensor sensorLinearAcceleration;
     private Sensor sensorStepDetector;
     private SensorManager sensorManager;
 
@@ -59,22 +60,23 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
         //defining sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorLinearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         //defining step detectors
         staticStepCounters = new StaticStepCounter[5];
-        staticStepCounters[0] = new StaticStepCounter(upperThreshold, lowerThreshold);
-        staticStepCounters[1] = new StaticStepCounter(10, 8);
-        staticStepCounters[2] = new StaticStepCounter(11, 7);
-        staticStepCounters[3] = new StaticStepCounter(12, 6);
-        staticStepCounters[4] = new StaticStepCounter(13, 5);
+        staticStepCounters[0] = new StaticStepCounter(2, 1.9);
+        staticStepCounters[1] = new StaticStepCounter(3, 2.9);
+        staticStepCounters[2] = new StaticStepCounter(4, 3.9);
+        staticStepCounters[3] = new StaticStepCounter(5, 4.9);
+        staticStepCounters[4] = new StaticStepCounter(6, 5.9);
 
         dynamicStepCounters = new DynamicStepCounter[5];
-        dynamicStepCounters[0] = new DynamicStepCounter(5.0);
-        dynamicStepCounters[1] = new DynamicStepCounter(3.0);
-        dynamicStepCounters[2] = new DynamicStepCounter(4.0);
-        dynamicStepCounters[3] = new DynamicStepCounter(6.0);
-        dynamicStepCounters[4] = new DynamicStepCounter(7.0);
+        dynamicStepCounters[0] = new DynamicStepCounter(0.875);
+        dynamicStepCounters[1] = new DynamicStepCounter(0.80);
+        dynamicStepCounters[2] = new DynamicStepCounter(0.85);
+        dynamicStepCounters[3] = new DynamicStepCounter(0.90);
+        dynamicStepCounters[4] = new DynamicStepCounter(0.95);
 
         clearCounters();
 
@@ -84,6 +86,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
             public void onClick(View v) {
                 staticStepCounters[0].setThresholds(upperThreshold, lowerThreshold);
                 sensorManager.registerListener(StepCountActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(StepCountActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(StepCountActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
             }
         });
@@ -93,6 +96,7 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
             @Override
             public void onClick(View v) {
                 sensorManager.unregisterListener(StepCountActivity.this, sensorAccelerometer);
+                sensorManager.unregisterListener(StepCountActivity.this, sensorLinearAcceleration);
                 sensorManager.unregisterListener(StepCountActivity.this, sensorStepDetector);
             }
         });
@@ -137,16 +141,16 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
                 androidStepCount++;
                 textAndroidCounter.setText(String.valueOf(androidStepCount));
             }
-
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            //TODO: remove TYPE_ACCELEROMETER
+        } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
             final Double norm = Math.sqrt(Math.pow(event.values[0], 2) +
                     Math.pow(event.values[1], 2) +
                     Math.pow(event.values[2], 2));
-            final Double acc = (double) event.values[2];
 
             //display the instantaneous acceleration to let the user know the step counter is working
-            textInstantAcc.setText(String.valueOf(acc).substring(0, 5));
+            textInstantAcc.setText(String.valueOf(norm).substring(0, 5));
 
             //using separate thread for step counters to minimize load on UI Thread
             new Thread(new Runnable() {
@@ -154,10 +158,10 @@ public class StepCountActivity extends ActionBarActivity implements SensorEventL
                 public void run() {
 
                     for (StaticStepCounter staticStepCounter : staticStepCounters)
-                        staticStepCounter.findStep(acc);
+                        staticStepCounter.findStep(norm);
 
                     for (DynamicStepCounter dynamicStepCounter : dynamicStepCounters)
-                        dynamicStepCounter.findStep(acc);
+                        dynamicStepCounter.findStep(norm);
 
                     runOnUiThread(new Runnable() {
                         @Override
