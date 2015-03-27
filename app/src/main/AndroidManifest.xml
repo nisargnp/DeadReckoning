@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="nisargpatel.locationtrack" >
+    package="nisargpatel.deadreckoning">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -10,55 +10,61 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        tools:replace="android:icon" >
+        tools:replace="android:icon">
         <activity
-            android:name=".activity.StepCountActivity"
+            android:name="nisargpatel.deadreckoning.activity.StepCountActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_step_counter"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.SetThresholdsActivity"
+            android:name="nisargpatel.deadreckoning.activity.SetThresholdsActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_set_thresholds"
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name=".activity.StrideLengthActivity"
+            android:name="nisargpatel.deadreckoning.activity.StrideLengthActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_calibration"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.GraphActivity"
+            android:name="nisargpatel.deadreckoning.activity.GraphActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_graph"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.HeadingActivity"
+            android:name="nisargpatel.deadreckoning.activity.HeadingActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_orientation"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.DataCollectActivity"
+            android:name="nisargpatel.deadreckoning.activity.DataCollectActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_data_collection"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.UserActivity"
+            android:name="nisargpatel.deadreckoning.activity.UserActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_user"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name=".activity.QRCodeActivity"
+            android:name="nisargpatel.deadreckoning.activity.QRCodeActivity"
             android:label="@string/title_activity_qr_code_scanner" >
         </activity>
         <activity
-            android:name=".activity.UserListActivity"
+            android:name="nisargpatel.deadreckoning.activity.UserListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
@@ -70,12 +76,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.DebugToolsActivity"
+            android:name="nisargpatel.deadreckoning.activity.DebugToolsActivity"
             android:label="@string/title_activity_debug_tools" >
-        </activity>
-        <activity
-            android:name=".activity.StepCountCalibrationActivity"
-            android:label="@string/title_activity_step_count_calibration" >
         </activity>
     </application>
 
