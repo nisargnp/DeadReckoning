@@ -39,5 +39,6 @@
     <string name="title_activity_qr_code_scanner">QR Code Scanner</string>
     <string name="delete_user">Delete User</string>
     <string name="title_activity_testing_activity_ignore">TestingActivityIgnore</string>
+    <string name="title_activity_step_count_calibration">StepCountCalibrationActivity</string>
 
 </resources>

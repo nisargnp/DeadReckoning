@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="nisargpatel.locationtrack">
+    package="nisargpatel.locationtrack" >
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -10,7 +10,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        tools:replace="android:icon">
+        tools:replace="android:icon" >
         <activity
             android:name=".activity.StepCountActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -72,6 +72,10 @@
         <activity
             android:name=".activity.DebugToolsActivity"
             android:label="@string/title_activity_debug_tools" >
+        </activity>
+        <activity
+            android:name=".activity.StepCountCalibrationActivity"
+            android:label="@string/title_activity_step_count_calibration" >
         </activity>
     </application>
 
