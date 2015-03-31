@@ -20,10 +20,11 @@ import android.widget.ListView;
 import java.util.ArrayList;
 
 import nisargpatel.deadreckoning.R;
-import nisargpatel.deadreckoning.dialog.CalibrationFragment;
-import nisargpatel.deadreckoning.dialog.UserDetailsFragment;
-import nisargpatel.deadreckoning.dialog.AccessUserFragment;
+import nisargpatel.deadreckoning.dialog.SensorCalibrationDialogFragment;
+import nisargpatel.deadreckoning.dialog.UserDetailsDialogFragment;
+import nisargpatel.deadreckoning.dialog.AccessUserDialogFragment;
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
+import nisargpatel.deadreckoning.heading.MagneticFieldBias;
 
 public class UserListActivity extends FragmentActivity{
 
@@ -33,6 +34,7 @@ public class UserListActivity extends FragmentActivity{
 
     public static ArrayList<String> userList;
     public static ArrayList<String> strideList;
+    public static ArrayList<String> preferredStepCounterList;
 
     private static SharedPreferences.Editor sharedPreferencesEditor;
 
@@ -47,33 +49,37 @@ public class UserListActivity extends FragmentActivity{
 
         userList = ExtraFunctions.getArrayFromSharedPreferences("user_list", sharedPreference);
         strideList = ExtraFunctions.getArrayFromSharedPreferences("stride_list", sharedPreference);
+        preferredStepCounterList = ExtraFunctions.getArrayFromSharedPreferences("preferred_step_counter", sharedPreference);
 
         myList = (ListView) findViewById(R.id.listView);
         refreshListView();
 
+        //clicking on a menu item
         myList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 Log.d("User_List_Activity", "click position: " + position);
 
-                CalibrationFragment calibrationDialog = new CalibrationFragment();
+                SensorCalibrationDialogFragment calibrationDialog = new SensorCalibrationDialogFragment();
                 Bundle mBundle = new Bundle();
                 mBundle.putString("user_name", userList.get(position));
                 mBundle.putFloat("stride_length", Float.parseFloat(strideList.get(position)));
+                mBundle.putString("preferred_step_counter", preferredStepCounterList.get(position));
                 calibrationDialog.setArguments(mBundle);
                 calibrationDialog.show(getFragmentManager(), "Calibrate Sensors");
 
             }
         });
 
+        //long clicking on a menu item
         myList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
                 Log.d("User_List_Activity", "long click position: " + position);
 
-                AccessUserFragment accessUserDialog = new AccessUserFragment();
+                AccessUserDialogFragment accessUserDialog = new AccessUserDialogFragment();
                 accessUserDialog.setUserName(userList.get(position));
                 accessUserDialog.setStrideLength(strideList.get(position));
                 accessUserDialog.show(getFragmentManager(), "User Settings");
@@ -94,8 +100,8 @@ public class UserListActivity extends FragmentActivity{
                 ArrayAdapter<String> listAdapter = new ArrayAdapter<>(UserListActivity.this, android.R.layout.simple_list_item_1, userList);
                 myList.setAdapter(listAdapter);
 
-                UserDetailsFragment userDetailsDialog = new UserDetailsFragment();
-                userDetailsDialog.setHandler(new UserSettingsDialogHandler(UserListActivity.this, myList));
+                UserDetailsDialogFragment userDetailsDialog = new UserDetailsDialogFragment();
+                userDetailsDialog.setHandler(new UserListHandler(UserListActivity.this, myList));
                 userDetailsDialog.addingUser(true);
                 userDetailsDialog.show(getFragmentManager(), "Calibration");
 
@@ -135,9 +141,11 @@ public class UserListActivity extends FragmentActivity{
 
             String userName = data.getStringExtra("user_name");
             String strideLength = String.valueOf(data.getDoubleExtra("stride_length", 2.5));
+            String preferredStepCounter = String.valueOf(data.getDoubleExtra("preferred_step_counter", 0));
 
             userList.add(userName);
             strideList.add(strideLength);
+            preferredStepCounterList.add(preferredStepCounter);
             updatePrefs();
 
             refreshListView();
@@ -160,17 +168,18 @@ public class UserListActivity extends FragmentActivity{
     public static void updatePrefs() {
         ExtraFunctions.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
         ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
+        ExtraFunctions.addArrayToSharedPreferences("preferred_step_counter", preferredStepCounterList, sharedPreferencesEditor);
     }
 
-    //this handler will let UserListActivity know when the UserDetailsFragment dialog has been dismissed
-    private static class UserSettingsDialogHandler extends Handler {
+    //this handler will let UserListActivity know when the UserDetailsDialogFragment dialog has been dismissed
+    private static class UserListHandler extends Handler {
 
         Context context;
-        ListView myList;
+        ListView listView;
 
-        public UserSettingsDialogHandler(Context context, ListView myList) {
+        public UserListHandler(Context context, ListView listView) {
             this.context = context;
-            this.myList = myList;
+            this.listView = listView;
         }
 
         @Override
@@ -179,19 +188,19 @@ public class UserListActivity extends FragmentActivity{
 
             refreshListView();
 
-            //Starting the StrideLengthActivity from the context of UserListActivity so that
-            //StrideLengthActivity triggers UserListActivity's OnActivityResult() on finish()
+            //Starting the StepCalibrationActivity from the context of UserListActivity so that
+            //StepCalibrationActivity triggers UserListActivity's OnActivityResult() on finish()
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(context, StrideLengthActivity.class);
+                Intent myIntent = new Intent(context, StepCalibrationActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
-                ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
+                ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE); //will trigger this activity's onResult on finish()
             }
 
         }
 
         private void refreshListView() {
             ArrayAdapter<String> listAdapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, userList);
-            myList.setAdapter(listAdapter);
+            listView.setAdapter(listAdapter);
         }
 
     }

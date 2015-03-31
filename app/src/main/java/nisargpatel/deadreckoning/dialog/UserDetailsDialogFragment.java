@@ -18,7 +18,7 @@ import android.widget.Toast;
 import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.activity.UserListActivity;
 
-public class UserDetailsFragment extends DialogFragment {
+public class UserDetailsDialogFragment extends DialogFragment {
 
     private final static String CALIBRATION_MESSAGE = "Enter stride length manually, or go to Calibration Mode for automatic stride length calculation:";
 
@@ -79,6 +79,7 @@ public class UserDetailsFragment extends DialogFragment {
                             if (addingUser) {
                                 UserListActivity.userList.add(userName);
                                 UserListActivity.strideList.add(strideLength);
+                                UserListActivity.preferredStepCounterList.add("default");
                             } else {
                                 int index = UserListActivity.userList.indexOf(userName);
                                 UserListActivity.strideList.set(index, String.valueOf(strideLength));

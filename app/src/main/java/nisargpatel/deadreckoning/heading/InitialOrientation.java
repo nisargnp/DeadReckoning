@@ -2,16 +2,17 @@ package nisargpatel.deadreckoning.heading;
 
 import android.util.Log;
 
-import org.ejml.data.DenseMatrix64F;
 import org.ejml.simple.SimpleMatrix;
+
+import java.util.Arrays;
+
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
 
 public final class InitialOrientation {
 
     private InitialOrientation() {}
 
     public static float[][] calcOrientation(float[] G_init, float[] M_init, float[] M_bias) {
-
-        Log.d("calibrate", "first M_init length = " + M_init.length);
 
         //G = Gyroscope, M = Magnetic Field
         //m = matrix
@@ -27,7 +28,7 @@ public final class InitialOrientation {
                             {-Math.sin(G_p), Math.cos(G_p) * Math.sin(G_r), Math.cos(G_p) * Math.cos(G_r)}};
 
         //remove bias from magnetic field initial values
-        double[][] M_init_unbiased = toMatrix(removeBias(M_init, M_bias));
+        double[][] M_init_unbiased = ExtraFunctions.vectorToMatrix(removeBias(M_init, M_bias));
 
         //convert arrays to matrices to allow for multiplication
         SimpleMatrix m_R_rp = new SimpleMatrix(R_rp);
@@ -47,27 +48,20 @@ public final class InitialOrientation {
         SimpleMatrix m_R_h = new SimpleMatrix(R_h);
         SimpleMatrix m_R = m_R_rp.mult(m_R_h);
 
-        return matrixToArray(m_R.getMatrix());
+        return ExtraFunctions.denseMatrixToArray(m_R.getMatrix());
 
     }
 
     private static double[] removeBias(float[] M_init, float[] M_bias) {
-        double[] M_biasRemoved = new double[M_init.length];
-        for (int i = 0; i < M_init.length; i++)
+
+        Log.d("bias", Arrays.toString(M_init));
+        Log.d("bias", Arrays.toString(M_bias));
+
+        //ignoring the last 3 values of M_init, which are the android-calculated biases
+        double[] M_biasRemoved = new double[M_bias.length];
+        for (int i = 0; i < M_bias.length; i++)
             M_biasRemoved[i] = M_init[i] - M_bias[i];
         return M_biasRemoved;
-    }
-
-    private static double[][] toMatrix(double[] array) {
-        return new double[][]{{array[0]},{array[1]},{array[2]}};
-    }
-
-    private static float[][] matrixToArray(DenseMatrix64F matrix) {
-        float array[][] = new float[matrix.getNumRows()][matrix.getNumCols()];
-        for (int row = 0; row < matrix.getNumRows(); row++)
-            for (int col = 0; col < matrix.getNumCols(); col++)
-                array[row][col] = (float) matrix.get(row,col);
-        return array;
     }
 
 }

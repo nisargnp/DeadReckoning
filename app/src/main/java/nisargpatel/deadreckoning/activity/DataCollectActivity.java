@@ -22,7 +22,7 @@ import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 
 public class DataCollectActivity extends Activity implements SensorEventListener{
 
-    private static final String FOLDER_NAME = "Inertial_Navigation_Data/Data_Collect_Activity";
+    private static final String FOLDER_NAME = "Dead_Reckoning/Data_Collect_Activity";
     private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Linear-Acceleration", "Gyroscope-Calibrated", "Gyroscope-Uncalibrated", "Magnetic-Field", "Magnetic-Field-Uncalibrated", "Gravity", "Rotation-Matrix"};
     private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;",
                                                         "t;LAx;LAy;LAz;",

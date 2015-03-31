@@ -2,7 +2,6 @@ package nisargpatel.deadreckoning.activity;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -14,13 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import nisargpatel.deadreckoning.R;
-import nisargpatel.deadreckoning.dialog.StepInfoFragment;
+import nisargpatel.deadreckoning.dialog.StepInfoDialogFragment;
 import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 import nisargpatel.deadreckoning.stepcounting.StaticStepCounter;
 
 public class StepCountActivity extends Activity implements SensorEventListener{
 
-    private StepInfoFragment myDialog;
+    private StepInfoDialogFragment myDialog;
 
     //declaring views
     private Button buttonStartCounter;
@@ -51,7 +50,7 @@ public class StepCountActivity extends Activity implements SensorEventListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_step_counter);
 
-        myDialog = new StepInfoFragment();
+        myDialog = new StepInfoDialogFragment();
 
         //defining views
         buttonStartCounter = (Button) findViewById(R.id.buttonStartCounter);
@@ -133,15 +132,6 @@ public class StepCountActivity extends Activity implements SensorEventListener{
             }
         });
 
-        findViewById(R.id.txtViewThresholds).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO: startActivityForResult -- Intent putExtra -- SetThresholdsActivity
-                Intent myIntent = new Intent(getApplicationContext(), SetThresholdsActivity.class);
-                startActivity(myIntent);
-            }
-        });
-
     }
 
     @Override
@@ -216,11 +206,6 @@ public class StepCountActivity extends Activity implements SensorEventListener{
 
     }
 
-    //setting thresholds for the StaticStepCounter (this method is called by SetThresholdsActivity)
-    public static void setThresholds(double upper, double lower) {
-        staticStepCounters[0].setThresholds(upper, lower);
-    }
-
     private String getDialogMessage() {
 
         String message = "";
@@ -232,19 +217,6 @@ public class StepCountActivity extends Activity implements SensorEventListener{
 
         for (int i = 1; i < dynamicStepCounters.length; i++)
             message += String.format("A(%.1f) = %d\n", dynamicStepCounters[i].getSensitivity(), dynamicStepCounters[i].getStepCount());
-
-        //TODO: remove these
-//        String t1 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[1].getUpperThreshold(), staticStepCounters[1].getLowerThreshold(), staticStepCounters[1].getStepCount());
-//        String t2 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[2].getUpperThreshold(), staticStepCounters[2].getLowerThreshold(), staticStepCounters[2].getStepCount());
-//        String t3 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[3].getUpperThreshold(), staticStepCounters[3].getLowerThreshold(), staticStepCounters[3].getStepCount());
-//        String t4 = String.format("T(%.1f, %.1f) = %d", staticStepCounters[4].getUpperThreshold(), staticStepCounters[4].getLowerThreshold(), staticStepCounters[4].getStepCount());
-//
-//        String a1 = String.format("A(%.1f) = %d", dynamicStepCounters[1].getSensitivity(), dynamicStepCounters[1].getStepCount());
-//        String a2 = String.format("A(%.1f) = %d", dynamicStepCounters[2].getSensitivity(), dynamicStepCounters[2].getStepCount());
-//        String a3 = String.format("A(%.1f) = %d", dynamicStepCounters[3].getSensitivity(), dynamicStepCounters[3].getStepCount());
-//        String a4 = String.format("A(%.1f) = %d", dynamicStepCounters[4].getSensitivity(), dynamicStepCounters[4].getStepCount());
-//
-//        message = t1 + "\n" + t2 + "\n" + t3 + "\n" + t4 + "\n" + "\n" + a1 + "\n" + a2 + "\n" + a3 + "\n" + a4;
 
         return message;
     }

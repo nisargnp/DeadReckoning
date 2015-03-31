@@ -6,8 +6,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -22,21 +26,17 @@ import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 import nisargpatel.deadreckoning.graph.ScatterPlot;
 import nisargpatel.deadreckoning.heading.EulerHeadingInference;
 import nisargpatel.deadreckoning.heading.GyroscopeIntegration;
-import nisargpatel.deadreckoning.stepcounting.StaticStepCounter;
+import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 
-public class GraphActivity extends Activity implements SensorEventListener{
+public class GraphActivity extends Activity implements SensorEventListener, LocationListener{
 
-    private static final double STEP_COUNTER_SENSITIVITY = 1.0;
-    private static final double UPPER_THRESHOLD = 11.5;
-    private static final double LOWER_THRESHOLD = 6.5;
-
-    private static final String FOLDER_NAME = "Inertial_Navigation_Data/Graph_Activity";
+    private static final String FOLDER_NAME = "Dead_Reckoning/Graph_Activity";
     private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Gyroscope-Uncalibrated", "XY-Data-Set"};
     private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;findStep;",
                                                         "t;uGx;uGy;uGz;xBias;yBias;zBias;heading;",
-                                                        "t;strideLength;heading;pointX;pointY;"};
+                                                        "timeGPS;t;strideLength;heading;pointX;pointY;"};
 
-    private StaticStepCounter thresholdStepCounter;
+    private DynamicStepCounter dynamicStepCounter;
     private GyroscopeIntegration gyroscopeIntegration;
     private EulerHeadingInference eulerHeadingInference;
     private DataFileWriter dataFileWriter;
@@ -47,17 +47,23 @@ public class GraphActivity extends Activity implements SensorEventListener{
     private Button buttonClear;
     private LinearLayout linearLayout;
 
-    private Sensor sensorAccelerometer;
+    private Sensor sensorStepDetector;
+    private Sensor sensorLinearAcceleration;
     private Sensor sensorGyroscopeUncalibrated;
+
     private SensorManager sensorManager;
+    private LocationManager locationManager;
 
     private float strideLength;
 
     private boolean filesCreated;
+    private boolean wasRunning;
 
     private float matrixHeading;
 
-    private boolean wasRunning;
+    private boolean isCalibrated;
+
+    long curr_GPS_time;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -65,11 +71,15 @@ public class GraphActivity extends Activity implements SensorEventListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
+        curr_GPS_time = 0;
+
         //getting global settings
         strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
         String userName = getIntent().getStringExtra("user_name");
         float[] gyroBias = getIntent().getFloatArrayExtra("gyroscope_bias");
         float[][] initialOrientation = (float[][]) getIntent().getSerializableExtra("initial_orientation");
+        String stepCounterSensitivity = UserListActivity.preferredStepCounterList.get(UserListActivity.userList.indexOf(userName));
+        isCalibrated = getIntent().getBooleanExtra("is_calibrated", false) || stepCounterSensitivity.equals("default");
 
         //defining views
         buttonStart = (Button) findViewById(R.id.buttonGraphStart);
@@ -77,13 +87,19 @@ public class GraphActivity extends Activity implements SensorEventListener{
         buttonClear = (Button) findViewById(R.id.buttonGraphClear);
         linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
+        //defining location
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
         //defining sensors
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorStepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        sensorLinearAcceleration = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorGyroscopeUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
 
         //initializing needed classes
-        thresholdStepCounter = new StaticStepCounter(UPPER_THRESHOLD, LOWER_THRESHOLD);
+        Log.d("test", "" + stepCounterSensitivity);
+        Log.d("test", "" + UserListActivity.preferredStepCounterList);
+        dynamicStepCounter = new DynamicStepCounter(stepCounterSensitivity.equals("default") ? 0 : Double.parseDouble(stepCounterSensitivity)); //if index != "default", set it to the stepCounterSensitivity
         gyroscopeIntegration = new GyroscopeIntegration(0.0025f, gyroBias);
         eulerHeadingInference = new EulerHeadingInference(initialOrientation);
 
@@ -102,8 +118,14 @@ public class GraphActivity extends Activity implements SensorEventListener{
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(GraphActivity.this, sensorGyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+                if (isCalibrated)
+                    sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
+                else
+                    sensorManager.registerListener(GraphActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
+
+                //registers the gps to start tracking location
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GraphActivity.this);
 
                 Toast.makeText(getApplicationContext(), "Tracking started.", Toast.LENGTH_SHORT).show();
 
@@ -113,6 +135,8 @@ public class GraphActivity extends Activity implements SensorEventListener{
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+
+                    filesCreated = true;
                 }
 
                 buttonStart.setEnabled(false);
@@ -162,8 +186,11 @@ public class GraphActivity extends Activity implements SensorEventListener{
         super.onResume();
 
         if (wasRunning) {
-            sensorManager.registerListener(GraphActivity.this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
             sensorManager.registerListener(GraphActivity.this, sensorGyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
+            if (isCalibrated)
+                sensorManager.registerListener(GraphActivity.this, sensorStepDetector, SensorManager.SENSOR_DELAY_FASTEST);
+            else
+                sensorManager.registerListener(GraphActivity.this, sensorLinearAcceleration, SensorManager.SENSOR_DELAY_FASTEST);
 
             buttonStart.setEnabled(false);
             buttonStop.setEnabled(true);
@@ -186,6 +213,7 @@ public class GraphActivity extends Activity implements SensorEventListener{
             float[] deltaOrientation = gyroscopeIntegration.getIntegratedValues(event.timestamp, event.values);
             matrixHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
 
+            //saving gyroscope data
             ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
             dataValues.add(0, (float) event.timestamp);
             dataValues.add(matrixHeading);
@@ -194,20 +222,22 @@ public class GraphActivity extends Activity implements SensorEventListener{
 
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
-            float zAcc = event.values[2];
+            float norm = (float) Math.sqrt(Math.pow(event.values[0], 2) + Math.pow(event.values[1], 2) + Math.pow(event.values[2], 2));
 
             //if step is found, findStep == true
-            boolean stepFound = thresholdStepCounter.findStep(zAcc);
+            boolean stepFound = dynamicStepCounter.findStep(norm);
 
             if (stepFound) {
 
+                //saving accelerometer data
                 ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
                 dataValues.add(0, (float) event.timestamp);
                 dataValues.add(1f);
                 dataFileWriter.writeToFile("Accelerometer", dataValues);
 
                 //rotation heading output by 90 degrees (pi/2)
-                float heading = matrixHeading + (float) (Math.PI / 2.0);
+//                float heading = matrixHeading + (float) (Math.PI / 2.0);
+                float heading = matrixHeading;
                 double pointX = ExtraFunctions.getXFromPolar(strideLength, heading);
                 double pointY = ExtraFunctions.getYFromPolar(strideLength, heading);
 
@@ -215,7 +245,10 @@ public class GraphActivity extends Activity implements SensorEventListener{
                 pointY += sPlot.getLastYPoint();
                 sPlot.addPoint(pointX, pointY);
 
+                //saving XY location data
                 dataValues.clear();
+                dataValues.add((float)curr_GPS_time);
+                dataValues.add((float)event.timestamp);
                 dataValues.add(strideLength);
                 dataValues.add(matrixHeading);
                 dataValues.add((float)pointX);
@@ -228,13 +261,62 @@ public class GraphActivity extends Activity implements SensorEventListener{
 
                 //if step is not found
             } else {
+                //saving accelerometer data
                 ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
                 dataValues.add(0, (float) event.timestamp);
                 dataValues.add(0f);
                 dataFileWriter.writeToFile("Accelerometer", dataValues);
             }
 
+        } else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
+
+            boolean stepFound = (event.values[0] == 1);
+
+            if (stepFound) {
+
+                //rotation heading output by 90 degrees (pi/2)
+                //so that moving straight forward is represented by moving directly "up" (90 degrees) on the map
+//                float heading = matrixHeading + (float) (Math.PI / 2.0);
+                float heading = matrixHeading;
+                double pointX = ExtraFunctions.getXFromPolar(strideLength, heading);
+                double pointY = ExtraFunctions.getYFromPolar(strideLength, heading);
+
+                pointX += sPlot.getLastXPoint();
+                pointY += sPlot.getLastYPoint();
+                sPlot.addPoint(pointX, pointY);
+
+                //saving XY location data
+                ArrayList<Float> dataValues = new ArrayList<>();
+                dataValues.add((float)curr_GPS_time);
+                dataValues.add((float)event.timestamp);
+                dataValues.add(strideLength);
+                dataValues.add(matrixHeading);
+                dataValues.add((float)pointX);
+                dataValues.add((float)pointY);
+
+                dataFileWriter.writeToFile("XY-Data-Set", dataValues);
+
+                linearLayout.removeAllViews();
+                linearLayout.addView(sPlot.getGraphView(getApplicationContext()));
+            }
+
         }
     }
+
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        curr_GPS_time = location.getTime();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+    @Override
+    public void onProviderEnabled(String provider) {}
+
+    @Override
+    public void onProviderDisabled(String provider) {}
 
 }

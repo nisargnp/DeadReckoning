@@ -2,6 +2,8 @@ package nisargpatel.deadreckoning.extra;
 
 import android.content.SharedPreferences;
 
+import org.ejml.data.DenseMatrix64F;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -145,6 +147,18 @@ public final class ExtraFunctions {
             for (int col = 0; col < stringArray[0].length; col++)
                 floatArray[row][col] = Float.parseFloat(stringArray[row][col]);
         return floatArray;
+    }
+
+    public static float[][] denseMatrixToArray(DenseMatrix64F matrix) {
+        float array[][] = new float[matrix.getNumRows()][matrix.getNumCols()];
+        for (int row = 0; row < matrix.getNumRows(); row++)
+            for (int col = 0; col < matrix.getNumCols(); col++)
+                array[row][col] = (float) matrix.get(row,col);
+        return array;
+    }
+
+    public static double[][] vectorToMatrix(double[] array) {
+        return new double[][]{{array[0]},{array[1]},{array[2]}};
     }
 
 

@@ -9,7 +9,7 @@ import android.os.Bundle;
 
 import nisargpatel.deadreckoning.activity.UserActivity;
 
-public class AccessUserFragment extends DialogFragment {
+public class AccessUserDialogFragment extends DialogFragment {
 
     private String userName;
     private String strideLength;

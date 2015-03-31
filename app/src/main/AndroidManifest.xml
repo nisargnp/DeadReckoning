@@ -4,6 +4,7 @@
     package="nisargpatel.deadreckoning">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -19,13 +20,7 @@
             android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name="nisargpatel.deadreckoning.activity.SetThresholdsActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_set_thresholds"
-            android:screenOrientation="portrait" >
-        </activity>
-        <activity
-            android:name="nisargpatel.deadreckoning.activity.StrideLengthActivity"
+            android:name=".activity.StepCalibrationActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_calibration"
             android:screenOrientation="portrait"

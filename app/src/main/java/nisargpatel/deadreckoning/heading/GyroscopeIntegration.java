@@ -46,6 +46,7 @@ public class GyroscopeIntegration {
         unbiasedGyroValues[1] = rawGyroValues[1] - gyroBias[1];
         unbiasedGyroValues[2] = rawGyroValues[2] - gyroBias[2];
 
+        //applying a quick high pass filter
         unbiasedGyroValues[0] = (Math.abs(unbiasedGyroValues[0]) > sensitivity) ? unbiasedGyroValues[0] : 0;
         unbiasedGyroValues[1] = (Math.abs(unbiasedGyroValues[1]) > sensitivity) ? unbiasedGyroValues[1] : 0;
         unbiasedGyroValues[2] = (Math.abs(unbiasedGyroValues[2]) > sensitivity) ? unbiasedGyroValues[2] : 0;

@@ -12,7 +12,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import nisargpatel.deadreckoning.R;
-import nisargpatel.deadreckoning.dialog.UserDetailsFragment;
+import nisargpatel.deadreckoning.dialog.UserDetailsDialogFragment;
 
 public class UserActivity extends Activity {
 
@@ -44,7 +44,7 @@ public class UserActivity extends Activity {
         findViewById(R.id.buttonUserCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UserDetailsFragment userDetailsDialog = new UserDetailsFragment();
+                UserDetailsDialogFragment userDetailsDialog = new UserDetailsDialogFragment();
                 userDetailsDialog.addingUser(false);
                 userDetailsDialog.setUserName(userName);
                 userDetailsDialog.setHandler(new UserSettingsDialogHandler(UserActivity.this, textStrideLength, userName));
@@ -102,8 +102,7 @@ public class UserActivity extends Activity {
             textStrideLength.setText(strideLength);
     }
 
-
-    //this handler will let UserActivity know when the UserDetailsFragment dialog has been dismissed.
+    //this handler will let UserActivity know when the UserDetailsDialogFragment dialog has been dismissed.
     private static class UserSettingsDialogHandler extends Handler {
 
         private Context context;
@@ -121,7 +120,7 @@ public class UserActivity extends Activity {
             super.handleMessage(msg);
 
             if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(context, StrideLengthActivity.class);
+                Intent myIntent = new Intent(context, StepCalibrationActivity.class);
                 myIntent.putExtra("user_name", msg.getData().getString("user_name"));
                 ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
             } else {

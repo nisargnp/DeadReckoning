@@ -10,7 +10,7 @@ import android.app.DialogFragment;
 import nisargpatel.deadreckoning.R;
 
 //creating a new DialogFragment to output a message
-public class StepInfoFragment extends DialogFragment{
+public class StepInfoDialogFragment extends DialogFragment{
 
     private String message;
 
