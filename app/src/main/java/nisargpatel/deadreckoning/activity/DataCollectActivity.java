@@ -23,13 +23,14 @@ import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 public class DataCollectActivity extends Activity implements SensorEventListener{
 
     private static final String FOLDER_NAME = "Dead_Reckoning/Data_Collect_Activity";
-    private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Linear-Acceleration", "Gyroscope-Calibrated", "Gyroscope-Uncalibrated", "Magnetic-Field", "Magnetic-Field-Uncalibrated", "Gravity", "Rotation-Matrix"};
+    private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Linear_Acceleration", "Gyroscope_Calibrated",
+            "Gyroscope_Uncalibrated", "Magnetic_Field", "Magnetic_Field_Uncalibrated", "Gravity", "Rotation_Matrix"};
     private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;",
                                                         "t;LAx;LAy;LAz;",
                                                         "t;Gx;Gy;Gz;",
-                                                        "t;uGx;uGy;uGz;xBias;yBias;zBias;",
+                                                        "t;uGx;uGy;uGz;xDriftAndroid;yDriftAndroid;zDriftAndroid;",
                                                         "t;Mx;My;Mz;",
-                                                        "t;uMx;uMy;uMz;xBias;yBias;zBias;",
+                                                        "t;uMx;uMy;uMz;xDriftAndroid;yDriftAndroid;zDriftAndroid;",
                                                         "t;gx;gy;gz;",
                                                         "t;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3);"};
 
@@ -179,21 +180,21 @@ public class DataCollectActivity extends Activity implements SensorEventListener
                 gotAccData = true;
                 break;
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                dataFileWriter.writeToFile("Linear-Acceleration", sensorValuesList);
+                dataFileWriter.writeToFile("Linear_Acceleration", sensorValuesList);
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                dataFileWriter.writeToFile("Gyroscope-Calibrated", sensorValuesList);
+                dataFileWriter.writeToFile("Gyroscope_Calibrated", sensorValuesList);
                 break;
             case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
-                dataFileWriter.writeToFile("Gyroscope-Uncalibrated", sensorValuesList);
+                dataFileWriter.writeToFile("Gyroscope_Uncalibrated", sensorValuesList);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                dataFileWriter.writeToFile("Magnetic-Field", sensorValuesList);
+                dataFileWriter.writeToFile("Magnetic_Field", sensorValuesList);
                 magData = event.values.clone();
                 gotMagData = true;
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
-                dataFileWriter.writeToFile("Magnetic-Field-Uncalibrated", sensorValuesList);
+                dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", sensorValuesList);
                 break;
             case Sensor.TYPE_GRAVITY:
                 dataFileWriter.writeToFile("Gravity", sensorValuesList);
@@ -206,7 +207,7 @@ public class DataCollectActivity extends Activity implements SensorEventListener
 
             ArrayList<Float> rotationMatrixList = ExtraFunctions.arrayToList(rotationMatrix);
             rotationMatrixList.add(0, time);
-            dataFileWriter.writeToFile("Rotation-Matrix", rotationMatrixList);
+            dataFileWriter.writeToFile("Rotation_Matrix", rotationMatrixList);
 
             gotAccData = gotMagData = false;
         }

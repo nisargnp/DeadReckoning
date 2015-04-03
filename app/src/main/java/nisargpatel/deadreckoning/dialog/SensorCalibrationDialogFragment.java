@@ -33,8 +33,8 @@ public class SensorCalibrationDialogFragment extends DialogFragment implements S
     public static final String DIALOG_MESSAGE = "Calibrate phone manually, or press \"Cancel\" to use Android-calibrated sensors.";
 
     private static final String FOLDER_NAME = "Dead_Reckoning/Calibration_Fragment";
-    private static final String[] DATA_FILE_NAMES = {"Initial-Orientation"};
-    private static final String[] DATA_FILE_HEADINGS = {"initGravity;initMagField;magBias;initOrientation"};
+    private static final String[] DATA_FILE_NAMES = {"Initial_Orientation"};
+    private static final String[] DATA_FILE_HEADINGS = {"Initial_Orientation"};
 
     private DataFileWriter dataFileWriter;
 
@@ -139,7 +139,6 @@ public class SensorCalibrationDialogFragment extends DialogFragment implements S
 
         if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
             currGravityValues = event.values.clone();
-            dataFileWriter.writeToFile("Gravity", dataValues);
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
             currMagneticFieldValues = event.values.clone();
         }
@@ -148,10 +147,10 @@ public class SensorCalibrationDialogFragment extends DialogFragment implements S
 
     private void startCalibrationDialogs() {
 
-        GyroCalibrateDialogFragment gyroCalibrateDialog = new GyroCalibrateDialogFragment();
+        GyroCalibrationDialogFragment gyroCalibrateDialog = new GyroCalibrationDialogFragment();
         gyroCalibrateDialog.setHandler(new SensorCalibrationHandler(getActivity(), getDialog(), null, gyroCalibrateDialog));
 
-        MagCalibrateDialogFragment magCalibrateDialog = new MagCalibrateDialogFragment();
+        MagCalibrationDialogFragment magCalibrateDialog = new MagCalibrationDialogFragment();
         magCalibrateDialog.setHandler(new SensorCalibrationHandler(getActivity(), getDialog(), magCalibrateDialog, gyroCalibrateDialog));
 
         magCalibrateDialog.show(getActivity().getFragmentManager(), "Magnetic Field Calibrate");
@@ -165,16 +164,12 @@ public class SensorCalibrationDialogFragment extends DialogFragment implements S
 
         if (isCalibrating == CALIBRATING) {
             float[][] initialOrientation = InitialOrientation.calcOrientation(currGravityValues, currMagneticFieldValues, magBias);
+            float[] initMagValues = {currMagneticFieldValues[0], currMagneticFieldValues[1], currMagneticFieldValues[2]};
 
-//            dataFileWriter.writeToFile("Initial-Orientation", Arrays.toString(currGravityValues) + ";" +
-//                                                              Arrays.toString(currMagneticFieldValues) + ";" +
-//                                                              Arrays.toString(magBias) + ";" +
-//                                                              Arrays.deepToString(initialOrientation));
-
-            dataFileWriter.writeToFile("Initial-Orientation", String.format("%s;%s;%s;%s", Arrays.toString(currGravityValues),
-                                                                                           Arrays.toString(currMagneticFieldValues),
-                                                                                           Arrays.toString(magBias),
-                                                                                           Arrays.deepToString(initialOrientation)));
+            dataFileWriter.writeToFile("Initial_Orientation", "initGravity: " + Arrays.toString(currGravityValues));
+            dataFileWriter.writeToFile("Initial_Orientation", "initMag: " + Arrays.toString(initMagValues));
+            dataFileWriter.writeToFile("Initial_Orientation", "magBias: " + Arrays.toString(magBias));
+            dataFileWriter.writeToFile("Initial_Orientation", "initOrientation: " + Arrays.deepToString(initialOrientation));
 
             myIntent.putExtra("is_calibrated", true);
             myIntent.putExtra("gyroscope_bias", gyroBias);
@@ -220,10 +215,10 @@ public class SensorCalibrationDialogFragment extends DialogFragment implements S
         private Context context;
         private Dialog dialog;
 
-        private MagCalibrateDialogFragment magCalibrateDialog;
-        private GyroCalibrateDialogFragment gyroCalibrateDialog;
+        private MagCalibrationDialogFragment magCalibrateDialog;
+        private GyroCalibrationDialogFragment gyroCalibrateDialog;
 
-        public SensorCalibrationHandler(Context context, Dialog dialog, MagCalibrateDialogFragment magCalibrateDialog, GyroCalibrateDialogFragment gyroCalibrateDialog) {
+        public SensorCalibrationHandler(Context context, Dialog dialog, MagCalibrationDialogFragment magCalibrateDialog, GyroCalibrationDialogFragment gyroCalibrateDialog) {
             this.context = context;
             this.dialog = dialog;
 

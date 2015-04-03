@@ -23,13 +23,6 @@ public class GyroscopeBias {
         if (runCount >= trials)
             return true;
 
-        //applying a quick low pass filter (the gyroValues should be small since the phone is not moving during calibration)
-        for (float rawGyroValue : rawGyroValues)
-            if (Math.abs(rawGyroValue) > 1) {
-                runCount--;
-                return false;
-            }
-
         if (runCount == 1) {
             gyroBias[0] = rawGyroValues[0];
             gyroBias[1] = rawGyroValues[1];

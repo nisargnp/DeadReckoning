@@ -161,6 +161,12 @@ public final class ExtraFunctions {
         return new double[][]{{array[0]},{array[1]},{array[2]}};
     }
 
+    public static ArrayList<Float> createList(float... args) {
+        ArrayList<Float> list = new ArrayList<>();
+        for (float arg : args)
+            list.add(arg);
+        return list;
+    }
 
 }
 

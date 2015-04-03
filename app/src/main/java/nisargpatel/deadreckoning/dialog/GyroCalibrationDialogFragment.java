@@ -23,14 +23,15 @@ import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 import nisargpatel.deadreckoning.heading.GyroscopeBias;
 
-public class GyroCalibrateDialogFragment extends DialogFragment implements SensorEventListener{
+public class GyroCalibrationDialogFragment extends DialogFragment implements SensorEventListener{
 
     public static final String DIALOG_MESSAGE = "To calibrate: Set the phone on a flat surface and press \"Start\".";
+    public static final int WAIT_COUNTER = 100;
 
     private DataFileWriter dataFileWriter;
     private static final String FOLDER_NAME = "Dead_Reckoning/Calibration_Fragment";
-    private static final String[] DATA_FILE_NAMES = {"Gyroscope-Uncalibrated"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;uGx;uGy;uGz;xBias;yBias;zBias;"};
+    private static final String[] DATA_FILE_NAMES = {"Gyroscope_Uncalibrated"};
+    private static final String[] DATA_FILE_HEADINGS = {"t;uGx;uGy;uGz;"};
 
     private Sensor sensorGyroscopeU;
     private SensorManager sensorManager;
@@ -40,6 +41,8 @@ public class GyroCalibrateDialogFragment extends DialogFragment implements Senso
     private ProgressDialog progressDialog;
 
     private Handler handler;
+
+    private int runCount;
 
     public void setHandler(Handler handler) {
         this.handler = handler;
@@ -53,6 +56,8 @@ public class GyroCalibrateDialogFragment extends DialogFragment implements Senso
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        runCount = 0;
 
         gyroscopeBias = new GyroscopeBias(500);
 
@@ -84,7 +89,7 @@ public class GyroCalibrateDialogFragment extends DialogFragment implements Senso
         buttonNeutral.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(GyroCalibrateDialogFragment.this, sensorGyroscopeU, SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GyroCalibrationDialogFragment.this, sensorGyroscopeU, SensorManager.SENSOR_DELAY_FASTEST);
                 progressDialog = ProgressDialog.show(getActivity(), "Calibrating", "Please wait.", true, false);
             }
         });
@@ -98,14 +103,28 @@ public class GyroCalibrateDialogFragment extends DialogFragment implements Senso
     public void onSensorChanged(SensorEvent event) {
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
-            if (gyroscopeBias.calcBias(event.values)) {
-                dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Calculated biases: " + Arrays.toString(gyroscopeBias.getBias()));
-                dismissDialog();
-            } else {
-                ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
-                dataValues.add(0, (float) event.timestamp);
-                dataFileWriter.writeToFile("Gyroscope-Uncalibrated", dataValues);
+
+            //waiting a while so that the button press doesn't effect the calibration
+            if (runCount++ > WAIT_COUNTER) {
+
+                double norm = Math.sqrt(Math.pow(event.values[0], 2) + Math.pow(event.values[1], 2) + Math.pow(event.values[2], 2));
+
+                //applying a quick low pass filter (the values should be small since the phone is not moving during calibration)
+                if (Math.abs(event.values[0]) < norm && Math.abs(event.values[1]) < norm && Math.abs(event.values[2]) < norm)
+                    if (gyroscopeBias.calcBias(event.values)) {
+                        dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Calculated_bias: " + Arrays.toString(gyroscopeBias.getBias()));
+                        dismissDialog();
+                    } else {
+                        //saving gyroscope data
+                        float[] gyroValues = {event.values[0], event.values[1], event.values[2]};
+                        ArrayList<Float> dataValues = ExtraFunctions.arrayToList(gyroValues);
+                        dataValues.add(0, (float) event.timestamp);
+
+                        dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
+                    }
+
             }
+
         }
 
     }
