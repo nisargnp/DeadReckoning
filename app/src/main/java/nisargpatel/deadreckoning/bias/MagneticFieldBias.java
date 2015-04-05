@@ -1,4 +1,4 @@
-package nisargpatel.deadreckoning.heading;
+package nisargpatel.deadreckoning.bias;
 
 import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
@@ -108,7 +108,7 @@ public class MagneticFieldBias {
         float xBias = B[0][0] / 2.0f;
         float yBias = B[1][0] / 2.0f;
         float zBias = B[2][0] / 2.0f;
-        float magneticFieldStrength = (float)Math.sqrt(Math.pow(B[3][0], 2) + Math.pow(B[3][0], 2) + Math.pow(B[3][0], 2) + Math.pow(B[3][0], 2));
+        float magneticFieldStrength = (float)Math.sqrt(B[3][0] + Math.pow(xBias, 2) + Math.pow(yBias, 2) + Math.pow(zBias, 2));
 
         return new float[] {xBias, yBias, zBias, magneticFieldStrength};
     }

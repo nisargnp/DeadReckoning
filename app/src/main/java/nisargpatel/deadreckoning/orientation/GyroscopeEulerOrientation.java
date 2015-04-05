@@ -1,19 +1,21 @@
 
-package nisargpatel.deadreckoning.heading;
+package nisargpatel.deadreckoning.orientation;
 
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 
 //heading inference determine using Euler angles and the Direction Cosine Matrix
-public class EulerHeadingInference {
+//this class was created before the importation of EJML, and therefore does not implement it
+public class GyroscopeEulerOrientation {
 
     private float[][] C;
 
-    public EulerHeadingInference() {
-        this(ExtraFunctions.IDENTITY_MATRIX);
+    public GyroscopeEulerOrientation() {
+        C = ExtraFunctions.IDENTITY_MATRIX.clone();
     }
 
-    public EulerHeadingInference(float[][] startingMatrix) {
-        C = startingMatrix.clone();
+    public GyroscopeEulerOrientation(float[][] initialOrientation) {
+        this();
+        C = initialOrientation.clone();
     }
 
     public float getCurrentHeading(float[] gyroValue) {

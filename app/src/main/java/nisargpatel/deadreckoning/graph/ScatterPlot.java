@@ -75,10 +75,11 @@ public class ScatterPlot {
         myMultiRenderer.setXLabelsPadding(10);
 
         //setting chart min/max
-        myMultiRenderer.setXAxisMin(-100);
-        myMultiRenderer.setXAxisMax(100);
-        myMultiRenderer.setYAxisMin(-100);
-        myMultiRenderer.setYAxisMax(100);
+        double bound = getMaxBound();
+        myMultiRenderer.setXAxisMin(-bound);
+        myMultiRenderer.setXAxisMax(bound);
+        myMultiRenderer.setYAxisMin(-bound);
+        myMultiRenderer.setYAxisMax(bound);
 
         //returns the graphical view containing the graph
         return ChartFactory.getScatterChartView(context, myMultiSeries, myMultiRenderer);
@@ -90,12 +91,14 @@ public class ScatterPlot {
         yList.add(y);
     }
 
-    public double getLastXPoint() {
-        return xList.get(xList.size() - 1);
+    public float getLastXPoint() {
+        double x = xList.get(xList.size() - 1);
+        return (float)x;
     }
 
-    public double getLastYPoint() {
-        return yList.get(yList.size() - 1);
+    public float getLastYPoint() {
+        double y = yList.get(yList.size() - 1);
+        return (float)y;
     }
 
     public void clearSet() {
@@ -103,4 +106,14 @@ public class ScatterPlot {
         yList.clear();
     }
 
+    private double getMaxBound() {
+        double max = 0;
+        for (double num : xList)
+            if (max < Math.abs(num))
+                max = num;
+        for (double num : yList)
+            if (max < Math.abs(num))
+                max = num;
+        return (Math.abs(max) / 100) * 100 + 100; //rounding up to the nearest hundred
+    }
 }

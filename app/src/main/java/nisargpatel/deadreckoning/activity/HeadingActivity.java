@@ -13,33 +13,33 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import nisargpatel.deadreckoning.R;
-import nisargpatel.deadreckoning.heading.EulerHeadingInference;
-import nisargpatel.deadreckoning.heading.GyroscopeBias;
-import nisargpatel.deadreckoning.heading.GyroscopeIntegration;
-import nisargpatel.deadreckoning.heading.InitialOrientation;
+import nisargpatel.deadreckoning.bias.GyroscopeBias;
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
+import nisargpatel.deadreckoning.orientation.GyroIntegration;
+import nisargpatel.deadreckoning.orientation.GyroscopeEulerOrientation;
+import nisargpatel.deadreckoning.orientation.MagneticFieldOrientation;
 
 public class HeadingActivity extends Activity implements SensorEventListener{
 
     private static final float EULER_GYROSCOPE_SENSITIVITY = 0.0025f;
     private static final float GYROSCOPE_SENSITIVITY = 0f;
 
-    private GyroscopeBias gyroBias;
-    private EulerHeadingInference eulerHeadingInference;
-    private GyroscopeIntegration gyroscopeIntegration;
-    private GyroscopeIntegration gyroscopeUncalibratedIntegration;
+    private GyroscopeBias gyroUBias;
+    private GyroscopeEulerOrientation gyroUOrientation;
+    private GyroIntegration gyroCIntegration;
+    private GyroIntegration gyroUIntegration;
 
-    private Sensor gyroscopeCalibrated;
-    private Sensor gyroscopeUncalibrated;
-    private Sensor rotationVector;
-    private Sensor magneticField;
-    private Sensor gravity;
+    private Sensor sensorGyroC; //gyroscope Android-calibrated
+    private Sensor sensorGyroU; //gyroscope uncalibrated (manually calibrated)
+    private Sensor sensorMagU; //magnetic field uncalibrated
+    private Sensor sensorGravity;
     private SensorManager sensorManager;
 
     private TextView textDirectionCosine;
-    private TextView textGyroscopeU;
-    private TextView textGyroscope;
+    private TextView textGyroU;
+    private TextView textGyroC;
     private TextView textMagneticField;
-    private TextView textRotationVector;
+    private TextView textComplimentaryFilter;
 
     private Button buttonStart;
     private Button buttonStop;
@@ -47,9 +47,15 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     private double gyroHeading;
     private double gyroHeadingU;
 
-    float[] gravityData;
+    private double eulerHeading;
+    private double magHeading;
 
-    private boolean wasRunning;
+    private float[] gravityValues;
+    private float[] magValues;
+
+    private boolean isRunning;
+
+    private double initialHeading;
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
@@ -57,56 +63,59 @@ public class HeadingActivity extends Activity implements SensorEventListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_heading);
 
-        gyroBias = new GyroscopeBias(300);
-        eulerHeadingInference = new EulerHeadingInference();
-        gyroscopeIntegration = new GyroscopeIntegration(GYROSCOPE_SENSITIVITY, new float[3]);
-        gyroscopeUncalibratedIntegration = new GyroscopeIntegration(EULER_GYROSCOPE_SENSITIVITY, null);
+        gyroUBias = new GyroscopeBias(300);
+        gyroCIntegration = new GyroIntegration(GYROSCOPE_SENSITIVITY, new float[3]);
+        gyroUIntegration = new GyroIntegration(EULER_GYROSCOPE_SENSITIVITY, null);
 
         gyroHeading = 0;
         gyroHeading = 0;
 
         textDirectionCosine = (TextView) findViewById(R.id.textDirectionCosine);
-        textGyroscopeU = (TextView) findViewById(R.id.textGyroscopeU);
-        textGyroscope = (TextView) findViewById(R.id.textGyroscope);
+        textGyroU = (TextView) findViewById(R.id.textGyroscopeU);
+        textGyroC = (TextView) findViewById(R.id.textGyroscope);
         textMagneticField = (TextView) findViewById(R.id.textMagneticField);
-        textRotationVector = (TextView) findViewById(R.id.textRotationVector);
+        textComplimentaryFilter = (TextView) findViewById(R.id.textRotationVector);
 
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        gyroscopeUncalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
-        gyroscopeCalibrated = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        rotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        sensorGyroU = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        sensorGyroC = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorMagU = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+
+        sensorManager.registerListener(HeadingActivity.this, sensorGyroU, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(HeadingActivity.this, sensorGyroC, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(HeadingActivity.this, sensorMagU, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(HeadingActivity.this, sensorGravity, SensorManager.SENSOR_DELAY_FASTEST);
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(HeadingActivity.this, magneticField, SensorManager.SENSOR_DELAY_FASTEST);
-                sensorManager.registerListener(HeadingActivity.this, gravity, SensorManager.SENSOR_DELAY_FASTEST);
+
+                float[][] initialOrientation = MagneticFieldOrientation.calcOrientation(gravityValues, magValues, new float[3]);
+
+//                gyroUOrientation = new GyroscopeEulerOrientation(initialOrientation);
+                gyroUOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+                initialHeading = ExtraFunctions.polarShiftMinusHalfPI(Math.atan2(initialOrientation[1][0], initialOrientation[0][0]));
+                initialHeading = -initialHeading;
 
                 buttonStart.setEnabled(false);
                 buttonStop.setEnabled(true);
 
-                wasRunning = true;
+                isRunning = true;
             }
         });
 
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sensorManager.unregisterListener(HeadingActivity.this);
-
                 buttonStart.setEnabled(true);
                 buttonStop.setEnabled(false);
 
-                wasRunning = false;
+                isRunning = false;
             }
         });
 
@@ -114,12 +123,12 @@ public class HeadingActivity extends Activity implements SensorEventListener{
             @Override
             public void onClick(View v) {
                 textDirectionCosine.setText("0");
-                textGyroscopeU.setText("0");
-                textGyroscope.setText("0");
+                textGyroU.setText("0");
+                textGyroC.setText("0");
                 textMagneticField.setText("0");
-                textRotationVector.setText("0");
+                textComplimentaryFilter.setText("0");
 
-                eulerHeadingInference.clearMatrix();
+                gyroUOrientation.clearMatrix();
 
                 gyroHeading = 0;
                 gyroHeadingU = 0;
@@ -137,12 +146,11 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     @Override
     protected void onResume() {
         super.onResume();
-        if (wasRunning) {
-            sensorManager.registerListener(HeadingActivity.this, gyroscopeUncalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(HeadingActivity.this, gyroscopeCalibrated, SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(HeadingActivity.this, rotationVector, SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(HeadingActivity.this, magneticField, SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(HeadingActivity.this, gravity, SensorManager.SENSOR_DELAY_FASTEST);
+        if (isRunning) {
+            sensorManager.registerListener(HeadingActivity.this, sensorGyroU, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, sensorGyroC, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, sensorMagU, SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(HeadingActivity.this, sensorGravity, SensorManager.SENSOR_DELAY_FASTEST);
 
             buttonStart.setEnabled(false);
             buttonStop.setEnabled(true);
@@ -158,43 +166,58 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        int sensorType = event.sensor.getType();
+        if (event.sensor.getType() == Sensor.TYPE_GRAVITY)
+            gravityValues = event.values;
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            magValues = event.values;
 
-        if (sensorType == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
+        if (isRunning) {
 
-            if (gyroBias.calcBias(event.values)) {
-                gyroscopeUncalibratedIntegration.setBias(gyroBias.getBias());
+            if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-                float[] deltaOrientation = gyroscopeUncalibratedIntegration.getIntegratedValues(event.timestamp, event.values);
+                float[] deltaOrientation = gyroCIntegration.getIntegratedValues(event.timestamp, event.values);
+                gyroHeading += deltaOrientation[2];
+                double gyroHeadingDegrees = ExtraFunctions.radsToDegrees(gyroHeading);
+                textGyroC.setText(String.valueOf(gyroHeadingDegrees));
 
-                gyroHeadingU += deltaOrientation[2];
-                textGyroscopeU.setText(String.valueOf(gyroHeadingU));
+            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-                float eulerHeading = eulerHeadingInference.getCurrentHeading(deltaOrientation);
-                textDirectionCosine.setText(String.valueOf(eulerHeading));
+                if (gyroUBias.calcBias(event.values)) {
+
+                    gyroUIntegration.setBias(gyroUBias.getBias());
+
+                    float[] deltaOrientation = gyroUIntegration.getIntegratedValues(event.timestamp, event.values);
+
+                    //rotation about z
+                    gyroHeadingU += deltaOrientation[2];
+                    double gyroHeadingUDegrees = ExtraFunctions.radsToDegrees(gyroHeadingU);
+                    textGyroU.setText(String.valueOf(gyroHeadingUDegrees));
+
+                    //direction cosine matrix
+                    eulerHeading = gyroUOrientation.getCurrentHeading(deltaOrientation);
+                    eulerHeading = ExtraFunctions.polarAdd(initialHeading, eulerHeading);
+
+                    textDirectionCosine.setText(String.valueOf(eulerHeading));
+
+                }
+
+            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+
+                float[][] rotationMatrix = MagneticFieldOrientation.calcOrientation(gravityValues, magValues, new float[3]);
+
+                magHeading = Math.atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
+
+                magHeading = ExtraFunctions.polarShiftMinusHalfPI(magHeading);
+                magHeading = -magHeading;
+                textMagneticField.setText(String.valueOf(String.valueOf(magHeading)));
+
             }
 
-        } else if (sensorType == Sensor.TYPE_GYROSCOPE) {
+            double compHeading = ExtraFunctions.calcCompHeading(magHeading, eulerHeading);
+            textComplimentaryFilter.setText(String.valueOf(compHeading));
 
-            float[] deltaOrientation = gyroscopeIntegration.getIntegratedValues(event.timestamp, event.values);
-            gyroHeading += deltaOrientation[2];
-            textGyroscope.setText(String.valueOf(gyroHeading));
-
-        } else if (sensorType == Sensor.TYPE_ROTATION_VECTOR) {
-            textRotationVector.setText(String.valueOf(event.values[2]));
-        } else if (sensorType == Sensor.TYPE_MAGNETIC_FIELD) {
-            if (gravityData != null) {
-                float[] magData = {event.values[0], event.values[1], event.values[2]};
-//                double heading = InitialOrientation.calcHeading(gravityData, magData, new float[3]);
-
-                float[][] rotationMatrix = InitialOrientation.calcOrientation(gravityData, magData, new float[3]);
-                double heading = Math.atan2(rotationMatrix[2][0], rotationMatrix[2][1]);
-
-                textMagneticField.setText(String.valueOf(String.valueOf(heading)));
-            }
-        } else if (sensorType == Sensor.TYPE_GRAVITY) {
-            gravityData = event.values.clone();
         }
+
     }
 
 }

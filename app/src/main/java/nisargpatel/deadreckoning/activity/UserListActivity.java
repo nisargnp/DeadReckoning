@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -20,11 +22,10 @@ import android.widget.ListView;
 import java.util.ArrayList;
 
 import nisargpatel.deadreckoning.R;
+import nisargpatel.deadreckoning.dialog.AccessUserDialogFragment;
 import nisargpatel.deadreckoning.dialog.SensorCalibrationDialogFragment;
 import nisargpatel.deadreckoning.dialog.UserDetailsDialogFragment;
-import nisargpatel.deadreckoning.dialog.AccessUserDialogFragment;
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
-import nisargpatel.deadreckoning.heading.MagneticFieldBias;
 
 public class UserListActivity extends FragmentActivity{
 
@@ -46,6 +47,8 @@ public class UserListActivity extends FragmentActivity{
         SharedPreferences sharedPreference = getSharedPreferences(ExtraFunctions.PREFS_NAME, 0);
         sharedPreferencesEditor = sharedPreference.edit();
         sharedPreferencesEditor.apply();
+
+        checkSensor(sharedPreferencesEditor, "step_detector", Sensor.TYPE_STEP_DETECTOR);
 
         userList = ExtraFunctions.getArrayFromSharedPreferences("user_list", sharedPreference);
         strideList = ExtraFunctions.getArrayFromSharedPreferences("stride_list", sharedPreference);
@@ -137,6 +140,7 @@ public class UserListActivity extends FragmentActivity{
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        //getting data back from StepCalibrationActivity
         if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
 
             String userName = data.getStringExtra("user_name");
@@ -163,6 +167,14 @@ public class UserListActivity extends FragmentActivity{
     private void refreshListView() {
         ArrayAdapter<String> listAdapter = new ArrayAdapter<>(UserListActivity.this, android.R.layout.simple_list_item_1, userList);
         myList.setAdapter(listAdapter);
+    }
+
+    private void checkSensor(SharedPreferences.Editor sharedPreferencesEditor, String sensorName, int sensorType) {
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (sensorManager.getDefaultSensor(sensorType) != null)
+            sharedPreferencesEditor.putBoolean(sensorName, true);
+        else
+            sharedPreferencesEditor.putBoolean(sensorName, false);
     }
 
     public static void updatePrefs() {

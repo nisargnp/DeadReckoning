@@ -21,13 +21,13 @@ public final class ExtraFunctions {
                                                      {0,0,1}};
 
     //calculate x coordinate point given radius and angle
-    public static double getXFromPolar(double radius, double angle) {
-        return radius * Math.cos(angle);
+    public static float getXFromPolar(double radius, double angle) {
+        return (float)(radius * Math.cos(angle));
     }
 
     //calculate y coordinate point given radius and angle
-    public static double getYFromPolar(double radius, double angle) {
-        return radius * Math.sin(angle);
+    public static float getYFromPolar(double radius, double angle) {
+        return (float)(radius * Math.sin(angle));
     }
 
     public static float nsToSec(float time) {
@@ -166,6 +166,53 @@ public final class ExtraFunctions {
         for (float arg : args)
             list.add(arg);
         return list;
+    }
+
+    public static float polarShiftMinusHalfPI(double heading) {
+        if (heading < -Math.PI / 2.0 && heading > -Math.PI)
+            heading += 3 * Math.PI / 2.0;
+        else
+            heading -= Math.PI / 2.0;
+        return (float)heading;
+    }
+
+    public static float radsToDegrees(double rads) {
+        double degrees = (rads < 0) ? (2.0 * Math.PI + rads) : rads;
+        degrees *= (180.0 / Math.PI);
+        return (float)degrees;
+    }
+
+    public static float polarAdd(double initHeading, double deltaHeading) {
+
+        double currHeading = initHeading + deltaHeading;
+
+        //convert 0 < h < 2pi or -2pi < h < 0 to -pi/2 < h < pi/2
+        if(currHeading < -Math.PI)
+            return (float)((currHeading % Math.PI) + Math.PI);
+        else if (currHeading > Math.PI)
+            return (float)((currHeading % Math.PI) + -Math.PI);
+        else
+            return (float)currHeading;
+
+    }
+
+    public static float calcCompHeading(double magHeading, double gyroHeading) {
+        //complimentary filter
+
+        //convert -pi/2 < h < pi/2 to 0 < h < 2pi
+        if (magHeading < 0)
+            magHeading = magHeading % (2.0 * Math.PI);
+        if (gyroHeading < 0)
+            gyroHeading = gyroHeading % (2.0 * Math.PI);
+
+        double compHeading = 0.02 * magHeading + 0.98 * gyroHeading;
+
+        //convert 0 < h < 2pi to -pi/2 < h < pi/2
+        if (compHeading > Math.PI)
+            compHeading = (compHeading % Math.PI) + -Math.PI;
+
+        return (float)compHeading;
+
     }
 
 }

@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.filewriting.DataFileWriter;
-import nisargpatel.deadreckoning.heading.GyroscopeBias;
+import nisargpatel.deadreckoning.bias.GyroscopeBias;
 
 public class GyroCalibrationDialogFragment extends DialogFragment implements SensorEventListener{
 

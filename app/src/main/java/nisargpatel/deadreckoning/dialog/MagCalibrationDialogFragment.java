@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.filewriting.DataFileWriter;
-import nisargpatel.deadreckoning.heading.MagneticFieldBias;
+import nisargpatel.deadreckoning.bias.MagneticFieldBias;
 
 public class MagCalibrationDialogFragment extends DialogFragment implements SensorEventListener{
 

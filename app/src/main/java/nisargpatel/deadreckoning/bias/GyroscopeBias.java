@@ -1,4 +1,4 @@
-package nisargpatel.deadreckoning.heading;
+package nisargpatel.deadreckoning.bias;
 
 public class GyroscopeBias {
 

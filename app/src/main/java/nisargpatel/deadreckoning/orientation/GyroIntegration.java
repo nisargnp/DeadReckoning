@@ -1,8 +1,8 @@
-package nisargpatel.deadreckoning.heading;
+package nisargpatel.deadreckoning.orientation;
 
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 
-public class GyroscopeIntegration {
+public class GyroIntegration {
 
     private boolean isFirstRun;
     private float sensitivity;
@@ -10,13 +10,13 @@ public class GyroscopeIntegration {
     private float[] gyroBias;
 
 
-    public GyroscopeIntegration() {
+    public GyroIntegration() {
         this.gyroBias = new float[3];
         this.sensitivity = 0.0025f;
         this.isFirstRun = true;
     }
 
-    public GyroscopeIntegration(float sensitivity, float[] gyroBias) {
+    public GyroIntegration(float sensitivity, float[] gyroBias) {
         this();
         this.sensitivity = sensitivity;
         this.gyroBias = gyroBias;

@@ -39,7 +39,7 @@
     <Button
         android:layout_width="100dp"
         android:layout_height="75dp"
-        android:text="@string/clear"
+        android:text="Add Point"
         android:id="@+id/buttonGraphClear"
         android:textSize="15sp"
         android:layout_marginLeft="86.5dp"

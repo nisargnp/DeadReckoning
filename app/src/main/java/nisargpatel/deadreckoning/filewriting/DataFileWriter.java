@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
+
 public class DataFileWriter {
 
     private BufferedWriter bufferedWriter;
@@ -26,6 +28,12 @@ public class DataFileWriter {
         this();
         this.folderName = folderName;
         createFiles(fileNames, fileHeadings);
+    }
+
+    public DataFileWriter(String folderName, String[] fileNames, String[] fileHeadings) throws IOException {
+        this();
+        this.folderName = folderName;
+        createFiles(ExtraFunctions.arrayToList(fileNames), ExtraFunctions.arrayToList(fileHeadings));
     }
 
     private File getFolder() {
@@ -85,6 +93,7 @@ public class DataFileWriter {
 
     }
 
+    //overridden write methods
     public void writeToFile(String fileName, ArrayList<Float> values) {
         File file = files.get(fileName);
         try {
@@ -108,6 +117,13 @@ public class DataFileWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void writeToFile(String fileName, float... args) {
+        ArrayList<Float> values = new ArrayList<>();
+        for (float arg : args)
+            values.add(arg);
+        writeToFile(fileName, values);
     }
 
 }
