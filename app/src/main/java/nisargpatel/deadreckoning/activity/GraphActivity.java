@@ -38,6 +38,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     //according to NovAtel
     private static final long SECONDS_PER_WEEK = 511200;
 
+    private static final float GYROSCOPE_INTEGRATION_SENSITIVITY = 0.0025f;
+
     private static final String FOLDER_NAME = "Dead_Reckoning/Graph_Activity";
     private static final String[] DATA_FILE_NAMES = {
             "Initial_Orientation",
@@ -63,7 +65,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     private Button buttonStart;
     private Button buttonStop;
     private Button buttonAddPoint;
-    private LinearLayout linearLayout;
+    private LinearLayout mLinearLayout;
 
     private SensorManager sensorManager;
     private LocationManager locationManager;
@@ -72,10 +74,11 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     float[] magBias;
     float[] currGravity; //current gravity
     float[] currMag; //current magnetic field
-//    float[][] initialOrientation;
 
+    private String counterSensitivity;
     private boolean isRunning;
     private boolean isCalibrated;
+    private boolean usingDefaultCounter;
     private boolean areFilesCreated;
     private float strideLength;
     private float gyroHeading;
@@ -96,49 +99,50 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
         //initializing needed variables
         gyroBias = magBias = currGravity = currMag = null;
-//        initialOrientation = ExtraFunctions.IDENTITY_MATRIX;
-        isRunning = isCalibrated = areFilesCreated = false;
-        strideLength = 0;
-        gyroHeading = magHeading = 0;
-        weeksGPS = 0;
-        secondsGPS = 0;
-        startingTime = 0;
+        isRunning = isCalibrated = usingDefaultCounter = areFilesCreated = false;
         firstRun = true;
-        initialHeading = 0;
+        strideLength = 0;
+        initialHeading = gyroHeading = magHeading = 0;
+        weeksGPS = secondsGPS = startingTime = 0;
+        counterSensitivity = "default";
 
         //getting global settings
         strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
-        String userName = getIntent().getStringExtra("user_name");
-
+        isCalibrated = getIntent().getBooleanExtra("is_calibrated", false);
         gyroBias = getIntent().getFloatArrayExtra("gyro_bias");
         magBias = getIntent().getFloatArrayExtra("mag_bias");
 
-        //todo: check in SharedPreferences if TYPE_STEP_DETECTOR is available
+        //using user_name to get index of user in userList, which is also the index of the user's stride_length
+        counterSensitivity = UserListActivity.preferredStepCounterList
+                .get(UserListActivity.userList.indexOf(getIntent().getStringExtra("user_name")));
 
-        String stepCounterSensitivity = UserListActivity.preferredStepCounterList
-                .get(UserListActivity.userList.indexOf(userName));
-        isCalibrated = getIntent().getBooleanExtra("is_calibrated", false) ||
-                stepCounterSensitivity.equals("default");
+        //usingDefaultCounter is counterSensitivity = "default" and sensor is available
+        usingDefaultCounter = counterSensitivity.equals("default") &&
+                getIntent().getBooleanExtra("step_detector", false);
 
         //initializing needed classes
-        dynamicStepCounter = new DynamicStepCounter(stepCounterSensitivity.equals("default") ? 0 :
-                Double.parseDouble(stepCounterSensitivity)); //if sensitivity != "default", set it to the stepCounterSensitivity
-        gyroIntegration = new GyroIntegration(0.0025f, gyroBias);
+        gyroIntegration = new GyroIntegration(GYROSCOPE_INTEGRATION_SENSITIVITY, gyroBias);
+        if (usingDefaultCounter) //if using default TYPE_STEP_DETECTOR, don't need DynamicStepCounter
+            dynamicStepCounter = null;
+        else
+            if (!counterSensitivity.equals("default"))
+                dynamicStepCounter = new DynamicStepCounter(Double.parseDouble(counterSensitivity));
+            else //if cannot use TYPE_STEP_DETECTOR but sensitivity = "default", use 1.0 sensitivity until user calibrates
+                dynamicStepCounter = new DynamicStepCounter(1.0);
 
         //defining views
         buttonStart = (Button) findViewById(R.id.buttonGraphStart);
         buttonStop = (Button) findViewById(R.id.buttonGraphStop);
         buttonAddPoint = (Button) findViewById(R.id.buttonGraphClear);
-        linearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
+        mLinearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
 
         //setting up graph with origin
         scatterPlot = new ScatterPlot("Position");
         scatterPlot.addPoint(0, 0);
-        linearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+        mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
 
         //message user w/ user_name and stride_length info
-        Toast.makeText(GraphActivity.this,
-                "user: " + userName + "\n" + "stride length: " + strideLength, Toast.LENGTH_SHORT).show();
+        Toast.makeText(GraphActivity.this, "Stride Length: " + strideLength, Toast.LENGTH_SHORT).show();
 
         //starting GPS location tracking
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -149,20 +153,32 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         sensorManager.registerListener(GraphActivity.this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(GraphActivity.this,
-                sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
-                SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(GraphActivity.this,
-                sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
-                SensorManager.SENSOR_DELAY_FASTEST);
-        if (isCalibrated)
+
+        if (isCalibrated) {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+            sensorManager.registerListener(GraphActivity.this,
+                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                    SensorManager.SENSOR_DELAY_FASTEST);
+        }
+
+        if (usingDefaultCounter) {
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
                     SensorManager.SENSOR_DELAY_FASTEST);
-        else
+        } else {
             sensorManager.registerListener(GraphActivity.this,
                     sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
                     SensorManager.SENSOR_DELAY_FASTEST);
+        }
 
         //setting up buttons
         buttonStart.setOnClickListener(new View.OnClickListener() {
@@ -172,6 +188,11 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 isRunning = true;
 
                 createFiles();
+
+                if (usingDefaultCounter)
+                    dataFileWriter.writeToFile("Linear_Acceleration",
+                            "TYPE_LINEAR_ACCELERATION will not be recorded, since the TYPE_STEP_DETECTOR is being used instead."
+                    );
 
                 float[][] initialOrientation = MagneticFieldOrientation.calcOrientation(currGravity, currMag, magBias);
 
@@ -189,7 +210,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 Log.d("init_heading", "" + initialHeading);
 
                 //TODO: fix rotation matrix
-//                gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
+                //gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
+
                 gyroscopeEulerOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
 
                 dataFileWriter.writeToFile("XY_Data_Set", "Initial_orientation: " +
@@ -200,7 +222,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                         Arrays.toString(magBias));
 
                 buttonStart.setEnabled(false);
-                buttonStart.setEnabled(true);
+                buttonAddPoint.setEnabled(true);
                 buttonStop.setEnabled(true);
 
             }
@@ -214,7 +236,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 isRunning = false;
 
                 buttonStart.setEnabled(true);
-                buttonStart.setEnabled(true);
+                buttonAddPoint.setEnabled(true);
                 buttonStop.setEnabled(false);
 
             }
@@ -243,8 +265,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
                 scatterPlot.addPoint(rPointX, rPointY);
 
-                linearLayout.removeAllViews();
-                linearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+                mLinearLayout.removeAllViews();
+                mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
 
             }
         });
@@ -263,30 +285,45 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         super.onResume();
 
         if (isRunning) {
-            sensorManager.registerListener(GraphActivity.this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
-                    SensorManager.SENSOR_DELAY_FASTEST);
-            sensorManager.registerListener(GraphActivity.this,
-                    sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
-                    SensorManager.SENSOR_DELAY_FASTEST);
-            if (isCalibrated)
-                sensorManager.registerListener(GraphActivity.this,
-                        sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
-                        SensorManager.SENSOR_DELAY_FASTEST);
-            else
-                sensorManager.registerListener(GraphActivity.this,
-                        sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
-                        SensorManager.SENSOR_DELAY_FASTEST);
 
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GraphActivity.this);
 
+            if (isCalibrated) {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            }
+
+            if (usingDefaultCounter) {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                sensorManager.registerListener(GraphActivity.this,
+                        sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                        SensorManager.SENSOR_DELAY_FASTEST);
+            }
+
             buttonStart.setEnabled(false);
-            buttonStart.setEnabled(true);
+            buttonAddPoint.setEnabled(true);
             buttonStop.setEnabled(true);
+
         } else {
+
             buttonStart.setEnabled(true);
-            buttonStart.setEnabled(true);
+            buttonAddPoint.setEnabled(true);
             buttonStop.setEnabled(false);
+
         }
 
     }
@@ -305,13 +342,15 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
             currGravity = event.values;
             Log.d("gravity_values", Arrays.toString(event.values));
-        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD ||
+                event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
             currMag = event.values;
             Log.d("mag_values", Arrays.toString(event.values));
         }
 
         if (isRunning) {
-            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
+            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
+                    Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
 
                 float[][] magOrientation = MagneticFieldOrientation.calcOrientation(currGravity, currMag, magBias);
                 magHeading = (float)Math.atan2(magOrientation[1][0], magOrientation[0][0]);
@@ -331,7 +370,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 dataValues.add(gyroHeading);
                 dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", dataValues);
 
-            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
+            } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE ||
+                    event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
                 float[] deltaOrientation = gyroIntegration.getIntegratedValues(event.timestamp, event.values);
 
@@ -349,7 +389,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 dataValues.add(gyroHeading);
                 dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
 
-            }else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+            } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
                 float norm = (float) Math.sqrt(Math.pow(event.values[0], 2) +
                         Math.pow(event.values[1], 2) +
@@ -397,8 +437,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                             rPointX,
                             rPointY);
 
-                    linearLayout.removeAllViews();
-                    linearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
 
                     //if step is not found
                 } else {
@@ -446,8 +486,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                             rPointX,
                             rPointY);
 
-                    linearLayout.removeAllViews();
-                    linearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.addView(scatterPlot.getGraphView(getApplicationContext()));
                 }
 
             }

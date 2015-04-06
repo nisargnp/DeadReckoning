@@ -48,8 +48,6 @@ public class UserListActivity extends FragmentActivity{
         sharedPreferencesEditor = sharedPreference.edit();
         sharedPreferencesEditor.apply();
 
-        checkSensor(sharedPreferencesEditor, "step_detector", Sensor.TYPE_STEP_DETECTOR);
-
         userList = ExtraFunctions.getArrayFromSharedPreferences("user_list", sharedPreference);
         strideList = ExtraFunctions.getArrayFromSharedPreferences("stride_list", sharedPreference);
         preferredStepCounterList = ExtraFunctions.getArrayFromSharedPreferences("preferred_step_counter", sharedPreference);
@@ -65,10 +63,13 @@ public class UserListActivity extends FragmentActivity{
                 Log.d("User_List_Activity", "click position: " + position);
 
                 SensorCalibrationDialogFragment calibrationDialog = new SensorCalibrationDialogFragment();
+
                 Bundle mBundle = new Bundle();
                 mBundle.putString("user_name", userList.get(position));
                 mBundle.putFloat("stride_length", Float.parseFloat(strideList.get(position)));
                 mBundle.putString("preferred_step_counter", preferredStepCounterList.get(position));
+                mBundle.putBoolean("step_detector", checkSensor(Sensor.TYPE_STEP_DETECTOR));
+
                 calibrationDialog.setArguments(mBundle);
                 calibrationDialog.show(getFragmentManager(), "Calibrate Sensors");
 
@@ -83,8 +84,10 @@ public class UserListActivity extends FragmentActivity{
                 Log.d("User_List_Activity", "long click position: " + position);
 
                 AccessUserDialogFragment accessUserDialog = new AccessUserDialogFragment();
+
                 accessUserDialog.setUserName(userList.get(position));
                 accessUserDialog.setStrideLength(strideList.get(position));
+
                 accessUserDialog.show(getFragmentManager(), "User Settings");
 
                 return true;
@@ -169,12 +172,9 @@ public class UserListActivity extends FragmentActivity{
         myList.setAdapter(listAdapter);
     }
 
-    private void checkSensor(SharedPreferences.Editor sharedPreferencesEditor, String sensorName, int sensorType) {
+    private boolean checkSensor(int sensorType) {
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (sensorManager.getDefaultSensor(sensorType) != null)
-            sharedPreferencesEditor.putBoolean(sensorName, true);
-        else
-            sharedPreferencesEditor.putBoolean(sensorName, false);
+        return (sensorManager.getDefaultSensor(sensorType) != null);
     }
 
     public static void updatePrefs() {

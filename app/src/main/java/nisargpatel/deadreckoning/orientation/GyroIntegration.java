@@ -40,6 +40,7 @@ public class GyroIntegration {
     }
 
     private float[] removeBias(float[] rawGyroValues) {
+        //ignoring the last 3 values of TYPE_UNCALIBRATED_GYROSCOPE, since the are only the Android-calculated biases
         float[] unbiasedGyroValues = new float[3];
 
         unbiasedGyroValues[0] = rawGyroValues[0] - gyroBias[0];

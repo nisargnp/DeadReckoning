@@ -111,9 +111,10 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
 
     private Intent addExtras(Intent myIntent) {
 
-        myIntent.putExtra("user_name", getArguments().getString("user_name", "Default"));
+        myIntent.putExtra("user_name", getArguments().getString("user_name", "unknown"));
         myIntent.putExtra("stride_length", getArguments().getDouble("stride_length", 2.5));
-        myIntent.putExtra("preferred_step_counter", getArguments().getString("preferred_step_counter"));
+        myIntent.putExtra("preferred_step_counter", getArguments().getString("preferred_step_counter", "default"));
+        myIntent.putExtra("step_detector", getArguments().getBoolean("step_detector", false));
 
         if (isCalibrating == CALIBRATING) {
             myIntent.putExtra("is_calibrated", true);
@@ -121,7 +122,8 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
             myIntent.putExtra("mag_bias", magBias);
         } else if (isCalibrating == NOT_CALIBRATING) {
             myIntent.putExtra("is_calibrated", false);
-            myIntent.putExtra("gyroscope_bias", new float[3]);
+            myIntent.putExtra("gyro_bias", new float[3]);
+            myIntent.putExtra("mag_bias", new float[3]);
         }
 
         return myIntent;
