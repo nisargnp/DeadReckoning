@@ -97,8 +97,9 @@ public class HeadingActivity extends Activity implements SensorEventListener{
 
                 float[][] initialOrientation = MagneticFieldOrientation.calcOrientation(gravityValues, magValues, new float[3]);
 
-//                gyroUOrientation = new GyroscopeEulerOrientation(initialOrientation);
-                gyroUOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+                gyroUOrientation = new GyroscopeEulerOrientation(initialOrientation);
+                //gyroUOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+
                 initialHeading = ExtraFunctions.polarShiftMinusHalfPI(Math.atan2(initialOrientation[1][0], initialOrientation[0][0]));
                 initialHeading = -initialHeading;
 
@@ -195,7 +196,7 @@ public class HeadingActivity extends Activity implements SensorEventListener{
 
                     //direction cosine matrix
                     eulerHeading = gyroUOrientation.getCurrentHeading(deltaOrientation);
-                    eulerHeading = ExtraFunctions.polarAdd(initialHeading, eulerHeading);
+                    //eulerHeading = ExtraFunctions.polarAdd(initialHeading, eulerHeading);
 
                     textDirectionCosine.setText(String.valueOf(eulerHeading));
 
