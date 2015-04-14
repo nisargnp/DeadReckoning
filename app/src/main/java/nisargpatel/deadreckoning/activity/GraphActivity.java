@@ -25,18 +25,14 @@ import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 import nisargpatel.deadreckoning.graph.ScatterPlot;
-import nisargpatel.deadreckoning.orientation.GyroIntegration;
+import nisargpatel.deadreckoning.orientation.GyroscopeDeltaOrientation;
 import nisargpatel.deadreckoning.orientation.GyroscopeEulerOrientation;
 import nisargpatel.deadreckoning.orientation.MagneticFieldOrientation;
 import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 
 public class GraphActivity extends Activity implements SensorEventListener, LocationListener{
 
-    //according to Google
-//    private static final long SECONDS_PER_WEEK = 604800;
-
-    //according to NovAtel
-    private static final long SECONDS_PER_WEEK = 511200;
+    private static final long GPS_SECONDS_PER_WEEK = 511200L;
 
     private static final float GYROSCOPE_INTEGRATION_SENSITIVITY = 0.0025f;
 
@@ -47,17 +43,19 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
             "Gyroscope_Uncalibrated",
             "Magnetic_Field_Uncalibrated",
             "Gravity",
-            "XY_Data_Set"};
+            "XY_Data_Set"
+    };
     private static final String[] DATA_FILE_HEADINGS = {
             "Initial_Orientation",
-            "t;Ax;Ay;Az;findStep;",
-            "t;uGx;uGy;uGz;xBias;yBias;zBias;heading;",
-            "t;uMx;uMy;uMz;xBias;yBias;zBias;heading;",
-            "t;gx,gy,gz",
-            "weeksGPS;secondsGPS;t;strideLength;magHeading;gyroHeading;originalPointX;originalPointY;rotatedPointX;rotatedPointY"};
+            "Linear_Acceleration" + "\n" + "t;Ax;Ay;Az;findStep",
+            "Gyroscope_Uncalibrated" + "\n" + "t;uGx;uGy;uGz;xBias;yBias;zBias;heading",
+            "Magnetic_Field_Uncalibrated" + "\n" + "t;uMx;uMy;uMz;xBias;yBias;zBias;heading",
+            "Gravity" + "\n" + "t;gx;gy;gz",
+            "XY_Data_Set" + "\n" + "weekGPS;secGPS;t;strideLength;magHeading;gyroHeading;originalPointX;originalPointY;rotatedPointX;rotatedPointY"
+    };
 
     private DynamicStepCounter dynamicStepCounter;
-    private GyroIntegration gyroIntegration;
+    private GyroscopeDeltaOrientation gyroscopeDeltaOrientation;
     private GyroscopeEulerOrientation gyroscopeEulerOrientation;
     private DataFileWriter dataFileWriter;
     private ScatterPlot scatterPlot;
@@ -75,7 +73,6 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     float[] currGravity; //current gravity
     float[] currMag; //current magnetic field
 
-    private String counterSensitivity;
     private boolean isRunning;
     private boolean isCalibrated;
     private boolean usingDefaultCounter;
@@ -86,7 +83,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     private float weeksGPS;
     private float secondsGPS;
 
-    private long startingTime;
+    private long startTime;
     private boolean firstRun;
 
     private float initialHeading;
@@ -97,14 +94,20 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
-        //initializing needed variables
-        gyroBias = magBias = currGravity = currMag = null;
+        //defining needed variables
+        gyroBias = null;
+        magBias = null;
+        currGravity = null;
+        currMag = null;
+
+        String counterSensitivity;
+
         isRunning = isCalibrated = usingDefaultCounter = areFilesCreated = false;
         firstRun = true;
         strideLength = 0;
         initialHeading = gyroHeading = magHeading = 0;
-        weeksGPS = secondsGPS = startingTime = 0;
-        counterSensitivity = "default";
+        weeksGPS = secondsGPS = 0;
+        startTime = 0;
 
         //getting global settings
         strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
@@ -121,7 +124,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 getIntent().getBooleanExtra("step_detector", false);
 
         //initializing needed classes
-        gyroIntegration = new GyroIntegration(GYROSCOPE_INTEGRATION_SENSITIVITY, gyroBias);
+        gyroscopeDeltaOrientation = new GyroscopeDeltaOrientation(GYROSCOPE_INTEGRATION_SENSITIVITY, gyroBias);
         if (usingDefaultCounter) //if using default TYPE_STEP_DETECTOR, don't need DynamicStepCounter
             dynamicStepCounter = null;
         else
@@ -194,18 +197,16 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                             "TYPE_LINEAR_ACCELERATION will not be recorded, since the TYPE_STEP_DETECTOR is being used instead."
                     );
 
-                float[][] initialOrientation = MagneticFieldOrientation.calcOrientation(currGravity, currMag, magBias);
-
-                initialHeading = (float)Math.atan2(initialOrientation[1][0], initialOrientation[0][0]);
-                initialHeading = ExtraFunctions.polarShiftMinusHalfPI(initialHeading);
-                initialHeading = -initialHeading; //switching from clockwise to counter-clockwise
+                float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
+                initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
 
                 //saving initial orientation data
-                dataFileWriter.writeToFile("Initial_Orientation", "initGravity: " + Arrays.toString(currGravity));
-                dataFileWriter.writeToFile("Initial_Orientation", "initMag: " + Arrays.toString(currMag));
-                dataFileWriter.writeToFile("Initial_Orientation", "magBias: " + Arrays.toString(magBias));
-                dataFileWriter.writeToFile("Initial_Orientation", "initOrientation: " + Arrays.deepToString(initialOrientation));
-                dataFileWriter.writeToFile("Initial_Orientation", "initHeading: " + initialHeading);
+                dataFileWriter.writeToFile("Initial_Orientation", "init_Gravity: " + Arrays.toString(currGravity));
+                dataFileWriter.writeToFile("Initial_Orientation", "init_Mag: " + Arrays.toString(currMag));
+                dataFileWriter.writeToFile("Initial_Orientation", "mag_Bias: " + Arrays.toString(magBias));
+                dataFileWriter.writeToFile("Initial_Orientation", "gyro_Bias: " + Arrays.toString(gyroBias));
+                dataFileWriter.writeToFile("Initial_Orientation", "init_Orientation: " + Arrays.deepToString(initialOrientation));
+                dataFileWriter.writeToFile("Initial_Orientation", "init_Heading: " + initialHeading);
 
                 Log.d("init_heading", "" + initialHeading);
 
@@ -335,7 +336,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     public void onSensorChanged(SensorEvent event) {
 
         if(firstRun) {
-            startingTime = event.timestamp;
+            startTime = event.timestamp;
             firstRun = false;
         }
 
@@ -349,15 +350,14 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         }
 
         if (isRunning) {
-            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
+            if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+                ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataFileWriter.writeToFile("Gravity", dataValues);
+            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD || event.sensor.getType() ==
                     Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
 
-                float[][] magOrientation = MagneticFieldOrientation.calcOrientation(currGravity, currMag, magBias);
-                magHeading = (float)Math.atan2(magOrientation[1][0], magOrientation[0][0]);
-
-                //shifting heading by pi/2 to get 0 to align w/ North instead of West
-                magHeading = ExtraFunctions.polarShiftMinusHalfPI(magHeading);
-                magHeading = -magHeading; //switching from clockwise to counter-clockwise
+                magHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
 
                 Log.d("mag_heading", "" + magHeading);
 
@@ -366,16 +366,16 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                         event.values[0], event.values[1], event.values[2],
                         magBias[0], magBias[1], magBias[2]
                 );
-                dataValues.add(0, (float)(event.timestamp - startingTime));
-                dataValues.add(gyroHeading);
+                dataValues.add(0, (float)(event.timestamp - startTime));
+                dataValues.add(magHeading);
                 dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", dataValues);
 
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE ||
                     event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-                float[] deltaOrientation = gyroIntegration.getIntegratedValues(event.timestamp, event.values);
+                float[] deltaOrientation = gyroscopeDeltaOrientation.calcDeltaOrientation(event.timestamp, event.values);
 
-                gyroHeading = gyroscopeEulerOrientation.getCurrentHeading(deltaOrientation);
+                gyroHeading = gyroscopeEulerOrientation.getHeading(deltaOrientation);
                 gyroHeading += initialHeading;
 
                 Log.d("gyro_heading", "" + gyroHeading);
@@ -385,15 +385,17 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                         event.values[0], event.values[1], event.values[2],
                         gyroBias[0], gyroBias[1], gyroBias[2]
                 );
-                dataValues.add(0, (float)(event.timestamp - startingTime));
+                dataValues.add(0, (float)(event.timestamp - startTime));
                 dataValues.add(gyroHeading);
                 dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
 
             } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-                float norm = (float) Math.sqrt(Math.pow(event.values[0], 2) +
-                        Math.pow(event.values[1], 2) +
-                        Math.pow(event.values[2], 2));
+                float norm = ExtraFunctions.calcNorm(
+                        event.values[0] +
+                        event.values[1] +
+                        event.values[2]
+                );
 
                 //if step is found, findStep == true
                 boolean stepFound = dynamicStepCounter.findStep(norm);
@@ -402,7 +404,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
                     //saving linear acceleration data
                     ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
-                    dataValues.add(0, (float)(event.timestamp - startingTime));
+                    dataValues.add(0, (float)(event.timestamp - startTime));
                     dataValues.add(1f);
                     dataFileWriter.writeToFile("Linear_Acceleration", dataValues);
 
@@ -429,8 +431,9 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                     dataFileWriter.writeToFile("XY_Data_Set",
                             weeksGPS,
                             secondsGPS,
-                            (event.timestamp - startingTime),
+                            (event.timestamp - startTime),
                             strideLength,
+                            magHeading,
                             gyroHeading,
                             oPointX,
                             oPointY,
@@ -478,8 +481,9 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                     dataFileWriter.writeToFile("XY_Data_Set",
                             weeksGPS,
                             secondsGPS,
-                            (event.timestamp - startingTime),
+                            (event.timestamp - startTime),
                             strideLength,
+                            magHeading,
                             gyroHeading,
                             oPointX,
                             oPointY,
@@ -498,8 +502,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     @Override
     public void onLocationChanged(Location location) {
         long GPSTimeSec = location.getTime() / 1000;
-        weeksGPS = GPSTimeSec / SECONDS_PER_WEEK;
-        secondsGPS = GPSTimeSec % SECONDS_PER_WEEK;
+        weeksGPS = GPSTimeSec / GPS_SECONDS_PER_WEEK;
+        secondsGPS = GPSTimeSec % GPS_SECONDS_PER_WEEK;
     }
 
     @Override

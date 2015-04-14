@@ -28,17 +28,25 @@ public class MagCalibrationDialogFragment extends DialogFragment implements Sens
 
     private DataFileWriter dataFileWriter;
     private static final String FOLDER_NAME = "Dead_Reckoning/Calibration_Fragment";
-    private static final String[] DATA_FILE_NAMES = {"Magnetic_Field_Uncalibrated"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;uMx;uMy;uMz;xBias;yBias;zBias;"};
-
-    private boolean isRunning;
+    private static final String[] DATA_FILE_NAMES = {
+            "Magnetic_Field_Uncalibrated"
+    };
+    private static final String[] DATA_FILE_HEADINGS = {
+            "Magnetic_Field_Uncalibrated"+ "\n" + "t;uMx;uMy;uMz;xBiasHardIron;yBiasHardIron;zBiasHardIron"
+    };
 
     private Sensor sensorMagneticField;
     private SensorManager sensorManager;
 
+    private Handler handler;
+
     private MagneticFieldBias magneticFieldBias;
 
-    private Handler handler;
+    private long startTime;
+    private boolean firstRun;
+    private boolean isRunning;
+
+
 
     public void setHandler(Handler handler) {
         this.handler = handler;
@@ -47,13 +55,17 @@ public class MagCalibrationDialogFragment extends DialogFragment implements Sens
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
+        startTime = 0;
+        firstRun = true;
+        isRunning = false;
+
+        magneticFieldBias = new MagneticFieldBias();
+
         try {
             dataFileWriter = new DataFileWriter(FOLDER_NAME, ExtraFunctions.arrayToList(DATA_FILE_NAMES), ExtraFunctions.arrayToList(DATA_FILE_HEADINGS));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        magneticFieldBias = new MagneticFieldBias();
 
         sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
@@ -101,15 +113,17 @@ public class MagCalibrationDialogFragment extends DialogFragment implements Sens
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        if (firstRun) {
+            startTime = event.timestamp;
+            firstRun = false;
+        }
+
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
-
-            float[] magValues = {event.values[0], event.values[1], event.values[2]};
-
-            magneticFieldBias.calcBias(magValues);
+            magneticFieldBias.calcBias(event.values);
 
             //storing data to file
-            ArrayList<Float> dataValues = ExtraFunctions.arrayToList(magValues);
-            dataValues.add(0, (float) event.timestamp);
+            ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+            dataValues.add(0, (float) (event.timestamp - startTime));
             dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", dataValues);
         }
 

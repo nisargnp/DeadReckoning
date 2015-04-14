@@ -15,7 +15,7 @@ import android.widget.TextView;
 import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.bias.GyroscopeBias;
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
-import nisargpatel.deadreckoning.orientation.GyroIntegration;
+import nisargpatel.deadreckoning.orientation.GyroscopeDeltaOrientation;
 import nisargpatel.deadreckoning.orientation.GyroscopeEulerOrientation;
 import nisargpatel.deadreckoning.orientation.MagneticFieldOrientation;
 
@@ -25,9 +25,13 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     private static final float GYROSCOPE_SENSITIVITY = 0f;
 
     private GyroscopeBias gyroUBias;
-    private GyroscopeEulerOrientation gyroUOrientation;
-    private GyroIntegration gyroCIntegration;
-    private GyroIntegration gyroUIntegration;
+
+    //todo: remove one of these after debugging
+    private GyroscopeEulerOrientation gyroUOrientation1;
+    private GyroscopeEulerOrientation gyroUOrientation2;
+
+    private GyroscopeDeltaOrientation gyroCIntegration;
+    private GyroscopeDeltaOrientation gyroUIntegration;
 
     private Sensor sensorGyroC; //gyroscope Android-calibrated
     private Sensor sensorGyroU; //gyroscope uncalibrated (manually calibrated)
@@ -47,7 +51,11 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     private double gyroHeading;
     private double gyroHeadingU;
 
-    private double eulerHeading;
+    //todo: remove two of these after debugging
+    private double eulerHeading1;
+    private double eulerHeading2;
+    private double eulerHeading3;
+
     private double magHeading;
 
     private float[] gravityValues;
@@ -57,18 +65,31 @@ public class HeadingActivity extends Activity implements SensorEventListener{
 
     private double initialHeading;
 
+    int gravityCount;
+    int magCount;
+    float[] sumGravityValues;
+    float[] sumMagValues;
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_heading);
 
+        gravityCount = magCount = 0;
+        sumGravityValues = new float[3];
+        sumMagValues = new float[3];
+
         gyroUBias = new GyroscopeBias(300);
-        gyroCIntegration = new GyroIntegration(GYROSCOPE_SENSITIVITY, new float[3]);
-        gyroUIntegration = new GyroIntegration(EULER_GYROSCOPE_SENSITIVITY, null);
+        gyroCIntegration = new GyroscopeDeltaOrientation(GYROSCOPE_SENSITIVITY, new float[3]);
+        gyroUIntegration = new GyroscopeDeltaOrientation(EULER_GYROSCOPE_SENSITIVITY, null);
 
         gyroHeading = 0;
-        gyroHeading = 0;
+        gyroHeadingU = 0;
+        eulerHeading1 = 0;
+        eulerHeading2 = 0;
+        eulerHeading3 = 0;
+        magHeading = 0;
 
         textDirectionCosine = (TextView) findViewById(R.id.textDirectionCosine);
         textGyroU = (TextView) findViewById(R.id.textGyroscopeU);
@@ -95,13 +116,22 @@ public class HeadingActivity extends Activity implements SensorEventListener{
             @Override
             public void onClick(View v) {
 
-                float[][] initialOrientation = MagneticFieldOrientation.calcOrientation(gravityValues, magValues, new float[3]);
+//                for (int i = 0; i < 3; i++) {
+//                    sumGravityValues[i] = sumGravityValues[i] / gravityCount;
+//                    sumMagValues[i] = sumMagValues[i] / magCount;
+//                }
+//
+//                Log.d("initial", Arrays.toString(sumGravityValues));
+//                Log.d("initial", Arrays.toString(sumMagValues));
+//
+//                initialOrientation = MagneticFieldOrientation.getOrientationMatrix(sumGravityValues, sumMagValues, new float[3]);
 
-                gyroUOrientation = new GyroscopeEulerOrientation(initialOrientation);
-                //gyroUOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+                float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(gravityValues, magValues, new float[3]);
 
-                initialHeading = ExtraFunctions.polarShiftMinusHalfPI(Math.atan2(initialOrientation[1][0], initialOrientation[0][0]));
-                initialHeading = -initialHeading;
+                initialHeading = MagneticFieldOrientation.getHeading(gravityValues, magValues, new float[3]);
+
+                gyroUOrientation1 = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+                gyroUOrientation2 = new GyroscopeEulerOrientation(initialOrientation);
 
                 buttonStart.setEnabled(false);
                 buttonStop.setEnabled(true);
@@ -129,7 +159,7 @@ public class HeadingActivity extends Activity implements SensorEventListener{
                 textMagneticField.setText("0");
                 textComplimentaryFilter.setText("0");
 
-                gyroUOrientation.clearMatrix();
+                //gyroUOrientation1.clearMatrix();
 
                 gyroHeading = 0;
                 gyroHeadingU = 0;
@@ -164,57 +194,76 @@ public class HeadingActivity extends Activity implements SensorEventListener{
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
+
+
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if (event.sensor.getType() == Sensor.TYPE_GRAVITY)
+        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
             gravityValues = event.values;
-        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+
+            gravityCount++;
+            for (int i = 0; i < 3; i++)
+                sumGravityValues[i] += gravityValues[i];
+
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             magValues = event.values;
+
+            magCount++;
+            for (int i = 0; i < 3; i++)
+                sumMagValues[i] += magValues[i];
+
+        }
 
         if (isRunning) {
 
             if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-                float[] deltaOrientation = gyroCIntegration.getIntegratedValues(event.timestamp, event.values);
+                float[] deltaOrientation = gyroCIntegration.calcDeltaOrientation(event.timestamp, event.values);
                 gyroHeading += deltaOrientation[2];
                 double gyroHeadingDegrees = ExtraFunctions.radsToDegrees(gyroHeading);
-                textGyroC.setText(String.valueOf(gyroHeadingDegrees));
+//                textGyroC.setText(String.valueOf(gyroHeadingDegrees));
 
             } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
+                //if biases are calculated
                 if (gyroUBias.calcBias(event.values)) {
 
+                    //set the biases
                     gyroUIntegration.setBias(gyroUBias.getBias());
 
-                    float[] deltaOrientation = gyroUIntegration.getIntegratedValues(event.timestamp, event.values);
+                    float[] deltaOrientation = gyroUIntegration.calcDeltaOrientation(event.timestamp, event.values);
 
                     //rotation about z
                     gyroHeadingU += deltaOrientation[2];
                     double gyroHeadingUDegrees = ExtraFunctions.radsToDegrees(gyroHeadingU);
-                    textGyroU.setText(String.valueOf(gyroHeadingUDegrees));
+//                    textGyroU.setText(String.valueOf(gyroHeadingUDegrees));
 
                     //direction cosine matrix
-                    eulerHeading = gyroUOrientation.getCurrentHeading(deltaOrientation);
-                    //eulerHeading = ExtraFunctions.polarAdd(initialHeading, eulerHeading);
+                    eulerHeading1 = gyroUOrientation1.getHeading(deltaOrientation); //identity
+                    eulerHeading2 = gyroUOrientation2.getHeading(deltaOrientation); //initial orientation
+                    eulerHeading3 = ExtraFunctions.polarAdd(initialHeading, eulerHeading1); //initial heading + identity heading
 
-                    textDirectionCosine.setText(String.valueOf(eulerHeading));
+                    textDirectionCosine.setText(String.valueOf(eulerHeading3));
+
+                    ((TextView)findViewById(R.id.textView)).setText("Non-Initialized DCM");
+                    textGyroU.setText(String.valueOf(eulerHeading1));
+
+                    ((TextView)findViewById(R.id.textView6)).setText("Initialized DCM");
+                    textGyroC.setText(String.valueOf(eulerHeading2));
 
                 }
 
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
 
-                float[][] rotationMatrix = MagneticFieldOrientation.calcOrientation(gravityValues, magValues, new float[3]);
-
-                magHeading = Math.atan2(rotationMatrix[1][0], rotationMatrix[0][0]);
-
-                magHeading = ExtraFunctions.polarShiftMinusHalfPI(magHeading);
-                magHeading = -magHeading;
-                textMagneticField.setText(String.valueOf(String.valueOf(magHeading)));
+                magHeading = MagneticFieldOrientation.getHeading(gravityValues, magValues, new float[3]);
+                textMagneticField.setText(String.valueOf(magHeading));
 
             }
 
-            double compHeading = ExtraFunctions.calcCompHeading(magHeading, eulerHeading);
+            double compHeading = ExtraFunctions.calcCompHeading(magHeading, eulerHeading3);
             textComplimentaryFilter.setText(String.valueOf(compHeading));
 
         }

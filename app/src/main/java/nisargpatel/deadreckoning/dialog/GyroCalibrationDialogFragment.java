@@ -30,19 +30,24 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
 
     private DataFileWriter dataFileWriter;
     private static final String FOLDER_NAME = "Dead_Reckoning/Calibration_Fragment";
-    private static final String[] DATA_FILE_NAMES = {"Gyroscope_Uncalibrated"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;uGx;uGy;uGz;"};
+    private static final String[] DATA_FILE_NAMES = {
+            "Gyroscope_Uncalibrated"
+    };
+    private static final String[] DATA_FILE_HEADINGS = {
+            "Gyroscope_Uncalibrated" + "\n" + "t;uGx;uGy;uGz;xDrift;yDrift;zDrift"
+    };
 
     private Sensor sensorGyroscopeU;
     private SensorManager sensorManager;
 
-    private GyroscopeBias gyroscopeBias;
-
     private ProgressDialog progressDialog;
-
     private Handler handler;
 
+    private GyroscopeBias gyroscopeBias;
+
     private int runCount;
+    private long startTime;
+    private boolean firstRun;
 
     public void setHandler(Handler handler) {
         this.handler = handler;
@@ -51,15 +56,19 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
+        runCount = 0;
+        startTime = 0;
+        firstRun = true;
+
         try {
             dataFileWriter = new DataFileWriter(FOLDER_NAME, ExtraFunctions.arrayToList(DATA_FILE_NAMES), ExtraFunctions.arrayToList(DATA_FILE_HEADINGS));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        runCount = 0;
 
-        gyroscopeBias = new GyroscopeBias(500);
+
+        gyroscopeBias = new GyroscopeBias(600);
 
         progressDialog = new ProgressDialog(getActivity());
 
@@ -102,24 +111,32 @@ public class GyroCalibrationDialogFragment extends DialogFragment implements Sen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
+        if (firstRun) {
+            startTime = event.timestamp;
+            firstRun = false;
+        }
+
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
 
-            //waiting a while so that the button press doesn't effect the calibration
+            //waiting so that the button press doesn't effect the calibration
             if (runCount++ > WAIT_COUNTER) {
 
-                double norm = Math.sqrt(Math.pow(event.values[0], 2) + Math.pow(event.values[1], 2) + Math.pow(event.values[2], 2));
+                double norm = ExtraFunctions.calcNorm(
+                        event.values[0] +
+                        event.values[1] +
+                        event.values[2]
+                );
 
-                //applying a quick low pass filter (the values should be small since the phone is not moving during calibration)
+                //applying a quick low pass filter
+                //the values should be small since the phone is not moving during calibration
                 if (Math.abs(event.values[0]) < norm && Math.abs(event.values[1]) < norm && Math.abs(event.values[2]) < norm)
                     if (gyroscopeBias.calcBias(event.values)) {
                         dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Calculated_bias: " + Arrays.toString(gyroscopeBias.getBias()));
                         dismissDialog();
                     } else {
                         //saving gyroscope data
-                        float[] gyroValues = {event.values[0], event.values[1], event.values[2]};
-                        ArrayList<Float> dataValues = ExtraFunctions.arrayToList(gyroValues);
-                        dataValues.add(0, (float) event.timestamp);
-
+                        ArrayList<Float> dataValues = ExtraFunctions.arrayToList(event.values);
+                        dataValues.add(0, (float) (event.timestamp - startTime));
                         dataFileWriter.writeToFile("Gyroscope_Uncalibrated", dataValues);
                     }
 

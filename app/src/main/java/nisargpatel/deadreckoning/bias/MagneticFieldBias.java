@@ -48,20 +48,21 @@ public class MagneticFieldBias {
     private double[][] XTX; //X-Transposed * X is a 4x4 matrix
     private double[][] XTY; //X_Transposed * Y is a 4x1 vector (stored in a matrix for easier manipulation)
 
+    boolean firstRun;
+
+    float reserveX, reserveY, reserveZ;
+
     public MagneticFieldBias() {
         firstRun = true;
         XTX = new double[4][4];
         XTY = new double[4][1];
     }
 
-    boolean firstRun;
-
-    float reserveX, reserveY, reserveZ;
-
     public void calcBias(float[] rawMagneticValues) {
 
         float x, y, z;
 
+        //TODO: figure out if reserve values are needed
         //the bias is calculated by n-l values instead of n values (according to the paper)
         //so the following if keeps the latest set of values n reserve
         if (firstRun) {

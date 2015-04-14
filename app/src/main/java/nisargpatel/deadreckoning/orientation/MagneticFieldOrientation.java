@@ -8,7 +8,7 @@ public final class MagneticFieldOrientation {
 
     private MagneticFieldOrientation() {}
 
-    public static float[][] calcOrientation(float[] G_values, float[] M_values, float[] M_bias) {
+    public static float[][] getOrientationMatrix(float[] G_values, float[] M_values, float[] M_bias) {
 
         //G = Gyroscope, M = Magnetic Field
         //m = matrix
@@ -36,16 +36,29 @@ public final class MagneticFieldOrientation {
         //calc heading (rads) from rotated magnetic field
         double h = Math.atan2(-m_M_rp.get(1), m_M_rp.get(0));
 
-        double[][] R_h = {{Math.cos(h), Math.sin(h), 0},
-                          {-Math.sin(h), Math.cos(h), 0},
-                          {0, 0, 1}};
+        //rotation matrix representing heading, is negative when moving East of North
+        double[][] R_h = {{Math.cos(h), -Math.sin(h), 0},
+                          {Math.sin(h),  Math.cos(h), 0},
+                          {0,            0,           1}};
 
         //calc complete (initial) rotation matrix by multiplying roll/pitch matrix with heading matrix
         SimpleMatrix m_R_h = new SimpleMatrix(R_h);
         SimpleMatrix m_R = m_R_rp.mult(m_R_h);
 
+        //rotate heading by minus pi/2, so that heading == 0 corresponds with North
+        double[][] R_yx = {{0.0, -1.0, 0.0},
+                           {1.0,  0.0, 0.0},
+                           {0.0,  0.0, 0.0}};
+        SimpleMatrix m_R_yx = new SimpleMatrix(R_yx);
+        m_R = m_R_yx.mult(m_R);
+
         return ExtraFunctions.denseMatrixToArray(m_R.getMatrix());
 
+    }
+
+    public static float getHeading(float[] G_values, float[] M_values, float[] M_bias) {
+        float[][] orientationMatrix = getOrientationMatrix(G_values, M_values, M_bias);
+        return (float) Math.atan2(orientationMatrix[1][0], orientationMatrix[0][0]);
     }
 
     private static double[] removeBias(float[] M_init, float[] M_bias) {

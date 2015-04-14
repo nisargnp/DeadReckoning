@@ -85,6 +85,7 @@ public class UserListActivity extends FragmentActivity{
 
                 AccessUserDialogFragment accessUserDialog = new AccessUserDialogFragment();
 
+                //todo: change this to bundle
                 accessUserDialog.setUserName(userList.get(position));
                 accessUserDialog.setStrideLength(strideList.get(position));
 

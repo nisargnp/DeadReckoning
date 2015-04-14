@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.dialog.StepInfoDialogFragment;
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 import nisargpatel.deadreckoning.stepcounting.StaticStepCounter;
 
@@ -173,9 +174,11 @@ public class StepCountActivity extends Activity implements SensorEventListener{
             }
         } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-            final Double norm = Math.sqrt(Math.pow(event.values[0], 2) +
-                    Math.pow(event.values[1], 2) +
-                    Math.pow(event.values[2], 2));
+            final double norm = ExtraFunctions.calcNorm(
+                    event.values[0] +
+                    event.values[1] +
+                    event.values[2]
+            );
 
             //display the instantaneous acceleration to let the user know the step counter is working
             textInstantAcc.setText(String.valueOf(norm).substring(0, 5));

@@ -168,13 +168,13 @@ public final class ExtraFunctions {
         return list;
     }
 
-    public static float polarShiftMinusHalfPI(double heading) {
-        if (heading < -Math.PI / 2.0 && heading > -Math.PI)
-            heading += 3 * Math.PI / 2.0;
-        else
-            heading -= Math.PI / 2.0;
-        return (float)heading;
-    }
+//    public static float polarShiftMinusHalfPI(double heading) {
+//        if (heading < -Math.PI / 2.0 && heading > -Math.PI)
+//            heading += 3 * Math.PI / 2.0;
+//        else
+//            heading -= Math.PI / 2.0;
+//        return (float)heading;
+//    }
 
     public static float radsToDegrees(double rads) {
         double degrees = (rads < 0) ? (2.0 * Math.PI + rads) : rads;
@@ -213,6 +213,13 @@ public final class ExtraFunctions {
 
         return (float)compHeading;
 
+    }
+
+    public static float calcNorm(double... args) {
+        double sumSq = 0;
+        for (double arg : args)
+            sumSq += Math.pow(arg, 2);
+        return (float)Math.sqrt(sumSq);
     }
 
 }

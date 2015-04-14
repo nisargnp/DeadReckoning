@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.dialog.StepCalibrationDialogFragment;
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
 import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 
 public class StepCalibrationActivity extends Activity implements SensorEventListener {
@@ -175,7 +176,11 @@ public class StepCalibrationActivity extends Activity implements SensorEventList
             }
         } else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-            double norm = Math.sqrt(Math.pow(event.values[0], 2) + Math.pow(event.values[1], 2) + Math.pow(event.values[2], 2));
+            float norm = ExtraFunctions.calcNorm(
+                    event.values[0] +
+                    event.values[1] +
+                    event.values[2]
+            );
 
             textInstantAcc.setText(String.valueOf(event.values[2]).substring(0, 5));
 

@@ -112,7 +112,7 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
     private Intent addExtras(Intent myIntent) {
 
         myIntent.putExtra("user_name", getArguments().getString("user_name", "unknown"));
-        myIntent.putExtra("stride_length", getArguments().getDouble("stride_length", 2.5));
+        myIntent.putExtra("stride_length", getArguments().getFloat("stride_length", 2.5f));
         myIntent.putExtra("preferred_step_counter", getArguments().getString("preferred_step_counter", "default"));
         myIntent.putExtra("step_detector", getArguments().getBoolean("step_detector", false));
 

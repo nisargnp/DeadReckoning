@@ -23,35 +23,44 @@ import nisargpatel.deadreckoning.filewriting.DataFileWriter;
 public class DataCollectActivity extends Activity implements SensorEventListener{
 
     private static final String FOLDER_NAME = "Dead_Reckoning/Data_Collect_Activity";
-    private static final String[] DATA_FILE_NAMES = {"Accelerometer", "Linear_Acceleration", "Gyroscope_Calibrated",
-            "Gyroscope_Uncalibrated", "Magnetic_Field", "Magnetic_Field_Uncalibrated", "Gravity", "Rotation_Matrix"};
-    private static final String[] DATA_FILE_HEADINGS = {"t;Ax;Ay;Az;",
-                                                        "t;LAx;LAy;LAz;",
-                                                        "t;Gx;Gy;Gz;",
-                                                        "t;uGx;uGy;uGz;xDriftAndroid;yDriftAndroid;zDriftAndroid;",
-                                                        "t;Mx;My;Mz;",
-                                                        "t;uMx;uMy;uMz;xDriftAndroid;yDriftAndroid;zDriftAndroid;",
-                                                        "t;gx;gy;gz;",
-                                                        "t;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3);"};
-
-    DataFileWriter dataFileWriter;
+    private static final String[] DATA_FILE_NAMES = {
+            "Accelerometer",
+            "Linear_Acceleration",
+            "Gyroscope_Calibrated",
+            "Gyroscope_Uncalibrated",
+            "Magnetic_Field",
+            "Magnetic_Field_Uncalibrated",
+            "Gravity",
+            "Rotation_Matrix"
+    };
+    private static final String[] DATA_FILE_HEADINGS = {
+            "Accelerometer" + "\n" + "t;Ax;Ay;Az",
+            "Linear_Acceleration" + "\n" + "t;Ax;Ay;Az",
+            "Gyroscope_Calibrated" + "\n" + "t;Gx;Gy;Gz",
+            "Gyroscope_Uncalibrated" + "\n" + "t;uGx;uGy;uGz;xDrift;yDrift;zDrift",
+            "Magnetic_Field" + "\n" + "t;Mx;My;Mz",
+            "Magnetic_Field_Uncalibrated" + "\n" + "t;uMx;uMy;uMz;xHardIronBias;yHardIronBias;zHardIronBias",
+            "Gravity" + "\n" + "t;gx;gy;gz",
+            "Rotation_Matrix" + "\n" + "t;(1,1);(1,2);(1,3);(2,1);(2,2);(2,3);(3,1);(3,2);(3,3)"
+    };
 
     private TextView info;
-
-    private Sensor[] sensors;
-
-    private SensorManager sensorManager;
-
-    private float[] rotationMatrix;
-
-    private boolean gotAccData, gotMagData;
-    private float[] accData, magData;
-
-    private boolean wasRunning;
-
     private Button buttonStart;
     private Button buttonPause;
     private Button buttonStop;
+
+    private Sensor[] sensors;
+    private SensorManager sensorManager;
+
+    private DataFileWriter dataFileWriter;
+
+    private float[] rotationMatrix;
+    private float[] accData, magData;
+
+    private long startTime;
+    private boolean firstRun;
+    private boolean gotAccData, gotMagData;
+    private boolean wasRunning;
 
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -60,6 +69,8 @@ public class DataCollectActivity extends Activity implements SensorEventListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data_collect);
 
+        startTime = 0;
+        firstRun = true;
         gotAccData = gotMagData = false;
         wasRunning = false;
 
@@ -168,10 +179,13 @@ public class DataCollectActivity extends Activity implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        float time  = ExtraFunctions.nsToSec(event.timestamp);
+        if (firstRun) {
+            startTime = event.timestamp;
+            firstRun = false;
+        }
 
         ArrayList<Float> sensorValuesList = ExtraFunctions.arrayToList(event.values);
-        sensorValuesList.add(0, time);
+        sensorValuesList.add(0, (float)(event.timestamp - startTime));
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
@@ -206,7 +220,7 @@ public class DataCollectActivity extends Activity implements SensorEventListener
             SensorManager.getRotationMatrix(rotationMatrix, null, accData, magData);
 
             ArrayList<Float> rotationMatrixList = ExtraFunctions.arrayToList(rotationMatrix);
-            rotationMatrixList.add(0, time);
+            rotationMatrixList.add(0, (float)(event.timestamp - startTime));
             dataFileWriter.writeToFile("Rotation_Matrix", rotationMatrixList);
 
             gotAccData = gotMagData = false;
