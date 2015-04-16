@@ -67,6 +67,30 @@ public final class ExtraFunctions {
 
     }
 
+    public static float[] multiplyMatrices(float[][] a, float[] b) {
+
+        //numRows = aRows
+        int numRows = a.length;
+
+        //numCols = aCols
+        int numCols = a[0].length;
+
+        //numElements = (aCols == bRows)
+        //int numElements = b.length;
+
+        float[] c = new float[numRows];
+
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numCols; col++) {
+                c[row] += a[row][col] * b[col];
+            }
+        }
+
+        //a[][] * b[] = c[]
+        return c;
+
+    }
+
     public static float[][] addMatrices(float[][] a, float[][] b) {
 
         int numRows = a.length;

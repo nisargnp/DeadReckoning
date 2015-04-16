@@ -9,6 +9,15 @@ public class GyroscopeEulerOrientation {
 
     private float[][] C;
 
+    //NEU rotation
+    private float[][] rotationNEU= {{0,1,0},
+                                    {1,0,0},
+                                    {0,0,-1}};
+//    Android Sensor X --> INS Y
+//    Android Sensor Y --> INS X
+//    Android Sensor -Z --> INS Z
+
+
     public GyroscopeEulerOrientation() {
         C = ExtraFunctions.IDENTITY_MATRIX.clone();
     }
@@ -19,9 +28,13 @@ public class GyroscopeEulerOrientation {
     }
 
     public float[][] getOrientationMatrix(float[] gyroValues) {
-        float wX = gyroValues[0];
-        float wY = gyroValues[1];
-        float wZ = gyroValues[2];
+//        float wX = gyroValues[0];
+//        float wY = gyroValues[1];
+//        float wZ = gyroValues[2];
+
+        float wX = gyroValues[1];
+        float wY = gyroValues[0];
+        float wZ = -gyroValues[2];
 
         float[][] A = calcMatrixA(wX, wY, wZ);
 

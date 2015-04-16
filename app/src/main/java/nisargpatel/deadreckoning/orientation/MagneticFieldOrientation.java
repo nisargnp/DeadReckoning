@@ -8,11 +8,18 @@ public final class MagneticFieldOrientation {
 
     private MagneticFieldOrientation() {}
 
+    private static float[][] rotationNEU= {{0,1,0},
+                                           {1,0,0},
+                                           {0,0,-1}};
+
     public static float[][] getOrientationMatrix(float[] G_values, float[] M_values, float[] M_bias) {
 
         //G = Gyroscope, M = Magnetic Field
         //m = matrix
         //where r = roll, p = pitch, h = heading (yaw)
+
+        M_values = ExtraFunctions.multiplyMatrices(rotationNEU, M_values);
+        M_bias = ExtraFunctions.multiplyMatrices(rotationNEU, M_bias);
 
         //calculate roll and pitch from gravity
         double G_r = Math.atan2(G_values[1], G_values[2]);
