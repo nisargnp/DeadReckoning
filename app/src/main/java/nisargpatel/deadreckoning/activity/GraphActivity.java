@@ -411,15 +411,15 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                     //complimentary filter
                     float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
 
-                    Log.d("comp_heading", "" + compHeading);
+                    //Log.d("comp_heading", "" + compHeading);
 
                     //getting and rotating the previous XY points so North 0 on unit circle
                     float oPointX = scatterPlot.getLastYPoint();
                     float oPointY = -scatterPlot.getLastXPoint();
 
                     //calculating XY points from heading and stride_length
-                    oPointX += ExtraFunctions.getXFromPolar(strideLength, compHeading);
-                    oPointY += ExtraFunctions.getYFromPolar(strideLength, compHeading);
+                    oPointX += ExtraFunctions.getXFromPolar(strideLength, gyroHeading);
+                    oPointY += ExtraFunctions.getYFromPolar(strideLength, gyroHeading);
 
                     //rotating points by 90 degrees, so north is up
                     float rPointX = -oPointY;
@@ -461,15 +461,15 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                     //complimentary filter
                     float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
 
-                    Log.d("comp_heading", "" + compHeading);
+                    //Log.d("comp_heading", "" + compHeading);
 
                     //getting and rotating the previous XY points so North 0 on unit circle
                     float oPointX = scatterPlot.getLastYPoint();
                     float oPointY = -scatterPlot.getLastXPoint();
 
                     //calculating XY points from heading and stride_length
-                    oPointX += ExtraFunctions.getXFromPolar(strideLength, compHeading);
-                    oPointY += ExtraFunctions.getYFromPolar(strideLength, compHeading);
+                    oPointX += ExtraFunctions.getXFromPolar(strideLength, gyroHeading);
+                    oPointY += ExtraFunctions.getYFromPolar(strideLength, gyroHeading);
 
                     //rotating points by 90 degrees, so north is up
                     float rPointX = -oPointY;

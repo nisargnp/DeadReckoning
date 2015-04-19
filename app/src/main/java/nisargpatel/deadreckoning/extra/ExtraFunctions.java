@@ -67,29 +67,29 @@ public final class ExtraFunctions {
 
     }
 
-    public static float[] multiplyMatrices(float[][] a, float[] b) {
-
-        //numRows = aRows
-        int numRows = a.length;
-
-        //numCols = aCols
-        int numCols = a[0].length;
-
-        //numElements = (aCols == bRows)
-        //int numElements = b.length;
-
-        float[] c = new float[numRows];
-
-        for (int row = 0; row < numRows; row++) {
-            for (int col = 0; col < numCols; col++) {
-                c[row] += a[row][col] * b[col];
-            }
-        }
-
-        //a[][] * b[] = c[]
-        return c;
-
-    }
+//    public static float[] multiplyMatrices(double[][] a, double[] b) {
+//
+//        //numRows = aRows
+//        int numRows = a.length;
+//
+//        //numCols = aCols
+//        int numCols = a[0].length;
+//
+//        //numElements = (aCols == bRows)
+//        //int numElements = b.length;
+//
+//        float[] c = new float[numRows];
+//
+//        for (int row = 0; row < numRows; row++) {
+//            for (int col = 0; col < numCols; col++) {
+//                c[row] += a[row][col] * b[col];
+//            }
+//        }
+//
+//        //a[][] * b[] = c[]
+//        return c;
+//
+//    }
 
     public static float[][] addMatrices(float[][] a, float[][] b) {
 
@@ -157,21 +157,21 @@ public final class ExtraFunctions {
         return dynamicList;
     }
 
-    public static String[][] floatArrayToStringArray(float[][] floatArray) {
-        String[][] stringArray = new String[floatArray.length][floatArray[0].length];
-        for (int row = 0; row < floatArray.length; row++)
-            for (int col = 0; col < floatArray[0].length; col++)
-                stringArray[row][col] = String.valueOf(floatArray[row][col]);
-        return stringArray;
-    }
+//    public static String[][] floatArrayToStringArray(float[][] floatArray) {
+//        String[][] stringArray = new String[floatArray.length][floatArray[0].length];
+//        for (int row = 0; row < floatArray.length; row++)
+//            for (int col = 0; col < floatArray[0].length; col++)
+//                stringArray[row][col] = String.valueOf(floatArray[row][col]);
+//        return stringArray;
+//    }
 
-    public static float[][] stringArrayToFloatArray(String[][] stringArray) {
-        float[][] floatArray = new float[stringArray.length][stringArray[0].length];
-        for (int row = 0; row < stringArray.length; row++)
-            for (int col = 0; col < stringArray[0].length; col++)
-                floatArray[row][col] = Float.parseFloat(stringArray[row][col]);
-        return floatArray;
-    }
+//    public static float[][] stringArrayToFloatArray(String[][] stringArray) {
+//        float[][] floatArray = new float[stringArray.length][stringArray[0].length];
+//        for (int row = 0; row < stringArray.length; row++)
+//            for (int col = 0; col < stringArray[0].length; col++)
+//                floatArray[row][col] = Float.parseFloat(stringArray[row][col]);
+//        return floatArray;
+//    }
 
     public static float[][] denseMatrixToArray(DenseMatrix64F matrix) {
         float array[][] = new float[matrix.getNumRows()][matrix.getNumCols()];
@@ -246,5 +246,18 @@ public final class ExtraFunctions {
         return (float)Math.sqrt(sumSq);
     }
 
-}
+    public static double[] floatVectorToDoubleVector(float[] floatValues) {
+        double[] doubleValues = new double[floatValues.length];
+        for (int i = 0; i < floatValues.length; i++)
+            doubleValues[i] = floatValues[i];
+        return doubleValues;
+    }
 
+//    public static double[] matrixToVector(double[][] matrix) {
+//        double[] vector = new double[matrix.length];
+//        for (int i = 0; i < 3; i++)
+//            vector[i] = matrix[i][0];
+//        return vector;
+//    }
+
+}

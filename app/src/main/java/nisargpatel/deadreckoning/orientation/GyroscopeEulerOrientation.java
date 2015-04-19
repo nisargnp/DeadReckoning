@@ -10,9 +10,9 @@ public class GyroscopeEulerOrientation {
     private float[][] C;
 
     //NEU rotation
-    private float[][] rotationNEU= {{0,1,0},
-                                    {1,0,0},
-                                    {0,0,-1}};
+//    private float[][] rotationNEU= {{0,1,0},
+//                                    {1,0,0},
+//                                    {0,0,-1}};
 //    Android Sensor X --> INS Y
 //    Android Sensor Y --> INS X
 //    Android Sensor -Z --> INS Z
@@ -70,9 +70,12 @@ public class GyroscopeEulerOrientation {
     }
 
     private float[][] calcMatrixB(float wX, float wY, float wZ) {
-        return (new float[][]{{0, -wZ, wY},
-                              {wZ, 0, -wX},
-                              {-wY, wX, 0}});
+//        return (new float[][]{{0, -wZ, wY},
+//                              {wZ, 0, -wX},
+//                              {-wY, wX, 0}});
+          return (new float[][]{{0, wZ, -wY},
+                                {-wZ, 0, wX},
+                                {wY, -wX, 0}});
     }
 
     //(sin σ) / σ ≈ 1 - (σ^2 / 3!) + (σ^4 / 5!)
@@ -114,8 +117,8 @@ public class GyroscopeEulerOrientation {
 //
 //    }
 
-    public void clearMatrix() {
-        C = ExtraFunctions.IDENTITY_MATRIX;
-    }
+//    public void clearMatrix() {
+//        C = ExtraFunctions.IDENTITY_MATRIX;
+//    }
 
 }
