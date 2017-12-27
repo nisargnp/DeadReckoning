@@ -13,17 +13,17 @@ Dead Reckoning is an Android app that offers a solution. Using built-in smartpho
 
 **On the phone:**
 <br>
-<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/nexus_6p.png" hspace="20">
+<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/nexus_6p.png" width="50%" height="50%" hspace="20">
 <br>
 
 **Zoomed in:**
 <br>
-<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/dead_reckoning_app.png" hspace="20">
+<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/dead_reckoning_app.png" width="50%" height="50%" hspace="20">
 <br>
 
 **Very zoomed in:**
 <br>
-<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/dead_reckoning_app_zoom.png" hspace="20">
+<img src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/dead_reckoning_app_zoom.png" width="50%" height="50%" hspace="20">
 <br>
 
 **Presentation:**
