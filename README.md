@@ -27,6 +27,8 @@ Dead Reckoning is an Android app that offers a solution. Using built-in smartpho
 <br>
 
 **Presentation:**
-<embed src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/presentation.pdf" width="500" height="375" type='application/pdf'>
-<iframe src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/presentation.pdf" style="width:718px; height:700px;" frameborder="0"></iframe>
-<iframe src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/presentation.pdf" frameborder="0"></iframe>
+<object data="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/presentation.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="https://github.com/nisargnp/DeadReckoning/blob/master/Screenshots/presentation.pdf">
+        This browser does not support PDFs. Please download the PDF to view it: <a href="http://yoursite.com/the.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
