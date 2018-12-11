@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "nisargpatel.deadreckoning"
@@ -20,10 +20,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:21.0.3'
-    compile 'com.android.support:support-v4:21.0.3'
-    compile files('src/libs/achartengine-1.1.0.jar')
-    compile project(':zBarScannerLibrary')
-    compile files('src/libs/EJML-core-0.26.jar')
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    api 'com.android.support:appcompat-v7:21.0.3'
+    api 'com.android.support:support-v4:21.0.3'
+    api files('src/libs/achartengine-1.1.0.jar')
+    api files('src/libs/EJML-core-0.26.jar')
 }

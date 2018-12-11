@@ -55,10 +55,6 @@
             android:theme="@android:style/Theme.Material" >
         </activity>
         <activity
-            android:name="nisargpatel.deadreckoning.activity.QRCodeActivity"
-            android:label="@string/title_activity_qr_code_scanner" >
-        </activity>
-        <activity
             android:name="nisargpatel.deadreckoning.activity.UserListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"

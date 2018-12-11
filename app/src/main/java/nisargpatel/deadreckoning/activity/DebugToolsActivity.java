@@ -38,10 +38,6 @@ public class DebugToolsActivity extends ListActivity {
                 Intent myIntent = new Intent(DebugToolsActivity.this, DataCollectActivity.class);
                 startActivity(myIntent);
                 break;
-            } case 3: { //qr code scanner
-                Intent myIntent = new Intent(DebugToolsActivity.this, QRCodeActivity.class);
-                startActivity(myIntent);
-                break;
             }
         }
 
