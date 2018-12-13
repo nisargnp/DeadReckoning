@@ -2,10 +2,7 @@ package nisargpatel.deadreckoning.activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,7 +19,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -203,11 +199,7 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             @Override
             public void onClick(View v) {
 
-                Log.d("testing", "button press");
-
                 if (!isRunning) {
-
-                    Log.d("testing", "button press -> true");
 
                     isRunning = true;
 
@@ -246,8 +238,6 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
                     fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
 
                 } else {
-
-                    Log.d("testing", "button press -> false");
 
                     firstRun = true;
                     isRunning = false;
