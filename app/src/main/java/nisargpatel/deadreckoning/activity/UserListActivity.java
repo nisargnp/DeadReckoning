@@ -9,7 +9,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +27,7 @@ import nisargpatel.deadreckoning.dialog.SensorCalibrationDialogFragment;
 import nisargpatel.deadreckoning.dialog.UserDetailsDialogFragment;
 import nisargpatel.deadreckoning.extra.ExtraFunctions;
 
-public class UserListActivity extends FragmentActivity{
+public class UserListActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE = 0;
 

@@ -59,7 +59,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Material.Light.DarkActionBar" >
+            android:theme="@style/Theme.AppCompat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -68,7 +68,10 @@
         </activity>
         <activity
             android:name="nisargpatel.deadreckoning.activity.DebugToolsActivity"
-            android:label="@string/title_activity_debug_tools" >
+            android:label="@string/title_activity_debug_tools"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material">
         </activity>
     </application>
 

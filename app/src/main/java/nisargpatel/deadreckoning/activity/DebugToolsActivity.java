@@ -11,7 +11,7 @@ import nisargpatel.deadreckoning.R;
 
 public class DebugToolsActivity extends ListActivity {
 
-    private static final String[] debugToolsList = {"Step Counter", "Heading Test", "Data Collector", "QR Code Scanner"};
+    private static final String[] debugToolsList = {"Step Counter", "Heading Test", "Data Collector"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
