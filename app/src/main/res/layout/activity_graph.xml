@@ -1,49 +1,34 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context="nisargpatel.deadreckoning.activity.GraphActivity"
     android:id="@+id/graph_layout_relative">
 
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="@string/start"
-        android:id="@+id/buttonGraphStart"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:textSize="15sp" />
-
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="@string/stop"
-        android:id="@+id/buttonGraphStop"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:textSize="15sp" />
-
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="330dp"
-        android:layout_height="375dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/linearLayoutGraph"/>
 
-    <Button
-        android:layout_width="100dp"
-        android:layout_height="75dp"
-        android:text="Add Point"
-        android:id="@+id/buttonGraphClear"
-        android:textSize="15sp"
-        android:layout_marginLeft="86.5dp"
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentEnd="true"
+        android:tint="@android:color/white"
+        android:backgroundTint="#ff0099ff"
+        app:borderWidth="0dp"
+        app:fabSize="normal"
+        app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
 </RelativeLayout>
+

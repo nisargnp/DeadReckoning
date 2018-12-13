@@ -1,7 +1,11 @@
 package nisargpatel.deadreckoning.activity;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,6 +15,11 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,7 +39,7 @@ import nisargpatel.deadreckoning.orientation.GyroscopeEulerOrientation;
 import nisargpatel.deadreckoning.orientation.MagneticFieldOrientation;
 import nisargpatel.deadreckoning.stepcounting.DynamicStepCounter;
 
-public class GraphActivity extends Activity implements SensorEventListener, LocationListener{
+public class GraphActivity extends AppCompatActivity implements SensorEventListener, LocationListener {
 
     private static final long GPS_SECONDS_PER_WEEK = 511200L;
 
@@ -60,9 +69,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
     private DataFileWriter dataFileWriter;
     private ScatterPlot scatterPlot;
 
-    private Button buttonStart;
-    private Button buttonStop;
-    private Button buttonAddPoint;
+    private FloatingActionButton fabButton;
     private LinearLayout mLinearLayout;
 
     private SensorManager sensorManager;
@@ -94,6 +101,18 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
+        // get location permission
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(GraphActivity.this, new String[] {
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            },0);
+            finish();
+        }
+
         //defining needed variables
         gyroBias = null;
         magBias = null;
@@ -110,14 +129,13 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         startTime = 0;
 
         //getting global settings
-        strideLength =  getIntent().getFloatExtra("stride_length", 2.5f);
+        strideLength = getIntent().getFloatExtra("stride_length", 2.5f);
         isCalibrated = getIntent().getBooleanExtra("is_calibrated", false);
         gyroBias = getIntent().getFloatArrayExtra("gyro_bias");
         magBias = getIntent().getFloatArrayExtra("mag_bias");
 
         //using user_name to get index of user in userList, which is also the index of the user's stride_length
-        counterSensitivity = UserListActivity.preferredStepCounterList
-                .get(UserListActivity.userList.indexOf(getIntent().getStringExtra("user_name")));
+        counterSensitivity = getIntent().getStringExtra("preferred_step_counter");
 
         //usingDefaultCounter is counterSensitivity = "default" and sensor is available
         usingDefaultCounter = counterSensitivity.equals("default") &&
@@ -127,17 +145,14 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         gyroscopeDeltaOrientation = new GyroscopeDeltaOrientation(GYROSCOPE_INTEGRATION_SENSITIVITY, gyroBias);
         if (usingDefaultCounter) //if using default TYPE_STEP_DETECTOR, don't need DynamicStepCounter
             dynamicStepCounter = null;
-        else
-            if (!counterSensitivity.equals("default"))
-                dynamicStepCounter = new DynamicStepCounter(Double.parseDouble(counterSensitivity));
-            else //if cannot use TYPE_STEP_DETECTOR but sensitivity = "default", use 1.0 sensitivity until user calibrates
-                dynamicStepCounter = new DynamicStepCounter(1.0);
+        else if (!counterSensitivity.equals("default"))
+            dynamicStepCounter = new DynamicStepCounter(Double.parseDouble(counterSensitivity));
+        else //if cannot use TYPE_STEP_DETECTOR but sensitivity = "default", use 1.0 sensitivity until user calibrates
+            dynamicStepCounter = new DynamicStepCounter(1.0);
 
         //defining views
-        buttonStart = (Button) findViewById(R.id.buttonGraphStart);
-        buttonStop = (Button) findViewById(R.id.buttonGraphStop);
-        buttonAddPoint = (Button) findViewById(R.id.buttonGraphClear);
-        mLinearLayout = (LinearLayout) findViewById(R.id.linearLayoutGraph);
+        fabButton = findViewById(R.id.fab);
+        mLinearLayout = findViewById(R.id.linearLayoutGraph);
 
         //setting up graph with origin
         scatterPlot = new ScatterPlot("Position");
@@ -184,73 +199,75 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
         }
 
         //setting up buttons
-        buttonStart.setOnClickListener(new View.OnClickListener() {
+        fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                isRunning = true;
+                Log.d("testing", "button press");
 
-                createFiles();
+                if (!isRunning) {
 
-                if (usingDefaultCounter)
-                    dataFileWriter.writeToFile("Linear_Acceleration",
-                            "TYPE_LINEAR_ACCELERATION will not be recorded, since the TYPE_STEP_DETECTOR is being used instead."
-                    );
+                    Log.d("testing", "button press -> true");
 
-                float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
-                initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
+                    isRunning = true;
 
-                //saving initial orientation data
-                dataFileWriter.writeToFile("Initial_Orientation", "init_Gravity: " + Arrays.toString(currGravity));
-                dataFileWriter.writeToFile("Initial_Orientation", "init_Mag: " + Arrays.toString(currMag));
-                dataFileWriter.writeToFile("Initial_Orientation", "mag_Bias: " + Arrays.toString(magBias));
-                dataFileWriter.writeToFile("Initial_Orientation", "gyro_Bias: " + Arrays.toString(gyroBias));
-                dataFileWriter.writeToFile("Initial_Orientation", "init_Orientation: " + Arrays.deepToString(initialOrientation));
-                dataFileWriter.writeToFile("Initial_Orientation", "init_Heading: " + initialHeading);
+                    createFiles();
 
-                Log.d("init_heading", "" + initialHeading);
+                    if (usingDefaultCounter)
+                        dataFileWriter.writeToFile("Linear_Acceleration",
+                                "TYPE_LINEAR_ACCELERATION will not be recorded, since the TYPE_STEP_DETECTOR is being used instead."
+                        );
 
-                //TODO: fix rotation matrix
-                //gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
+                    float[][] initialOrientation = MagneticFieldOrientation.getOrientationMatrix(currGravity, currMag, magBias);
+                    initialHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
 
-                gyroscopeEulerOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+                    //saving initial orientation data
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Gravity: " + Arrays.toString(currGravity));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Mag: " + Arrays.toString(currMag));
+                    dataFileWriter.writeToFile("Initial_Orientation", "mag_Bias: " + Arrays.toString(magBias));
+                    dataFileWriter.writeToFile("Initial_Orientation", "gyro_Bias: " + Arrays.toString(gyroBias));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Orientation: " + Arrays.deepToString(initialOrientation));
+                    dataFileWriter.writeToFile("Initial_Orientation", "init_Heading: " + initialHeading);
 
-                dataFileWriter.writeToFile("XY_Data_Set", "Initial_orientation: " +
-                        Arrays.deepToString(initialOrientation));
-                dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Gyroscope_bias: " +
-                        Arrays.toString(gyroBias));
-                dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", "Magnetic_field_bias:" +
-                        Arrays.toString(magBias));
+//                Log.d("init_heading", "" + initialHeading);
 
-                buttonStart.setEnabled(false);
-                buttonAddPoint.setEnabled(true);
-                buttonStop.setEnabled(true);
+                    //TODO: fix rotation matrix
+                    //gyroscopeEulerOrientation = new GyroscopeEulerOrientation(initialOrientation);
+
+                    gyroscopeEulerOrientation = new GyroscopeEulerOrientation(ExtraFunctions.IDENTITY_MATRIX);
+
+                    dataFileWriter.writeToFile("XY_Data_Set", "Initial_orientation: " +
+                            Arrays.deepToString(initialOrientation));
+                    dataFileWriter.writeToFile("Gyroscope_Uncalibrated", "Gyroscope_bias: " +
+                            Arrays.toString(gyroBias));
+                    dataFileWriter.writeToFile("Magnetic_Field_Uncalibrated", "Magnetic_field_bias:" +
+                            Arrays.toString(magBias));
+
+                    fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
+
+                } else {
+
+                    Log.d("testing", "button press -> false");
+
+                    firstRun = true;
+                    isRunning = false;
+
+                    fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
+
+                }
+
 
             }
         });
 
-        buttonStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                firstRun = true;
-                isRunning = false;
-
-                buttonStart.setEnabled(true);
-                buttonAddPoint.setEnabled(true);
-                buttonStop.setEnabled(false);
-
-            }
-        });
-
-        buttonAddPoint.setOnClickListener(new View.OnClickListener() {
+        mLinearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 //complimentary filter
                 float compHeading = ExtraFunctions.calcCompHeading(magHeading, gyroHeading);
 
-                Log.d("comp_heading", "" + compHeading);
+//                Log.d("comp_heading", "" + compHeading);
 
                 //getting and rotating the previous XY points so North 0 on unit circle
                 float oPointX = scatterPlot.getLastYPoint();
@@ -287,6 +304,18 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
         if (isRunning) {
 
+            // get location permission
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(GraphActivity.this, new String[] {
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                },0);
+                finish();
+            }
+
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GraphActivity.this);
 
             if (isCalibrated) {
@@ -315,15 +344,11 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                         SensorManager.SENSOR_DELAY_FASTEST);
             }
 
-            buttonStart.setEnabled(false);
-            buttonAddPoint.setEnabled(true);
-            buttonStop.setEnabled(true);
+            fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_pause_black_24dp));
 
         } else {
 
-            buttonStart.setEnabled(true);
-            buttonAddPoint.setEnabled(true);
-            buttonStop.setEnabled(false);
+            fabButton.setImageDrawable(ContextCompat.getDrawable(GraphActivity.this, R.drawable.ic_play_arrow_black_24dp));
 
         }
 
@@ -342,11 +367,11 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
         if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
             currGravity = event.values;
-            Log.d("gravity_values", Arrays.toString(event.values));
+//            Log.d("gravity_values", Arrays.toString(event.values));
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD ||
                 event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) {
             currMag = event.values;
-            Log.d("mag_values", Arrays.toString(event.values));
+//            Log.d("mag_values", Arrays.toString(event.values));
         }
 
         if (isRunning) {
@@ -359,7 +384,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
                 magHeading = MagneticFieldOrientation.getHeading(currGravity, currMag, magBias);
 
-                Log.d("mag_heading", "" + magHeading);
+//                Log.d("mag_heading", "" + magHeading);
 
                 //saving magnetic field data
                 ArrayList<Float> dataValues = ExtraFunctions.createList(
@@ -378,7 +403,7 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
                 gyroHeading = gyroscopeEulerOrientation.getHeading(deltaOrientation);
                 gyroHeading += initialHeading;
 
-                Log.d("gyro_heading", "" + gyroHeading);
+//                Log.d("gyro_heading", "" + gyroHeading);
 
                 //saving gyroscope data
                 ArrayList<Float> dataValues = ExtraFunctions.createList(
@@ -393,8 +418,8 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
 
                 float norm = ExtraFunctions.calcNorm(
                         event.values[0] +
-                        event.values[1] +
-                        event.values[2]
+                                event.values[1] +
+                                event.values[2]
                 );
 
                 //if step is found, findStep == true
@@ -520,10 +545,28 @@ public class GraphActivity extends Activity implements SensorEventListener, Loca
             try {
                 dataFileWriter = new DataFileWriter(FOLDER_NAME, DATA_FILE_NAMES, DATA_FILE_HEADINGS);
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e("GraphActivity", e.toString());
             }
             areFilesCreated = true;
         }
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case 0:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(GraphActivity.this, "Thank you for providing permission!", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Toast.makeText(GraphActivity.this, "Need location permission to create tour.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
+        }
+    }
+
 
 }
+

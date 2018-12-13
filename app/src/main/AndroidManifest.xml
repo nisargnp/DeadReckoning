@@ -31,7 +31,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_graph"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Material" >
+            android:theme="@style/Theme.AppCompat" >
         </activity>
         <activity
             android:name="nisargpatel.deadreckoning.activity.HeadingActivity"

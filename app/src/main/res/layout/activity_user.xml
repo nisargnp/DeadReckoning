@@ -10,10 +10,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="User's Name: "
+        android:text="Username: "
         android:id="@+id/textView11"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
+        android:layout_alignStart="@+id/buttonUserCalibration"
         android:layout_marginTop="60dp" />
 
     <TextView
@@ -23,7 +23,7 @@
         android:text="Stride Length: "
         android:id="@+id/textView1"
         android:layout_below="@+id/textView11"
-        android:layout_alignParentStart="true"
+        android:layout_alignStart="@+id/buttonUserCalibration"
         android:layout_marginTop="40dp" />
 
     <TextView
@@ -32,7 +32,6 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/zero"
         android:id="@+id/textUserStrideLength"
-        android:textColor="#96000000"
         android:layout_alignTop="@+id/textView1"
         android:layout_alignEnd="@+id/buttonUserCalibration" />
 
@@ -49,11 +48,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/hello_world"
+        android:text="@string/zero"
         android:id="@+id/textUserName"
-        android:textColor="#96000000"
         android:layout_alignTop="@+id/textView11"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignEnd="@+id/buttonUserCalibration" />
 
 
 </RelativeLayout>

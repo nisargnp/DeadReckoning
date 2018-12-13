@@ -1,20 +1,22 @@
 package nisargpatel.deadreckoning.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import nisargpatel.deadreckoning.R;
 import nisargpatel.deadreckoning.dialog.UserDetailsDialogFragment;
+import nisargpatel.deadreckoning.extra.ExtraFunctions;
+import nisargpatel.deadreckoning.interfaces.OnUserUpdateListener;
 
-public class UserActivity extends Activity {
+public class UserActivity extends Activity implements OnUserUpdateListener {
 
     private static final int REQUEST_CODE = 0;
 
@@ -22,32 +24,41 @@ public class UserActivity extends Activity {
 
     private String userName;
 
+    private SharedPreferences.Editor sharedPreferencesEditor;
+    private ArrayList<String> userList;
+    private ArrayList<String> strideList;
+    private ArrayList<String> preferredStepCounterList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
 
+        SharedPreferences sharedPreference = getSharedPreferences(ExtraFunctions.PREFS_NAME, 0);
+        sharedPreferencesEditor = sharedPreference.edit();
+        sharedPreferencesEditor.apply();
+
+        userList = ExtraFunctions.getArrayFromSharedPreferences("user_list", sharedPreference);
+        strideList = ExtraFunctions.getArrayFromSharedPreferences("stride_list", sharedPreference);
+        preferredStepCounterList = ExtraFunctions.getArrayFromSharedPreferences("preferred_step_counter", sharedPreference);
+
         Intent myIntent = getIntent();
         String strideLength = myIntent.getStringExtra("stride_length");
         userName = myIntent.getStringExtra("user_name");
 
-        TextView textUserName = (TextView) findViewById(R.id.textUserName);
-        textStrideLength = (TextView) findViewById(R.id.textUserStrideLength);
-
+        TextView textUserName = findViewById(R.id.textUserName);
         textUserName.setText(userName);
 
-        if (strideLength.length() > 3)
-            textStrideLength.setText(strideLength.substring(0,3));
-        else
-            textStrideLength.setText(strideLength);
+        textStrideLength = findViewById(R.id.textUserStrideLength);
+        setStrideLengthText(strideLength);
 
         findViewById(R.id.buttonUserCalibration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 UserDetailsDialogFragment userDetailsDialog = new UserDetailsDialogFragment();
-                userDetailsDialog.addingUser(false);
+                userDetailsDialog.setOnUserUpdateListener(UserActivity.this);
+                userDetailsDialog.setAddingUser(false);
                 userDetailsDialog.setUserName(userName);
-                userDetailsDialog.setHandler(new UserSettingsDialogHandler(UserActivity.this, textStrideLength, userName));
                 userDetailsDialog.show(getFragmentManager(), "Calibration");
             }
         });
@@ -56,24 +67,20 @@ public class UserActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_user, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //remove the current user_name and his/her stride_length from the global database
         if (id == R.id.delete_user) {
-            int index = UserListActivity.userList.indexOf(userName);
-            UserListActivity.userList.remove(index);
-            UserListActivity.strideList.remove(index);
-            UserListActivity.updatePrefs();
+            int index = userList.indexOf(userName);
+            userList.remove(index);
+            strideList.remove(index);
+            updatePrefs();
             finish();
         }
 
@@ -86,57 +93,36 @@ public class UserActivity extends Activity {
 
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             double strideLength = data.getDoubleExtra("stride_length", 2.5);
-            int index = UserListActivity.userList.indexOf(userName);
-            UserListActivity.strideList.set(index, String.valueOf(strideLength));
+            int index = userList.indexOf(userName);
+            strideList.set(index, String.valueOf(strideLength));
+            setStrideLengthText("" + strideLength);
+
+            updatePrefs();
         }
 
-        refreshStrideLength();
     }
 
-    private void refreshStrideLength() {
-        int index = UserListActivity.userList.indexOf(userName);
-        String strideLength = UserListActivity.strideList.get(index);
+    @Override
+    public void onUserUpdateListener(Bundle bundle) {
+        String strideLength = bundle.getString(UserDetailsDialogFragment.STRIDE_LENGTH_TAG);
+        int index = userList.indexOf(userName);
+        strideList.set(index, String.valueOf(strideLength));
+        setStrideLengthText(strideLength != null ? strideLength : "0");
+
+        updatePrefs();
+    }
+
+    private void updatePrefs() {
+        ExtraFunctions.addArrayToSharedPreferences("user_list", userList, sharedPreferencesEditor);
+        ExtraFunctions.addArrayToSharedPreferences("stride_list", strideList, sharedPreferencesEditor);
+        ExtraFunctions.addArrayToSharedPreferences("preferred_step_counter", preferredStepCounterList, sharedPreferencesEditor);
+    }
+
+    private void setStrideLengthText(String strideLength) {
         if (strideLength.length() > 3)
             textStrideLength.setText(strideLength.substring(0,3));
         else
             textStrideLength.setText(strideLength);
     }
 
-    //this handler will let UserActivity know when the UserDetailsDialogFragment dialog has been dismissed.
-    private static class UserSettingsDialogHandler extends Handler {
-
-        private Context context;
-        private TextView textStrideLength;
-        private String userName;
-
-        public UserSettingsDialogHandler(Context context, TextView textStrideLength, String userName) {
-            this.context = context;
-            this.textStrideLength = textStrideLength;
-            this.userName = userName;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-            if (msg.getData().getBoolean("adding_user", false)) {
-                Intent myIntent = new Intent(context, StepCalibrationActivity.class);
-                myIntent.putExtra("user_name", msg.getData().getString("user_name"));
-                ((Activity)context).startActivityForResult(myIntent, REQUEST_CODE);
-            } else {
-                refreshStrideLength();
-            }
-
-        }
-
-        private void refreshStrideLength() {
-            int index = UserListActivity.userList.indexOf(userName);
-            String strideLength = UserListActivity.strideList.get(index);
-            if (strideLength.length() > 3)
-                textStrideLength.setText(strideLength.substring(0,3));
-            else
-                textStrideLength.setText(strideLength);
-        }
-
-    }
 }

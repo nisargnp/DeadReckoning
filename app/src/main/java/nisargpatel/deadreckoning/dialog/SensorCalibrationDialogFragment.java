@@ -20,7 +20,7 @@ import nisargpatel.deadreckoning.activity.GraphActivity;
 
 public class SensorCalibrationDialogFragment extends DialogFragment {
 
-    public static final String DIALOG_MESSAGE = "Calibrate phone manually, or press \"Cancel\" to use Android-calibrated sensors.";
+    public static final String DIALOG_MESSAGE = "Calibrate phone manually, or press \"Auto\" to use Android-calibrated sensors.";
 
     private static float[] gyroBias;
     private static float[] magBias;
@@ -39,13 +39,13 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
         dialogBuilder
                 .setMessage(DIALOG_MESSAGE)
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Manually Calibrate", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //this onClick() will be overridden during onStart()
                     }
                 })
-                .setPositiveButton("Calibrate", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Auto", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //this onClick() will be overridden during onStart()
@@ -69,8 +69,8 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
             negativeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    isCalibrating = NOT_CALIBRATING;
-                    dismiss();
+                    isCalibrating = CALIBRATING;
+                    startCalibrationDialogs();
                 }
             });
 
@@ -78,8 +78,8 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
             positiveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    isCalibrating = CALIBRATING;
-                    startCalibrationDialogs();
+                    isCalibrating = NOT_CALIBRATING;
+                    dismiss();
                 }
             });
         }
@@ -152,7 +152,7 @@ public class SensorCalibrationDialogFragment extends DialogFragment {
         private MagCalibrationDialogFragment magCalibrateDialog;
         private GyroCalibrationDialogFragment gyroCalibrateDialog;
 
-        public SensorCalibrationHandler(Context context, Dialog dialog, MagCalibrationDialogFragment magCalibrateDialog, GyroCalibrationDialogFragment gyroCalibrateDialog) {
+        SensorCalibrationHandler(Context context, Dialog dialog, MagCalibrationDialogFragment magCalibrateDialog, GyroCalibrationDialogFragment gyroCalibrateDialog) {
             this.context = context;
             this.dialog = dialog;
 

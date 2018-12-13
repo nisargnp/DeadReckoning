@@ -51,7 +51,8 @@ public class ScatterPlot {
         myRenderer = new XYSeriesRenderer();
         myRenderer.setFillPoints(true);
         myRenderer.setPointStyle(PointStyle.CIRCLE);
-        myRenderer.setColor(Color.GREEN);
+//        myRenderer.setColor(Color.GREEN);
+        myRenderer.setColor(Color.parseColor("#ff0099ff"));
 
         myMultiSeries = new XYMultipleSeriesDataset();
         myMultiSeries.addSeries(mySeries);
@@ -81,7 +82,7 @@ public class ScatterPlot {
         myMultiRenderer.setYAxisMin(-bound);
         myMultiRenderer.setYAxisMax(bound);
 
-        //returns the graphical view containing the graph
+        //returns the graphical view containing the graphz
         return ChartFactory.getScatterChartView(context, myMultiSeries, myMultiRenderer);
     }
 
